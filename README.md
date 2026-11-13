@@ -1,6 +1,6 @@
 # Hype POP
 
-**App no ar:** https://hype-barbearia.github.io/pop/
+**App no ar:** https://pop.hypebarbearia.com (também em https://hype-barbearia.github.io/pop/)
 
 Sistema de Procedimentos Operacionais Padrão da Hype Barbearia. Reúne os POPs da casa, transforma a rotina em checklists com horário e responsável e mostra aos sócios, de longe, se a operação está rodando como foi definido.
 
@@ -34,7 +34,7 @@ Mudança no banco: crie um arquivo novo em `supabase/migrations/` e aplique no S
 ## Configuração única
 
 1. **GitHub Pages**: já ativo, publicando a branch `main` na raiz.
-2. **Supabase → Authentication → URL Configuration**: em Site URL e Redirect URLs, coloque o endereço do GitHub Pages (`https://hype-barbearia.github.io/pop/`).
+2. **Supabase → Authentication → URL Configuration**: em Site URL e Redirect URLs, coloque o endereço do GitHub Pages (`https://pop.hypebarbearia.com/`).
 3. **Supabase → Authentication → Emails → SMTP**: configure um SMTP próprio (ex.: Resend). O e-mail padrão do Supabase só envia para membros da organização e tem limite baixo por hora.
 4. **Modelo do e-mail "Magic Link"**: inclua `{{ .Token }}` para a pessoa poder digitar o código de 6 números quando o link abrir fora do app instalado.
 5. **E-mails da equipe**: o primeiro sócio é cadastrado direto no banco; depois ele cadastra os outros na tela Equipe.
