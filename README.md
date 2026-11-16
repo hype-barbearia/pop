@@ -36,7 +36,7 @@ A base dos POPs é o documento "HYPE Cultura e POP" v1.0 (outubro de 2026). A co
 - **Fotos** com mais de 90 dias são apagadas toda madrugada.
 - **Erros** que aparecem no celular de alguém ficam registrados na tabela `erros_app`.
 
-- **Perfil** para cada pessoa: dados, e-mail, folga, termos assinados e notificações. Para os barbeiros parceiros, o checklist mensal do **Salão-Parceiro** (NFS-e da cota-parte para a Hype e comprovante do DAS do MEI), com envio do arquivo. A gestão é avisada, confere em **Notas fiscais** e aceita ou recusa com motivo. Lembretes automáticos no dia 1, dois dias antes e no prazo; atraso avisa a gerência e os sócios.
+- **Perfil** para cada pessoa: dados, e-mail, folga, termos assinados e notificações. Para os barbeiros parceiros, as **notas fiscais quinzenais do Salão-Parceiro**: do dia 1 ao 15, nota até o dia 16; do dia 16 ao fim do mês, nota até o dia 1º. A gestão informa o valor de cada barbeiro em **Notas fiscais**, ele recebe o aviso, emite a NFS-e para a Hype e envia número e arquivo. A gestão confere e aceita ou recusa com motivo. Também há o comprovante mensal do DAS do MEI (vence dia 20).
 
 Peças no Supabase: função `notificar` (Edge Function), agendamentos `hype_pop_gerar_dia`, `hype_pop_notificar` (a cada 2 min), `hype_pop_fiscal` (10:05) e `hype_pop_limpeza`, buckets privados `fotos` e `documentos`, chaves das notificações em `privado.config`.
 

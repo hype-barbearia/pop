@@ -20,7 +20,7 @@ function navBadge(k){
   if (k === 'hoje') { const n = dayStats().atrasado; return n ? `<span class="count bad">${n}</span>` : ''; }
   if (k === 'ocorrencias') { const n = occOpen().length; return n ? `<span class="count">${n}</span>` : ''; }
   if (k === 'pops') { const n = pendingReads().length; return n ? `<span class="count">${n}</span>` : ''; }
-  if (k === 'notas') { const c = compAtual(), n = S.docs.filter(d => d.competencia === c && d.status === 'enviada').length; return n ? `<span class="count">${n}</span>` : ''; }
+  if (k === 'notas') { const n = S.docs.filter(d => d.status === 'enviada').length; return n ? `<span class="count">${n}</span>` : ''; }
   return '';
 }
 
@@ -294,11 +294,11 @@ function pgGerente(){
           </div></section>
         <section class="panel"><div class="panel-h"><h2>Notas fiscais</h2><p>Salão-Parceiro</p></div>
           <div class="stack gap14">
-            <div class="rule"><div><b>Prazo da nota fiscal</b><p class="small muted">Dia do mês seguinte para enviar a NFS-e</p></div><div class="affix w-num"><input type="number" id="r-nfdia" data-rule="nfDia" value="${r.nfDia}" min="1" max="28" ${d}><span>dia</span></div></div>
+            <p class="small"><b>Notas quinzenais:</b> do dia 1 ao 15, nota até o dia 16; do dia 16 ao fim do mês, nota até o dia 1º. A gestão informa o valor de cada barbeiro em Notas fiscais.</p>
             <label class="toggle"><input type="checkbox" id="r-nfdas" data-rule="nfDas" data-kind="bool" ${r.nfDas ? 'checked' : ''} ${d}><span><b>Pedir o comprovante do DAS do MEI</b><span>Vence dia 20. Mostra que o MEI do parceiro está em dia.</span></span></label>
             <div class="field"><label for="r-nfrazao">Razão social da Hype (tomador)</label><input class="inp" id="r-nfrazao" data-rule="nfRazao" data-kind="str" value="${esc(r.nfRazao)}" ${d}></div>
             <div class="field"><label for="r-nfcnpj">CNPJ da Hype</label><input class="inp" id="r-nfcnpj" data-rule="nfCnpj" data-kind="str" value="${esc(r.nfCnpj)}" inputmode="numeric" ${d}></div>
-            <div class="field"><label for="r-nfdesc">Descrição sugerida do serviço ({mes} vira o mês da nota)</label><textarea class="inp" id="r-nfdesc" data-rule="nfDesc" data-kind="str" rows="3" ${d}>${esc(r.nfDesc)}</textarea></div>
+            <div class="field"><label for="r-nfdesc">Descrição sugerida do serviço ({periodo} vira o período da nota)</label><textarea class="inp" id="r-nfdesc" data-rule="nfDesc" data-kind="str" rows="3" ${d}>${esc(r.nfDesc)}</textarea></div>
           </div></section>
         <section class="panel"><div class="panel-h"><h2>Lembretes fixos</h2><p>chegam no celular da gerente</p></div>
           <div class="stack gap6">${S.reminders.map(x => `<div class="rem ${x.on ? '' : 'off'}"><span class="num"><b>${x.at}</b></span><span class="grow">${esc(x.text)}</span>${vis(S.remDone[x.id]) ? chip('feito ' + hm(S.remDone[x.id]), 'good') : toMin(x.at) <= NOW() && x.on ? chip('pendente', 'warn') : ''}
@@ -400,29 +400,33 @@ function pgRotina(){
 }
 
 /* ---------- Notas fiscais do Salão-Parceiro ---------- */
-function blocoNotas(comp, phone){
-  const parceiros = team().filter(p => p.parceiro), opts = [1, 2, 3, 4, 5, 6].map(k => compMenos(k));
-  const docCell = (p, tipo, prazo) => { const d = docDe(p.id, comp, tipo), atras = !docOk(d) && TODAY_ISO > prazo;
-    return `<div class="stack gap4">${d ? docChip(d) : chip(atras ? 'atrasada' : 'pendente', atras ? 'bad' : 'warn')}
-      ${d ? `<span class="small muted">${d.numero ? `nº ${esc(d.numero)} · ` : ''}${d.valor != null ? `R$ ${nf2(d.valor)} · ` : ''}${dLabelISO(recife(Date.parse(d.enviado_em)).toISOString().slice(0, 10))}</span>
-        <span class="row gap6"><button class="linkbtn small" data-act="verDoc" data-v="${esc(d.arquivo_path)}">Ver arquivo</button>
-        ${canManage() && d.status === 'enviada' ? `<button class="btn sm ok" data-act="revDoc" data-id="${d.id}" data-v="aceita">Aceitar</button><button class="btn sm no" data-act="revDoc" data-id="${d.id}" data-v="recusada">Recusar</button>` : ''}</span>
-        ${d.status === 'recusada' && d.obs ? `<span class="small bad-t">${esc(d.obs)}</span>` : ''}` : ''}</div>`; };
-  return `<section class="${phone ? 'card' : 'panel'}" id="notas"><div class="row between"><h3 class="${phone ? '' : 'h-sm'}">Notas fiscais de ${compLabel(comp)}</h3>
-      <label class="sr" for="f-comp">Mês</label><select class="inp w-auto sm-sel" id="f-comp" data-f="comp">${opts.map(c => `<option value="${c}" ${c === comp ? 'selected' : ''}>${compLabel(c)}</option>`).join('')}</select></div>
-    <p class="small muted">Prazo da NFS-e: ${dLabelISO(prazoNF(comp))}${S.rules.nfDas ? ` · DAS: ${dLabelISO(prazoDAS(comp))}` : ''}. Para recusar, escreva o motivo no campo antes de tocar em Recusar.</p>
-    ${canManage() ? `<label class="sr" for="rev-nota">Motivo da recusa</label><input class="inp" id="rev-nota" placeholder="Motivo da recusa (ex.: valor diferente do relatório)">` : ''}
-    ${parceiros.length ? `<div class="tw"><table class="t"><thead><tr><th>Parceiro</th><th>NFS-e</th>${S.rules.nfDas ? '<th>DAS</th>' : ''}</tr></thead><tbody>
-      ${parceiros.map(p => `<tr><td><span class="who-cell">${av(p)}${esc(p.name)}</span></td><td>${docCell(p, 'nfse', prazoNF(comp))}</td>${S.rules.nfDas ? `<td>${docCell(p, 'das', prazoDAS(comp))}</td>` : ''}</tr>`).join('')}
-    </tbody></table></div>` : '<p class="muted small">Nenhum profissional-parceiro marcado. Marque em Equipe, na ficha de cada barbeiro.</p>'}</section>`;
+function blocoNotas(per, phone){
+  const parceiros = team().filter(p => p.parceiro), opts = periodos(6), comp = compAtual();
+  const acoes = d => `${d ? `<span class="row gap6"><button class="linkbtn small" data-act="verDoc" data-v="${esc(d.arquivo_path)}">Ver arquivo</button>
+      ${canManage() && d.status === 'enviada' ? `<button class="btn sm ok" data-act="revDoc" data-id="${d.id}" data-v="aceita">Aceitar</button><button class="btn sm no" data-act="revDoc" data-id="${d.id}" data-v="recusada">Recusar</button>` : ''}</span>
+      ${d.status === 'recusada' && d.obs ? `<span class="small bad-t">${esc(d.obs)}</span>` : ''}` : ''}`;
+  const nfCell = p => { const d = docDe(p.id, per, 'nfse'), atras = !docOk(d) && TODAY_ISO > perPrazo(per);
+    return `<div class="stack gap4">${d ? docChip(d) : chip(atras ? 'atrasada' : 'pendente', atras ? 'bad' : 'warn')}${d?.numero ? `<span class="small muted">nº ${esc(d.numero)}</span>` : ''}${acoes(d)}</div>`; };
+  const valCell = p => { const v = valorNF(p.id, per);
+    return canManage() && !docOk(docDe(p.id, per, 'nfse')) ? `<div class="affix w-val"><span>R$</span><label class="sr" for="nv-${p.id}">Valor de ${esc(p.name)}</label><input id="nv-${p.id}" inputmode="decimal" data-nfvalor="${p.id}|${per}" value="${v != null ? nf2(v) : ''}" placeholder="0,00"></div>`
+      : v != null ? `<b>R$ ${nf2(v)}</b>` : '<span class="small muted">não informado</span>'; };
+  const dasCell = p => { const d = docDe(p.id, comp, 'das'), atras = !docOk(d) && TODAY_ISO > prazoDAS(comp); return `<div class="stack gap4">${d ? docChip(d) : chip(atras ? 'atrasado' : 'pendente', atras ? 'bad' : 'warn')}${acoes(d)}</div>`; };
+  return `<section class="${phone ? 'card' : 'panel'}" id="notas"><div class="row between"><h3 class="${phone ? '' : 'h-sm'}">Notas da quinzena</h3>
+      <label class="sr" for="f-per">Período</label><select class="inp w-auto sm-sel" id="f-per" data-f="per">${opts.map(c => `<option value="${c}" ${c === per ? 'selected' : ''}>${perLabel(c)}</option>`).join('')}</select></div>
+    <p class="small muted">Período de ${perLabel(per)} · nota até ${dLabelISO(perPrazo(per))}. ${canManage() ? 'Informe o valor de cada barbeiro: ele recebe o aviso para emitir. ' : ''}Para recusar, escreva o motivo antes de tocar em Recusar.</p>
+    ${canManage() ? `<label class="sr" for="rev-nota">Motivo da recusa</label><input class="inp" id="rev-nota" placeholder="Motivo da recusa (ex.: número da nota ilegível)">` : ''}
+    ${parceiros.length ? `<div class="tw"><table class="t"><thead><tr><th>Parceiro</th><th>Valor a emitir</th><th>NFS-e</th></tr></thead><tbody>
+      ${parceiros.map(p => `<tr><td><span class="who-cell">${av(p)}${esc(p.name)}</span></td><td>${valCell(p)}</td><td>${nfCell(p)}</td></tr>`).join('')}</tbody></table></div>
+      ${S.rules.nfDas ? `<p class="day-h">DAS do MEI de ${compLabel(comp)} · vence ${dLabelISO(prazoDAS(comp))}</p><div class="tw"><table class="t"><tbody>${parceiros.map(p => `<tr><td><span class="who-cell">${av(p)}${esc(p.name)}</span></td><td>${dasCell(p)}</td></tr>`).join('')}</tbody></table></div>` : ''}`
+      : '<p class="muted small">Nenhum profissional-parceiro marcado. Marque em Equipe, na ficha de cada barbeiro.</p>'}</section>`;
 }
 function pgNotas(){
-  const comp = S.ui.f.comp || compAtual(), parceiros = team().filter(p => p.parceiro);
-  const env = parceiros.filter(p => docOk(docDe(p.id, comp, 'nfse'))).length, ace = parceiros.filter(p => docDe(p.id, comp, 'nfse')?.status === 'aceita').length;
-  const total = sum(parceiros.map(p => docDe(p.id, comp, 'nfse')).filter(docOk), d => +d.valor);
-  return `${ph(eyebrow(), 'Notas fiscais', 'Salão-Parceiro (Lei 13.352/2016): cada barbeiro parceiro emite todo mês a NFS-e da sua cota-parte para a Hype e envia pelo app. A gerência confere aqui.')}
-    ${!S.rules.nfCnpj ? `<p class="callout"><b>Falta o CNPJ e a razão social da Hype</b> para os barbeiros emitirem a nota. ${canEdit() ? 'Preencha em Gerente e lembretes.' : 'O Victor preenche em Gerente e lembretes.'}</p>` : ''}
-    <div class="grid kpis">${kpi('Notas enviadas', `${env} de ${parceiros.length}`, compLabel(comp), env < parceiros.length && TODAY_ISO > prazoNF(comp) ? 'bad' : '')}${kpi('Conferidas', `${ace} de ${env}`, 'aceitas pela gerência')}${kpi('Valor informado', `R$ ${nf2(total)}`, 'soma das NFS-e enviadas')}</div>
-    ${blocoNotas(comp, false)}
-    <p class="small muted">Os arquivos ficam guardados no Supabase, numa pasta privada de cada barbeiro. Quem envia vê só os seus. Confirme as regras de emissão com a contabilidade da Hype.</p>`;
+  const per = periodos(6).includes(S.ui.f.per) ? S.ui.f.per : perAtual(), parceiros = team().filter(p => p.parceiro);
+  const defs = parceiros.filter(p => valorNF(p.id, per) != null).length, env = parceiros.filter(p => docOk(docDe(p.id, per, 'nfse'))).length;
+  const ace = parceiros.filter(p => docDe(p.id, per, 'nfse')?.status === 'aceita').length, total = sum(parceiros, p => +(valorNF(p.id, per) || 0));
+  return `${ph(eyebrow(), 'Notas fiscais', 'Salão-Parceiro (Lei 13.352/2016): a cada quinzena a gestão informa o valor da cota-parte de cada barbeiro parceiro, ele emite a NFS-e para a Hype e envia pelo app.')}
+    ${!S.rules.nfCnpj || !S.rules.nfRazao ? `<p class="callout"><b>Faltam dados da Hype para a nota${!S.rules.nfCnpj ? ' (CNPJ)' : ''}${!S.rules.nfRazao ? ' (razão social)' : ''}.</b> ${canEdit() ? 'Preencha em Gerente e lembretes.' : 'O Victor preenche em Gerente e lembretes.'}</p>` : ''}
+    <div class="grid kpis">${kpi('Valores informados', `${defs} de ${parceiros.length}`, perLabel(per), defs < parceiros.length && TODAY_ISO >= perPrazo(per) ? 'warn' : '')}${kpi('Notas enviadas', `${env} de ${parceiros.length}`, `prazo ${dLabelISO(perPrazo(per))}`, env < defs && TODAY_ISO > perPrazo(per) ? 'bad' : '')}${kpi('Conferidas', `${ace} de ${env}`, 'aceitas pela gerência')}${kpi('Total da quinzena', `R$ ${nf2(total)}`, 'soma dos valores informados')}</div>
+    ${blocoNotas(per, false)}
+    <p class="small muted">Os arquivos ficam numa pasta privada de cada barbeiro no Supabase. Quem envia vê só os seus. Confirme as regras de emissão com a contabilidade da Hype.</p>`;
 }

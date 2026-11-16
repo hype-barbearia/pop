@@ -39,8 +39,9 @@ async function carregar(){
     sb.from('pop_versoes').select('pop_id,versao,publicado_em,por,conteudo').order('versao', {ascending:false}),
     sb.from('resumos').select('*').order('data', {ascending:false}).limit(7),
     sb.from('documentos_fiscais').select('*').gte('competencia', compMenos(7)).order('enviado_em', {ascending:false}),
+    sb.from('nf_valores').select('*').gte('periodo', compMenos(4)),
   ]);
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis] = q.map(check);
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv] = q.map(check);
 
   const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem, fullName:p.nome_completo || p.nome, parceiro:p.parceiro}));
   const pops = po.map(p => {
@@ -76,7 +77,7 @@ async function carregar(){
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
-    docs:dfis, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
+    docs:dfis, nfValores:nfv, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = nowMin();
   await assinarFotos();
 }
@@ -109,7 +110,7 @@ let RT_TIMER, RT_CH;
 function tempoReal(){
   if (RT_CH) return;
   RT_CH = sb.channel('hype-pop');
-  ['execucoes','execucao_itens','cobrancas','ocorrencias','ocorrencia_acoes','lembretes_feitos','pop_leituras','ausencias','dias_fechados','documentos_fiscais'].forEach(t =>
+  ['execucoes','execucao_itens','cobrancas','ocorrencias','ocorrencia_acoes','lembretes_feitos','pop_leituras','ausencias','dias_fechados','documentos_fiscais','nf_valores'].forEach(t =>
     RT_CH.on('postgres_changes', {event:'*', schema:'public', table:t}, () => { clearTimeout(RT_TIMER); RT_TIMER = setTimeout(recarregar, 700); }));
   RT_CH.subscribe();
 }
@@ -169,6 +170,15 @@ const compCurta = c => `${c.slice(5, 7)}/${c.slice(0, 4)}`;
 const compAtual = () => compMenos(1);                      // a nota de um mês é emitida no mês seguinte
 function prazoNF(comp){ const [y, m] = comp.split('-').map(Number), last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); return new Date(Date.UTC(y, m, Math.min(S.rules.nfDia, last))).toISOString().slice(0, 10); }
 function prazoDAS(comp){ const [y, m] = comp.split('-').map(Number); return new Date(Date.UTC(y, m, 20)).toISOString().slice(0, 10); }
+/* Notas quinzenais: período começa no dia 1 (vence dia 16) ou no dia 16 (vence dia 1º do mês seguinte) */
+const isoUTC = (y, m, d) => new Date(Date.UTC(y, m, d)).toISOString().slice(0, 10);
+const perAtual = () => { const d = recife(), y = d.getUTCFullYear(), m = d.getUTCMonth(); return d.getUTCDate() >= 16 ? isoUTC(y, m, 1) : isoUTC(y, m - 1, 16); };
+const perAnterior = p => { const [y, m, d] = p.split('-').map(Number); return d === 16 ? isoUTC(y, m - 1, 1) : isoUTC(y, m - 2, 16); };
+const perFim = p => { const [y, m, d] = p.split('-').map(Number); return d === 1 ? isoUTC(y, m - 1, 15) : isoUTC(y, m, 0); };
+const perPrazo = p => { const [y, m, d] = p.split('-').map(Number); return d === 1 ? isoUTC(y, m - 1, 16) : isoUTC(y, m, 1); };
+const perLabel = p => `${dLabelISO(p)} a ${dLabelISO(perFim(p))}`;
+const periodos = n => { const out = [perAtual()]; while (out.length < n) out.push(perAnterior(out[out.length - 1])); return out; };
+const valorNF = (pid, p) => S.nfValores.find(v => v.pessoa_id === pid && v.periodo === p)?.valor;
 const docDe = (pid, comp, tipo) => S.docs.find(d => d.pessoa_id === pid && d.competencia === comp && d.tipo === tipo);   // o mais recente
 async function enviarDocumento(comp, tipo, numero, valor, file){
   const ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'pdf';

@@ -202,6 +202,9 @@ document.addEventListener('change', e => {
     return;
   }
   if (el.dataset.f) { S.ui.f[el.dataset.f] = el.value; uiSave(); render(); return; }
+  if (el.dataset.nfvalor) { const [pid, per] = el.dataset.nfvalor.split('|'), raw = el.value.replace(/\s|R\$/g, '').replace(/\./g, '').replace(',', '.');
+    if (raw === '') return; if (isNaN(+raw) || +raw < 0) { toast('Valor inválido. Use o formato 1.250,00.'); return; }
+    run(() => rpc('definir_valor_nf', {pessoa:pid, periodo:per, valor:+raw}), `Valor informado. ${first(person(pid))} recebe o aviso para emitir.`); return; }
   if (el.dataset.rodizio) { const [tid, dow] = el.dataset.rodizio.split('|');
     run(async () => { if (el.value) check(await sb.from('rodizio_escala').upsert({rotina_id:tid, dow:+dow, pessoa_id:el.value})); else check(await sb.from('rodizio_escala').delete().eq('rotina_id', tid).eq('dow', +dow)); }, 'Escala atualizada. Vale a partir de amanhã.'); return; }
   if (el.dataset.item) { const v = el.value.trim(); if (v) upd('rotina_itens', {texto:v}, 'id', el.dataset.item, 'Item atualizado.'); return; }
@@ -247,8 +250,7 @@ document.addEventListener('submit', async e => {
         responsavel:$('#no-r')?.value || null, prazo:$('#no-p')?.value || null, foto}); $('#det-occ') && ($('#det-occ').open = false); }, 'Ocorrência registrada. A gerência foi avisada.'); }
   if (f === 'doc') { const tipo = e.target.dataset.tipo, comp = e.target.dataset.comp, file = $('#df-' + tipo).files[0]; if (!file) return;
     if (file.size > 10 * 1024 * 1024) { toast('O arquivo passa de 10 MB. Envie o PDF da nota ou uma foto menor.'); return; }
-    const valor = tipo === 'nfse' ? $('#dv-' + tipo).value.replace(/\./g, '').replace(',', '.').trim() : null;
-    if (tipo === 'nfse' && (valor === '' || isNaN(+valor))) { toast('Informe o valor da nota, por exemplo 1.250,00.'); return; }
+    const valor = null;
     const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Enviando…';
     run(() => enviarDocumento(comp, tipo, tipo === 'nfse' ? $('#dn-' + tipo).value.trim() : null, valor, file), tipo === 'nfse' ? 'Nota fiscal enviada. A gestão foi avisada.' : 'Comprovante do DAS enviado.'); }
   if (f === 'aus') { const de = $('#au-i').value, ate = $('#au-f').value; if (ate < de) { toast('A data final precisa ser igual ou depois da inicial.'); return; }

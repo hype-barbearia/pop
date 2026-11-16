@@ -31,4 +31,5 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const firstName = n => String(n).split(' ')[0];
 const initials = n => String(n).split(' ').map(x => x[0]).slice(0, 2).join('');
 const nf2 = v => Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtCnpj = c => { const d = String(c || '').replace(/\D/g, ''); return d.length === 14 ? `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}` : c; };
 const mins = m => m < 60 ? `${Math.round(m)} min` : `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}`;

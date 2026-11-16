@@ -61,7 +61,7 @@ function gEquipe(p){
     ${ppl.map(x => { const d = dayStats(i => i.who === x.id), list = S.inst.filter(i => i.who === x.id).sort((a, b) => a.start - b.start);
       return `<section class="card"><div class="row between nowrap"><div class="row nowrap gap8">${av(x)}<div><b>${esc(x.name)}</b><p class="small muted">${roleL(x)} · ${esc(x.turno)}</p></div></div>${d.atrasado ? chip(d.atrasado + ' atrasado', 'bad') : chip(`${d.ok} de ${d.due} no prazo`, rateKind(d.rate))}</div>
         <div class="stack gap6">${list.map(i => instCard(i, {who:false})).join('') || '<p class="small muted">Nenhum checklist hoje.</p>'}</div></section>`; }).join('')}
-    ${blocoNotas(S.ui.f.comp || compAtual(), true)}
+    ${blocoNotas(periodos(6).includes(S.ui.f.per) ? S.ui.f.per : perAtual(), true)}
     ${blocoAusencias()}`;
 }
 
@@ -116,7 +116,7 @@ function eHist(p){
 }
 
 /* ---------- Perfil (todos) ---------- */
-const pendNF = pid => { const c = compAtual(); return (!docOk(docDe(pid, c, 'nfse')) && TODAY_ISO >= c.slice(0, 8) + '01' ? 1 : 0); };
+const pendNF = pid => { const p = perAtual(); return valorNF(pid, p) != null && !docOk(docDe(pid, p, 'nfse')) ? 1 : 0; };
 const docOk = d => d && d.status !== 'recusada';
 const docChip = d => !d ? chip('pendente', 'warn') : d.status === 'aceita' ? chip('aceita', 'good') : d.status === 'recusada' ? chip('recusada', 'bad') : chip('enviada, aguardando conferência', 'acc');
 function mPerfil(p){
@@ -134,22 +134,24 @@ function mPerfil(p){
     <button class="btn" data-act="sair">Sair do app</button>`;
 }
 function perfilNotas(p){
-  const opts = [1, 2, 3].map(k => compMenos(k)), comp = opts.includes(S.ui.f.compP) ? S.ui.f.compP : compAtual();
-  const nf = docDe(p.id, comp, 'nfse'), das = docDe(p.id, comp, 'das'), limNF = prazoNF(comp), limDAS = prazoDAS(comp);
-  const desc = (S.rules.nfDesc || '').replace('{mes}', compCurta(comp));
-  const linha = (tipo, d, titulo, prazo, comCampos) => `<div class="nf-item ${docOk(d) ? 'ok' : ''}"><span class="cbox" aria-hidden="true">${docOk(d) ? '✓' : ''}</span>
-    <div class="grow stack gap6"><div class="row between"><b>${titulo}</b>${docChip(d)}</div>
-      <p class="small muted">Prazo: ${dLabelISO(prazo)}${d ? ` · enviado em ${dLabelISO(recife(Date.parse(d.enviado_em)).toISOString().slice(0, 10))}${d.numero ? ` · nº ${esc(d.numero)}` : ''}${d.valor != null ? ` · R$ ${nf2(d.valor)}` : ''}` : ''}</p>
+  const opts = periodos(4), per = opts.includes(S.ui.f.perP) ? S.ui.f.perP : opts[0], comp = compAtual();
+  const nf = docDe(p.id, per, 'nfse'), das = docDe(p.id, comp, 'das'), valor = valorNF(p.id, per);
+  const desc = (S.rules.nfDesc || '').replace('{periodo}', perLabel(per)).replace('{mes}', perLabel(per));
+  const cab = (d, titulo, info) => `<div class="row between"><b>${titulo}</b>${docChip(d)}</div><p class="small muted">${info}</p>
       ${d?.status === 'recusada' ? `<p class="callout bad small"><b>Recusada:</b> ${esc(d.obs || '')} Envie de novo corrigida.</p>` : ''}
-      ${d ? `<button class="linkbtn small" data-act="verDoc" data-v="${esc(d.arquivo_path)}">Ver o arquivo enviado</button>` : ''}
-      ${!docOk(d) ? `<form class="stack gap6" data-form="doc" data-tipo="${tipo}" data-comp="${comp}">${comCampos ? `<div class="form-grid"><div class="field"><label for="dn-${tipo}">Número da nota</label><input class="inp" id="dn-${tipo}" inputmode="numeric" required></div>
-        <div class="field"><label for="dv-${tipo}">Valor (R$)</label><input class="inp" id="dv-${tipo}" inputmode="decimal" placeholder="0,00" required></div></div>` : ''}
-        <div class="field"><label for="df-${tipo}">Arquivo (PDF, XML ou foto)</label><input class="inp" type="file" id="df-${tipo}" accept="application/pdf,.pdf,.xml,text/xml,image/*" required></div>
-        <div><button class="btn sm primary">Enviar para a gestão</button></div></form>` : ''}</div></div>`;
-  return `<section class="card"><div class="row between"><h3>Notas fiscais · Salão-Parceiro</h3><label class="sr" for="f-compP">Mês</label><select class="inp w-auto sm-sel" id="f-compP" data-f="compP">${opts.map(c => `<option value="${c}" ${c === comp ? 'selected' : ''}>${compLabel(c)}</option>`).join('')}</select></div>
-    <p class="small muted">Como profissional-parceiro (Lei 13.352/2016), você emite todo mês a nota fiscal de serviço para a Hype com o valor da sua cota-parte do mês anterior. Aqui você envia a nota e a gestão confere.</p>
-    ${linha('nfse', nf, `NFS-e de ${compLabel(comp)} emitida para a Hype`, limNF, true)}
-    ${S.rules.nfDas ? linha('das', das, `DAS do MEI de ${compLabel(comp)} pago`, limDAS, false) : ''}
-    <details class="prev"><summary class="small"><b>Dados para emitir a nota</b></summary><dl class="meta-grid"><div><dt>Tomador (razão social)</dt><dd>${esc(S.rules.nfRazao || 'a definir pelos sócios')}</dd></div><div><dt>CNPJ</dt><dd>${esc(S.rules.nfCnpj || 'a definir pelos sócios')}</dd></div><div><dt>Descrição do serviço</dt><dd id="nf-desc">${esc(desc)}</dd></div></dl><button class="btn sm" data-act="copiarDesc">Copiar a descrição</button></details>
-    <p class="day-h">Últimos meses</p><div class="feed">${[1, 2, 3, 4, 5, 6].map(k => compMenos(k)).map(c => `<div class="feed-i"><div><b>${compLabel(c)}</b></div><div class="r row gap6">NF ${docChip(docDe(p.id, c, 'nfse'))}${S.rules.nfDas ? ` DAS ${docChip(docDe(p.id, c, 'das'))}` : ''}</div></div>`).join('')}</div></section>`;
+      ${d ? `<button class="linkbtn small" data-act="verDoc" data-v="${esc(d.arquivo_path)}">Ver o arquivo enviado</button>` : ''}`;
+  const arquivo = tipo => `<div class="field"><label for="df-${tipo}">Arquivo (PDF, XML ou foto)</label><input class="inp" type="file" id="df-${tipo}" accept="application/pdf,.pdf,.xml,text/xml,image/*" required></div>`;
+  const enviado = d => d ? ` · enviado em ${dLabelISO(recife(Date.parse(d.enviado_em)).toISOString().slice(0, 10))}${d.numero ? ` · nº ${esc(d.numero)}` : ''}` : '';
+  return `<section class="card"><div class="row between"><h3>Notas fiscais · Salão-Parceiro</h3><label class="sr" for="f-perP">Período</label><select class="inp w-auto sm-sel" id="f-perP" data-f="perP">${opts.map(c => `<option value="${c}" ${c === per ? 'selected' : ''}>${perLabel(c)}</option>`).join('')}</select></div>
+    <p class="small muted">Como profissional-parceiro (Lei 13.352/2016), você emite a nota fiscal de serviço para a Hype a cada quinzena: a do dia 1 ao 15 até o dia 16, e a do dia 16 ao fim do mês até o dia 1º. A gestão informa o valor; você emite e envia aqui.</p>
+    <div class="nf-item ${docOk(nf) ? 'ok' : ''}"><span class="cbox" aria-hidden="true">${docOk(nf) ? '✓' : ''}</span><div class="grow stack gap6">
+      ${cab(nf, `NFS-e de ${perLabel(per)}`, `Prazo: ${dLabelISO(perPrazo(per))}${enviado(nf)}`)}
+      ${valor != null ? `<p class="nf-valor">Valor a emitir: <b>R$ ${nf2(valor)}</b></p>` : '<p class="callout small">A gestão ainda não informou o valor desta nota. Você recebe um aviso quando ele estiver aqui.</p>'}
+      ${!docOk(nf) && valor != null ? `<form class="stack gap6" data-form="doc" data-tipo="nfse" data-comp="${per}"><div class="field"><label for="dn-nfse">Número da nota</label><input class="inp" id="dn-nfse" inputmode="numeric" required></div>${arquivo('nfse')}
+        <div><button class="btn sm primary">Enviar para a gestão</button></div></form>` : ''}</div></div>
+    ${S.rules.nfDas ? `<div class="nf-item ${docOk(das) ? 'ok' : ''}"><span class="cbox" aria-hidden="true">${docOk(das) ? '✓' : ''}</span><div class="grow stack gap6">
+      ${cab(das, `DAS do MEI de ${compLabel(comp)} pago`, `Vence dia ${dLabelISO(prazoDAS(comp))}${enviado(das)}`)}
+      ${!docOk(das) ? `<form class="stack gap6" data-form="doc" data-tipo="das" data-comp="${comp}">${arquivo('das')}<div><button class="btn sm primary">Enviar comprovante</button></div></form>` : ''}</div></div>` : ''}
+    <details class="prev"><summary class="small"><b>Dados para emitir a nota</b></summary><dl class="meta-grid"><div><dt>Tomador (razão social)</dt><dd>${esc(S.rules.nfRazao || 'a definir pelos sócios')}</dd></div><div><dt>CNPJ</dt><dd>${esc(fmtCnpj(S.rules.nfCnpj) || 'a definir pelos sócios')}</dd></div><div><dt>Descrição do serviço</dt><dd id="nf-desc">${esc(desc)}</dd></div></dl><button class="btn sm" data-act="copiarDesc">Copiar a descrição</button></details>
+    <p class="day-h">Últimas quinzenas</p><div class="feed">${periodos(6).map(c => `<div class="feed-i"><div><b>${perLabel(c)}</b><span>${valorNF(p.id, c) != null ? `R$ ${nf2(valorNF(p.id, c))}` : 'valor não informado'}</span></div><div class="r">${docChip(docDe(p.id, c, 'nfse'))}</div></div>`).join('')}</div></section>`;
 }
