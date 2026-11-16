@@ -14,14 +14,21 @@ function topRight(){
 
 function render(){
   PENDING = false;
+  // Guarda o que a pessoa tinha aberto para a tela não "pular" quando atualiza sozinha
+  const abertos = [...document.querySelectorAll('details[open][id]')].map(d => d.id);
+  const rolagem = ['.modal-in', '#tl-wrap'].map(q => [q, $(q)?.scrollTop || 0, $(q)?.scrollLeft || 0]);
   $('#top-right').innerHTML = topRight();
   const app = $('#app'), p = me();
   if (socioView()) { app.className = 'admin'; app.innerHTML = renderSocio(); }
   else { app.className = 'phoneview'; app.innerHTML = renderPhone(p); }
+  app.classList.toggle('ro', socioView() && !canEdit());
   const i = S.ui.open && inst(S.ui.open), sp = socioView();
   $('#modal').innerHTML = sp && i ? modal(`${tpl(i.tpl).title}`, `${tpl(i.tpl).kind === 'ronda' ? 'Ronda' : 'Checklist'} · ${tpl(i.tpl).pop}`, instBody(i, 'view'))
     : sp && S.ui.pop && S.ui.view !== 'pops' && pop(S.ui.pop) ? modal(`${pop(S.ui.pop).id} · ${esc(pop(S.ui.pop).title)}`, 'Procedimento', popBody(pop(S.ui.pop), p)) : '';
+  abertos.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; });
+  rolagem.forEach(([q, t, l]) => { const el = $(q); if (el) { el.scrollTop = t; el.scrollLeft = l; } });
 }
+const algoAberto = () => typing() || !!document.querySelector('details[open] form, .modal');
 const modal = (title, eb, body) => `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t" data-act="close"><div class="modal-in" data-stop="1">
   <div class="row between nowrap"><div><p class="eyebrow">${eb}</p><h2 id="m-t">${title}</h2></div><button class="btn sm" data-act="close">Fechar</button></div>${body}</div></div>`;
 
@@ -55,23 +62,27 @@ async function iniciar_(){
   S.ui.user = p.id;
   if (p.role === 'gerente' && !['agora','equipe','ocorrencias','pops'].includes(S.ui.tab)) S.ui.tab = 'agora';
   if (p.role !== 'gerente' && !['hoje','pops','hist'].includes(S.ui.tab)) S.ui.tab = 'hoje';
+  S.ui.push = await pushAtivo().catch(() => false);
+  esvaziarFila().then(n => { if (n) recarregar(true); });
   render(); tempoReal();
   clearInterval(TICK); TICK = setInterval(tick, 30000);
 }
 async function recarregar(force){
   if (!S?.ui?.user) return;
   try { await carregar(); } catch (e) { toast(esc(e.message)); return; }
-  if (!force && typing()) { PENDING = true; return; }
+  if (!force && algoAberto()) { PENDING = true; return; }
   render();
 }
 function tick(){
   const d = recife().toISOString().slice(0, 10);
   if (d !== TODAY_ISO) { recarregar(); return; }
   S.ui.now = nowMin();
-  if (typing()) { PENDING = true; return; }
+  if (algoAberto()) { PENDING = true; return; }
   render();
 }
-document.addEventListener('focusout', () => setTimeout(() => { if (PENDING && !typing()) render(); }, 50));
+document.addEventListener('focusout', () => setTimeout(() => { if (PENDING && !algoAberto()) render(); }, 50));
+document.addEventListener('toggle', () => setTimeout(() => { if (PENDING && !algoAberto()) render(); }, 50), true);
+window.addEventListener('online', async () => { const n = await esvaziarFila(); if (n) { toast(`${n} ${n === 1 ? 'marcação enviada' : 'marcações enviadas'}.`); recarregar(true); } });
 sb.auth.onAuthStateChange(ev => setTimeout(() => {
   if (ev === 'SIGNED_IN' && !S?.ui?.user && !STARTING) iniciar();
   if (ev === 'SIGNED_OUT') { S = null; clearInterval(TICK); telaLogin(); }
@@ -80,9 +91,19 @@ sb.auth.onAuthStateChange(ev => setTimeout(() => {
 /* ---------- Ações ---------- */
 async function run(fn, msg){
   try { await fn(); await recarregar(true); if (msg) toast(msg); }
-  catch (e) { toast(esc(e.message)); }
+  catch (e) { if (e.silencioso) return; toast(esc(e.message)); if (!semRede(e)) registrarErro(e.message, 'acao'); }
 }
 const rpc = (f, a) => sb.rpc(f, a).then(check);
+/* Marcar item e concluir funcionam sem internet: vão para a fila e saem quando a conexão voltar */
+async function rpcOffline(f, a, aplicarLocal){
+  try { return await rpc(f, a); }
+  catch (e) {
+    if (!semRede(e)) throw e;
+    enfileirar(f, a); aplicarLocal(); render();
+    toast('Sem internet. A marcação fica guardada e é enviada sozinha quando a conexão voltar.');
+    throw Object.assign(new Error('Guardado para enviar depois.'), {silencioso:true});
+  }
+}
 let FOTO = null;
 
 const A = {
@@ -102,7 +123,7 @@ const A = {
   check(d){
     const it = tpl(inst(d.id).tpl).items.find(x => x.id === d.it);
     if (it.photo) { FOTO = {id:d.id, it:d.it}; const c = $('#cam'); c.value = ''; c.click(); return; }
-    run(() => rpc('marcar_item', {e:d.id, item:d.it, feito:true}));
+    run(() => rpcOffline('marcar_item', {e:d.id, item:d.it, feito:true}, () => { inst(d.id).checks[d.it] = {at:NOW(), ok:true}; }));
   },
   uncheck(d){ run(() => rpc('desmarcar_item', {e:d.id, item:d.it})); },
   nao(d){ S.ui.nao = d.id + '|' + d.it; render(); setTimeout(() => $('#nao-note')?.focus(), 0); },
@@ -114,7 +135,7 @@ const A = {
   },
   finish(d){
     const i = inst(d.id), late = NOW() > i.due; S.ui.open = null;
-    run(() => rpc('concluir', {e:d.id}), late ? `Checklist concluído com ${mins(NOW() - i.due)} de atraso.` : `Checklist concluído no prazo.${tpl(i.tpl).verify ? ' A gerente vai conferir.' : ''}`);
+    run(() => rpcOffline('concluir', {e:d.id}, () => { inst(d.id).doneAt = NOW(); }), late ? `Checklist concluído com ${mins(NOW() - i.due)} de atraso.` : `Checklist concluído no prazo.${tpl(i.tpl).verify ? ' A gerente vai conferir.' : ''}`);
   },
   verify(d){
     const note = ($('#ver-note')?.value || '').trim();
@@ -133,6 +154,26 @@ const A = {
     run(() => rpc('registrar_acao', {oc:o.num, texto:t, resolver:!!solve}), solve ? `${o.id} resolvida.` : 'Ação registrada.');
   },
   occSolve(d){ A.occAct(d, true); },
+  async push(){ try { await ativarPush(); S.ui.push = true; render(); toast('Notificações ativadas neste aparelho.'); } catch (e) { toast(esc(e.message)); } },
+  popEditar(d){ S.ui.popEdit = d.v || null; render(); window.scrollTo(0, 0); },
+  ausDel(d){ run(() => rpc('remover_ausencia', {a:+d.id}), 'Ausência removida.'); },
+  reabrir(d){ run(() => rpc('reabrir_dia', {d:d.v}), 'Dia reaberto.'); },
+  desligar(d){ const p = person(d.id); if (!confirmar(el => el, `desligar-${d.id}`, `Desligar ${p.name}? A pessoa perde o acesso e sai das próximas rotinas. Toque de novo para confirmar.`)) return;
+    S.ui.selP = null; upd('pessoas', {ativo:false}, 'id', d.id, `${p.name} foi desligado(a) da equipe.`); },
+  reativar(d){ upd('pessoas', {ativo:true}, 'id', d.id, `${person(d.id).name} voltou para a equipe.`); },
+  rotAtivo(d){ upd('rotinas', {ativo:d.v === '1'}, 'id', d.id, d.v === '1' ? 'Checklist reativado. Vale a partir de amanhã.' : 'Checklist pausado. Vale a partir de amanhã.'); },
+  itemDel(d){ if (!confirmar(null, `item-${d.id}`, 'Toque de novo em Retirar para confirmar.')) return; upd('rotina_itens', {ativo:false}, 'id', d.id, 'Item retirado. Vale para os próximos checklists.'); },
+  async csv(d){
+    const mes = d.v, [y, m] = mes.split('-').map(Number), fim = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+    toast('Preparando a planilha…');
+    const {data, error} = await sb.from('execucoes').select('data,rotina_id,pessoa_id,inicio,prazo,concluida_em,conferido_resultado').gte('data', mes + '-01').lte('data', fim).order('data');
+    if (error) { toast(esc(error.message)); return; }
+    const tit = id => S.allTpls.find(t => t.id === id)?.title || id, hr = iso => iso ? hm(minOf(iso)) : '';
+    const linhasCsv = [['Data','Checklist','Pessoa','Início','Prazo','Concluído','Situação','Conferência'], ...data.map(x => [x.data, tit(x.rotina_id), person(x.pessoa_id)?.name || x.pessoa_id, hr(x.inicio), hr(x.prazo), hr(x.concluida_em),
+      !x.concluida_em ? 'Não feito' : x.concluida_em <= x.prazo ? 'No prazo' : 'Com atraso', x.conferido_resultado || ''])];
+    const txt = '\ufeff' + linhasCsv.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'text/csv;charset=utf-8'})); a.download = `hype-pop-${mes}.csv`; a.click();
+  },
   copiar(){ const t = $('#wa-text')?.innerText || ''; navigator.clipboard?.writeText(t).then(() => toast('Resumo copiado. Cole no WhatsApp dos sócios.'), () => toast('Não deu para copiar. Selecione o texto e copie.')); },
 };
 
@@ -143,6 +184,9 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S?.ui && (S.ui.open || S.ui.more || (S.ui.pop && S.ui.view !== 'pops'))) { S.ui.more = false; A.close(); } });
 
+/* Confirmação em dois toques, sem janela do navegador */
+const CONF = {};
+function confirmar(_, chave, msg){ if (CONF[chave] && Date.now() - CONF[chave] < 5000) { delete CONF[chave]; return true; } CONF[chave] = Date.now(); toast(msg); return false; }
 const upd = (table, values, col, val, msg) => run(async () => check(await sb.from(table).update(values).eq(col, val)), msg);
 document.addEventListener('change', e => {
   const el = e.target;
@@ -153,6 +197,12 @@ document.addEventListener('change', e => {
     return;
   }
   if (el.dataset.f) { S.ui.f[el.dataset.f] = el.value; uiSave(); render(); return; }
+  if (el.dataset.rodizio) { const [tid, dow] = el.dataset.rodizio.split('|');
+    run(async () => { if (el.value) check(await sb.from('rodizio_escala').upsert({rotina_id:tid, dow:+dow, pessoa_id:el.value})); else check(await sb.from('rodizio_escala').delete().eq('rotina_id', tid).eq('dow', +dow)); }, 'Escala atualizada. Vale a partir de amanhã.'); return; }
+  if (el.dataset.item) { const v = el.value.trim(); if (v) upd('rotina_itens', {texto:v}, 'id', el.dataset.item, 'Item atualizado.'); return; }
+  if (el.dataset.ocresp || el.dataset.ocprazo) { const n = +(el.dataset.ocresp || el.dataset.ocprazo), o = S.occ.find(x => x.num === n);
+    const resp = el.dataset.ocresp ? el.value : (o.resp || ''), prazo = el.dataset.ocprazo ? (el.value || null) : (o.prazo || null);
+    run(() => rpc('ajustar_ocorrencia', {oc:n, responsavel:resp, prazo}), 'Ocorrência atualizada.'); return; }
   if (el.dataset.rule) {
     const k = el.dataset.rule, kind = el.dataset.kind; let v = kind === 'bool' ? el.checked : kind === 'str' ? el.value : +el.value;
     if (kind === 'pct') v = clamp(v, 50, 100) / 100; if (kind !== 'bool' && kind !== 'str' && isNaN(v)) return;
@@ -185,8 +235,37 @@ document.addEventListener('submit', async e => {
   }
   if (f === 'rem') { const at = $('#nr-at').value, t = $('#nr-t').value.trim(); if (!at || !t) return;
     run(async () => check(await sb.from('lembretes').insert({hora:at, texto:t})), 'Lembrete adicionado para a gerente.'); }
-  if (f === 'occ') { const t = $('#no-t').value.trim(); if (!t) return;
-    run(() => rpc('abrir_ocorrencia', {titulo:t, pessoa:$('#no-w').value, origem:$('#no-s').value, descricao:$('#no-d').value.trim() || null, pop:null}), 'Ocorrência registrada.'); }
+  if (f === 'occ') { const t = $('#no-t').value.trim(); if (!t) return; const file = $('#no-f')?.files?.[0];
+    run(async () => { const foto = file ? await enviarFoto('ocorrencias', 'oc', file) : null;
+      await rpc('abrir_ocorrencia', {titulo:t, pessoa:$('#no-w').value, origem:$('#no-s')?.value || 'Equipe', descricao:$('#no-d').value.trim() || null, pop:null,
+        responsavel:$('#no-r')?.value || null, prazo:$('#no-p')?.value || null, foto}); $('#det-occ') && ($('#det-occ').open = false); }, 'Ocorrência registrada. A gerência foi avisada.'); }
+  if (f === 'aus') { const de = $('#au-i').value, ate = $('#au-f').value; if (ate < de) { toast('A data final precisa ser igual ou depois da inicial.'); return; }
+    run(() => rpc('registrar_ausencia', {pessoa:$('#au-p').value, de, ate, motivo:$('#au-m').value.trim() || null, substituto:$('#au-s').value || null}), 'Ausência registrada.'); }
+  if (f === 'fechar') { run(() => rpc('fechar_dia', {d:$('#fd-d').value, motivo:$('#fd-m').value.trim() || null}), 'Dia marcado como sem expediente.'); }
+  if (f === 'pessoa') { const nome = $('#np-nome').value.trim(); if (!nome) return;
+    const base = nome.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '').slice(0, 20) || 'pessoa'; let id = base, k = 2; while (person(id)) id = base + k++;
+    run(async () => check(await sb.from('pessoas').insert({id, nome, papel:$('#np-papel').value, rotulo:$('#np-rot').value.trim() || null, turno:$('#np-turno').value.trim() || null,
+      folga:$('#np-folga').value === '' ? null : +$('#np-folga').value, email:$('#np-email').value.trim().toLowerCase() || null, cor:Math.floor(Math.random() * 360), ordem:S.people.length})), `${nome} entrou na equipe.`); }
+  if (f === 'ficha') { const id = e.target.dataset.id;
+    upd('pessoas', {nome:$('#fp-nome').value.trim(), rotulo:$('#fp-rot').value.trim() || null, turno:$('#fp-turno').value.trim() || null, folga:$('#fp-folga').value === '' ? null : +$('#fp-folga').value}, 'id', id, 'Dados atualizados.'); }
+  if (f === 'editpop') { const id = e.target.dataset.id, nova = (e.submitter?.value || 'versao') === 'versao';
+    const ls = sel => $(sel).value.split('\n').map(x => x.trim()).filter(Boolean);
+    const dados = {titulo:$('#ep-t').value.trim(), quem:$('#ep-q').value.trim(), frequencia:$('#ep-f').value.trim(), dono:$('#ep-d').value.trim(), objetivo:$('#ep-o').value.trim(),
+      materiais:ls('#ep-m'), passos:ls('#ep-s').map(x => x.startsWith('!') ? {t:x.slice(1).trim(), crit:true} : {t:x}), qualidade:ls('#ep-qa'), erros:ls('#ep-e')};
+    S.ui.popEdit = null;
+    run(() => rpc('salvar_pop', {pop:id, dados, nova_versao:nova}), nova ? 'Nova versão publicada. A equipe vai assinar o termo de ciência de novo.' : 'Correção salva.'); }
+  if (f === 'item') { const tid = e.target.dataset.id, t = e.target.querySelector('input').value.trim(); if (!t) return;
+    const all = S.allTpls.find(x => x.id === tid).allItems, n = Math.max(0, ...all.map(i => +i.id.split('.i')[1] || 0)) + 1;
+    run(async () => check(await sb.from('rotina_itens').insert({id:`${tid}.i${n}`, rotina_id:tid, ordem:Math.max(0, ...all.map(i => i.ordem)) + 1, texto:t})), 'Item incluído. Vale para os próximos checklists.'); }
+  if (f === 'rotina') { const t = $('#nr-tit').value.trim(); if (!t) return;
+    const dias = [...document.querySelectorAll('input[name=nr-dia]:checked')].map(x => +x.value); if (!dias.length) { toast('Escolha pelo menos um dia.'); return; }
+    const itens = $('#nr-itens').value.split('\n').map(x => x.trim()).filter(Boolean); if (!itens.length) { toast('Inclua pelo menos um item.'); return; }
+    let id = t.normalize('NFD').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() || 'ROT'; let k = 2; while (S.allTpls.some(x => x.id === id)) id = id.slice(0, 2) + k++;
+    run(async () => {
+      check(await sb.from('rotinas').insert({id, titulo:t, pop_id:$('#nr-pop').value, conferir:$('#nr-conf').checked, dias, ordem:S.allTpls.length}));
+      check(await sb.from('rotina_janelas').insert({rotina_id:id, inicio:$('#nr-ini').value, prazo:$('#nr-fim').value, responsavel:$('#nr-resp').value}));
+      check(await sb.from('rotina_itens').insert(itens.map((x, n) => { const foto = x.includes('#'), crit = x.startsWith('!'); return {id:`${id}.i${n + 1}`, rotina_id:id, ordem:n + 1, texto:x.replace(/^[!#]+/, '').replace(/#/g, '').trim(), foto, critico:crit}; })));
+    }, 'Checklist criado. Começa a aparecer a partir de amanhã.'); }
   if (f === 'pop') { const t = $('#np-t').value.trim(); if (!t) return;
     const n = Math.max(...S.pops.map(p => +p.id.slice(4) || 0)) + 1, id = 'POP-' + String(n).padStart(2, '0'), role = $('#np-r').value;
     const steps = $('#np-s').value.split('\n').map(x => x.trim()).filter(Boolean).map(x => x.startsWith('!') ? {t:x.slice(1).trim(), crit:true} : {t:x});

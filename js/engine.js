@@ -10,7 +10,7 @@ const first = p => p ? firstName(p.name) : 'Equipe';
 const NOW = () => S.ui.now;
 const vis = at => at != null && at <= NOW();
 const GER = () => S.people.find(p => p.role === 'gerente')?.id;
-const team = () => S.people.filter(p => p.role !== 'socio');
+const team = () => S.people.filter(p => p.role !== 'socio' && p.active !== false);
 const mine = (i, pid) => i.who === pid || (tpl(i.tpl).also || []).includes(pid);
 const whoTxt = i => [i.who, ...(tpl(i.tpl).also || [])].map(id => first(person(id))).join(' e ');
 
@@ -104,7 +104,7 @@ function gerenteFeed(){
     out.push({k:n - toMin(r.at) > 30 ? 'warn' : '', ord:2, at:toMin(r.at), title:`${r.at} · ${r.text}`, sub:'Lembrete fixo definido pelos sócios.', rem:r.id}));
   occOpen().filter(o => !o.actions.length).forEach(o => out.push({k:'warn', ord:1, at:o.at, title:`Ocorrência sem ação: ${o.title}`, sub:`${o.id} · ${first(person(o.who))} · ${o.src}`, occ:o.id}));
   const pr = pendingReads();
-  if (pr.length) out.push({k:'', ord:4, at:0, title:`${pr.length} ${pr.length === 1 ? 'leitura de POP pendente' : 'leituras de POP pendentes'}`, sub:pr.map(x => `${first(x.who)} (${x.pop.id} v${x.pop.version})`).join(', '), tab:'equipe'});
+  if (pr.length) out.push({k:'', ord:4, at:0, title:`${pr.length} ${pr.length === 1 ? 'termo de ciência pendente' : 'termos de ciência pendentes'}`, sub:(() => { const by = {}; pr.forEach(x => by[first(x.who)] = (by[first(x.who)] || 0) + 1); return Object.entries(by).map(([n, c]) => `${n} (${c})`).join(', '); })(), tab:'equipe'});
   return out.sort((a, b) => a.ord - b.ord || b.at - a.at);
 }
 

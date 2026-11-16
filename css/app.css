@@ -622,3 +622,24 @@ details.card[open] .sum{margin-bottom:6px}
 .photo.img img{width:100%;height:100%;object-fit:cover;display:block}
 .photo.img span{position:absolute;right:6px;bottom:6px;background:rgba(15,12,9,.7);color:#F2F2F2;border-radius:6px;padding:1px 6px;font-size:11px}
 .inp.mail{min-width:200px;padding:6px 8px;font-size:12.5px}
+
+/* =========================================================
+   Gestão completa: cadastros, editores, ausências, avisos
+   ========================================================= */
+.push-card{background:var(--accent-soft)}
+.push-card span:first-child{font-weight:400}
+.mini-form{border-top:1px dashed var(--line);padding-top:12px;margin-top:4px}
+.ficha{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.ficha-acts{align-self:end}
+.it-in{padding:4px 6px;font-size:12.5px;width:100%}
+.sm-sel{padding:4px 6px;font-size:12px;max-width:130px}
+.tpl-box.off{opacity:.55}
+.tpl-box form{margin-top:4px}
+fieldset.dias{border:0;padding:0;margin:0;display:flex;gap:12px;flex-wrap:wrap}
+fieldset.dias legend{margin-bottom:6px}
+details.prev,details.ver{margin-top:10px}
+details.prev summary,details.ver summary{cursor:pointer}
+details.ver{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+details.ver[open] summary{margin-bottom:8px}
+.ro input:disabled,.ro select:disabled{opacity:.7;cursor:not-allowed}
+.occ .photo{margin-top:0}

@@ -40,7 +40,7 @@ function gAgora(p){
   const fixed = S.reminders.filter(r => r.on).sort((a, b) => toMin(a.at) - toMin(b.at));
   return `<div class="hero"><div class="ring-wrap">${ring(d.rate, 92)}<div class="stack gap4"><b class="big2">${greet()}, ${esc(first(p))}</b>
       <span class="small muted">Conformidade da loja hoje: ${d.ok} de ${d.due} no prazo.</span><span class="small">${late ? `<b class="bad-t">${late} ${late === 1 ? 'atraso' : 'atrasos'}</b> · ` : ''}${conf} para conferir</span></div></div></div>
-    ${avisoInicio()}<section class="stack gap8"><h2 class="sec-h">Lembretes agora</h2>${feed.length ? feed.map(feedCard).join('') : '<p class="callout good"><b>Nada pendente.</b> A loja está no padrão.</p>'}</section>
+    ${avisoPush()}${avisoInicio()}${avisoFechado()}<section class="stack gap8"><h2 class="sec-h">Lembretes agora</h2>${feed.length ? feed.map(feedCard).join('') : '<p class="callout good"><b>Nada pendente.</b> A loja está no padrão.</p>'}</section>
     <section class="stack gap8"><h2 class="sec-h">Seus checklists de hoje</h2>${mine.map(i => instCard(i, {who:false})).join('')}</section>
     <section class="card"><h3>Lembretes fixos</h3>${fixed.map(r => { const done = vis(S.remDone[r.id]), due = toMin(r.at) <= NOW();
       return `<div class="rem"><span class="num"><b>${r.at}</b></span><span class="grow">${esc(r.text)}</span>${done ? chip('feito ' + hm(S.remDone[r.id]), 'good') : due ? `<button class="btn sm primary" data-act="remDone" data-id="${r.id}">Feito</button>` : chip('mais tarde')}</div>`; }).join('')}</section>`;
@@ -56,22 +56,19 @@ function feedCard(f){
 function gEquipe(p){
   const ppl = team().filter(x => x.id !== p.id), pr = pendingReads();
   return `<div><p class="eyebrow">Equipe hoje</p><h1 class="p-title">Quem fez o quê</h1></div>
-    ${pr.length ? `<div class="notice warn"><span><b>Leituras pendentes:</b> ${pr.map(x => `${esc(first(x.who))} (${x.pop.id})`).join(', ')}. Cobre na reunião ou no WhatsApp.</span></div>` : ''}
+    ${pr.length ? `<div class="notice warn"><span><b>${pr.length} termos de ciência pendentes:</b> ${(() => { const by = {}; pr.forEach(x => by[first(x.who)] = (by[first(x.who)] || 0) + 1); return Object.entries(by).map(([n, c]) => `${esc(n)} (${c})`).join(', '); })()}. Cobre na reunião ou no WhatsApp.</span></div>` : ''}
     ${ppl.map(x => { const d = dayStats(i => i.who === x.id), list = S.inst.filter(i => i.who === x.id).sort((a, b) => a.start - b.start);
       return `<section class="card"><div class="row between nowrap"><div class="row nowrap gap8">${av(x)}<div><b>${esc(x.name)}</b><p class="small muted">${roleL(x)} · ${esc(x.turno)}</p></div></div>${d.atrasado ? chip(d.atrasado + ' atrasado', 'bad') : chip(`${d.ok} de ${d.due} no prazo`, rateKind(d.rate))}</div>
-        <div class="stack gap6">${list.map(i => instCard(i, {who:false})).join('')}</div></section>`; }).join('')}`;
+        <div class="stack gap6">${list.map(i => instCard(i, {who:false})).join('') || '<p class="small muted">Nenhum checklist hoje.</p>'}</div></section>`; }).join('')}
+    ${blocoAusencias()}`;
 }
 
 /* ---------- Gerente: Ocorrências ---------- */
 function gOcc(p){
   const list = S.occ.filter(occVis).sort((a, b) => (a.status === 'resolvida') - (b.status === 'resolvida'));
   return `<div><p class="eyebrow">Ocorrências</p><h1 class="p-title">O que saiu do padrão</h1></div>
-    <details class="card"><summary class="sum">Registrar ocorrência</summary>
-      <form class="stack gap8" data-form="occ"><div class="field"><label for="no-t">O que aconteceu</label><input class="inp" id="no-t" required placeholder="Ex.: Cliente reclamou do tempo de espera"></div>
-        <div class="field"><label for="no-w">Quem está envolvido</label><select class="inp" id="no-w">${team().filter(x => x.id !== p.id).map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></div>
-        <div class="field"><label for="no-s">Origem</label><select class="inp" id="no-s"><option>Cliente</option><option>Ronda da gerente</option><option>Observação</option></select></div>
-        <div class="field"><label for="no-d">Detalhes</label><textarea class="inp" id="no-d" rows="2"></textarea></div><button class="btn primary">Registrar</button></form></details>
-    ${list.map(o => occCard(o, {edit:true})).join('')}`;
+    ${formOcorrencia(true)}
+    ${list.map(o => occCard(o, {edit:canManage()})).join('') || '<p class="muted small">Nenhuma ocorrência nos últimos 30 dias.</p>'}`;
 }
 
 /* ---------- POPs (todos) ---------- */
@@ -97,18 +94,21 @@ function eHoje(p){
     ${redo.map(i => `<button class="notice bad" data-act="open" data-id="${i.id}"><span><b>Refazer: ${esc(tpl(i.tpl).title)}.</b> ${esc(i.redo.note)}</span><span>Abrir</span></button>`).join('')}
     ${nds.map(i => `<button class="notice bad" data-act="open" data-id="${i.id}"><span><b>${esc(first(person(nudgesOf(i.id).slice(-1)[0].by)))} te lembrou às ${hm(nudgesOf(i.id).slice(-1)[0].at)}:</b> ${esc(tpl(i.tpl).title)} das ${hm(i.start)} ${status(i) === 'atrasado' ? 'está atrasado' : 'está aberto'}.</span><span>Abrir</span></button>`).join('')}
     ${pr.length > 2 ? `<button class="notice warn" data-act="tab" data-v="pops"><span><b>${pr.length} POPs para assinar.</b> Leia cada um e assine o termo de ciência.</span><span>Ler</span></button>` : pr.map(x => `<button class="notice warn" data-act="pop" data-id="${x.pop.id}"><span><b>POP para assinar:</b> ${x.pop.id} ${esc(x.pop.title)}, versão ${x.pop.version}.</span><span>Ler</span></button>`).join('')}
-    ${avisoInicio()}<section class="stack gap8"><h2 class="sec-h">Sua rotina de hoje</h2>${list.length ? list.map(i => instCard(i, {who:false})).join('') : '<p class="muted small">Nenhum checklist para você hoje.</p>'}</section>
-    <p class="small muted center">Os POPs que você faz a cada cliente, como o atendimento na cadeira, são avaliados nas rondas da gerente.</p>`;
+    ${avisoPush()}${avisoInicio()}${avisoFechado()}${fila().length ? `<div class="notice warn"><span><b>${fila().length} ${fila().length === 1 ? 'marcação' : 'marcações'} esperando internet.</b> Elas são enviadas sozinhas quando a conexão voltar.</span></div>` : ''}<section class="stack gap8"><h2 class="sec-h">Sua rotina de hoje</h2>${list.length ? list.map(i => instCard(i, {who:false})).join('') : '<p class="muted small">Nenhum checklist para você hoje.</p>'}</section>
+    <p class="small muted center">Os POPs que você faz a cada cliente, como o atendimento na cadeira, são avaliados nas rondas da gerente.</p>
+    ${formOcorrencia(false).replace('class="panel"', 'class="card"').replace('Registrar ocorrência', 'Avisar a gerência de um problema')}`;
 }
 
 /* ---------- Equipe: Histórico ---------- */
 function eHist(p){
-  const a = histAgg(x => x.byP[p.id]), s = streak(p.id), occ = S.occ.filter(o => o.who === p.id && occVis(o));
+  const a = histAgg(x => x.byP[p.id]), s = streak(p.id), occ = S.occ.filter(o => (o.who === p.id || o.by === p.id) && occVis(o));
+  const sem = history().slice(-6).map(d => d.byP[p.id]).filter(Boolean), semana = sem.length >= 3 && sem.every(x => x.ok === x.exp);
   const h = history().slice(-10).reverse();
   return `<div><p class="eyebrow">Seu histórico</p><h1 class="p-title">Últimas 4 semanas</h1></div>
     <div class="split"><div><span class="l">No prazo</span><span class="v ${rateKind(a.rate)}-t">${rateTxt(a.rate)}</span></div><div><span class="l">Com atraso</span><span class="v">${a.late}</span></div><div><span class="l">Não feitos</span><span class="v">${a.miss}</span></div></div>
+    ${semana ? `<div class="callout good"><b>Semana perfeita!</b> Todos os seus checklists dos últimos dias de trabalho foram feitos no prazo.</div>` : ''}
     <section class="card"><h3>Sequência de dias perfeitos</h3><p class="pos-big">${s} ${s === 1 ? 'dia' : 'dias'}</p><p class="small muted">Dias seguidos com todos os checklists no prazo. Meta da casa: ${pct(S.rules.meta)} no mês.</p>${dots(p.id)}</section>
     <section class="card"><h3>Dia a dia</h3><div class="feed">${h.map(d => { const x = d.byP[p.id]; if (!x) return '';
       return `<div class="feed-i"><div><b>${WEEK[d.wd]}, ${d.label}</b><span>${x.exp} checklists</span></div><div class="r">${x.ok === x.exp ? chip('tudo no prazo', 'good') : chip(`${x.ok} de ${x.exp} no prazo`, x.miss ? 'bad' : 'warn')}</div></div>`; }).join('')}</div></section>
-    <section class="card"><h3>Ocorrências com você</h3>${occ.length ? occ.map(o => occCard(o)).join('') : '<p class="small muted">Nenhuma. Continue assim.</p>'}</section>`;
+    <section class="card"><h3>Ocorrências com você ou registradas por você</h3>${occ.length ? occ.map(o => occCard(o)).join('') : '<p class="small muted">Nenhuma. Continue assim.</p>'}</section>`;
 }

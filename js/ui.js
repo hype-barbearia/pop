@@ -115,11 +115,17 @@ function occCard(o, {edit = false} = {}){
   const p = person(o.who), stK = {aberta:'bad', tratamento:'warn', resolvida:'good'}[o.status], stL = {aberta:'Aberta', tratamento:'Em tratamento', resolvida:'Resolvida'}[o.status];
   const when = o.day ? `${o.day}` : `hoje, ${hm(o.at)}`;
   const acts = o.actions.filter(a => a.day || vis(a.at));
+  const vencida = o.status !== 'resolvida' && o.prazo && o.prazo < TODAY_ISO;
+  const quem = `${o.resp ? `Resolve: <b>${esc(first(person(o.resp)))}</b>` : 'Resolve: gerência'}${o.prazo ? ` · prazo ${dLabelISO(o.prazo)}` : ''}${o.by && o.src === 'Equipe' ? ` · registrada por ${esc(first(person(o.by)))}` : ''}`;
   return `<article class="occ ${stK}">
-    <div class="row between"><div class="row gap6"><span class="cid">${o.id}</span>${chip(stL, stK)}${chip(o.src)}${o.pop ? `<button class="chip linkchip" data-act="pop" data-id="${o.pop}">${o.pop}</button>` : ''}</div><span class="small muted">${when}</span></div>
-    <div class="row nowrap gap8">${av(p)}<div class="grow"><b>${esc(o.title)}</b><p class="small muted">${esc(first(p))} · ${esc(o.desc)}</p></div></div>
+    <div class="row between"><div class="row gap6"><span class="cid">${o.id}</span>${chip(stL, stK)}${vencida ? chip('prazo vencido', 'bad') : ''}${chip(o.src)}${o.pop ? `<button class="chip linkchip" data-act="pop" data-id="${o.pop}">${o.pop}</button>` : ''}</div><span class="small muted">${when}</span></div>
+    <div class="row nowrap gap8">${av(p)}<div class="grow"><b>${esc(o.title)}</b><p class="small muted">${esc(first(p))} · ${esc(o.desc)}</p><p class="small">${quem}</p></div></div>
+    ${o.foto ? photo(o.title, o.at, o.foto) : ''}
     ${acts.length ? `<ul class="actions">${acts.map(a => `<li><span class="small muted">${a.day || hm(a.at)} · ${esc(first(person(a.by)))}</span><p>${esc(a.t)}</p></li>`).join('')}</ul>` : '<p class="small warn-t">Nenhuma ação registrada ainda.</p>'}
-    ${edit && o.status !== 'resolvida' ? `<div class="stack gap6"><label class="sr" for="oa-${o.id}">Ação tomada</label><textarea class="inp" id="oa-${o.id}" rows="2" placeholder="O que foi feito? Ex.: Conversei com o barbeiro e repus o material."></textarea>
+    ${edit && o.status !== 'resolvida' ? `<div class="stack gap6">
+      <div class="row gap6"><label class="small muted" for="or-${o.id}">Quem resolve</label><select class="inp w-auto" id="or-${o.id}" data-ocresp="${o.num}">${pessoaOpts(o.resp || '', 'A gerência')}</select>
+        <label class="small muted" for="op-${o.id}">Prazo</label><input class="inp w-auto" type="date" id="op-${o.id}" data-ocprazo="${o.num}" value="${o.prazo || ''}"></div>
+      <label class="sr" for="oa-${o.id}">Ação tomada</label><textarea class="inp" id="oa-${o.id}" rows="2" placeholder="O que foi feito? Ex.: Conversei com o barbeiro e repus o material."></textarea>
       <div class="row gap6"><button class="btn sm" data-act="occAct" data-id="${o.id}">Registrar ação</button><button class="btn sm ok" data-act="occSolve" data-id="${o.id}">Registrar e resolver</button></div></div>` : ''}
   </article>`;
 }

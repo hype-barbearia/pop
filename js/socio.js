@@ -1,13 +1,20 @@
 /* =========================================================
    Visão dos sócios: painel de acompanhamento a distância
+   Victor edita tudo. Robson vê tudo, sem alterar.
    ========================================================= */
 const SNAV = [
-  ['Operação', [['painel','Painel','painel'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta']]],
-  ['Pessoas', [['equipe','Equipe','equipe'], ['gerente','Gerente e lembretes','sino']]],
+  ['Operação', [['painel','Painel','painel'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
+  ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['gerente','Gerente e lembretes','sino']]],
   ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina']]],
 ];
-const NAV_L = Object.fromEntries(SNAV.flatMap(g => g[1]).map(x => [x[0], x[1]]));
 const eyebrow = () => `Sócios · ${DIA_CURTO} · agora ${hm(NOW())}`;
+const canEdit = () => me()?.role === 'socio';
+const canManage = () => { const p = me(); return !!p && (['socio','gerente'].includes(p.role) || substitutoHoje(p.id)); };
+const substitutoHoje = pid => S.ausencias.some(a => a.substituto === pid && person(a.pessoa_id)?.role === 'gerente' && a.inicio <= TODAY_ISO && TODAY_ISO <= a.fim);
+const dis = () => canEdit() ? '' : 'disabled';
+const roNote = () => canEdit() ? '' : '<p class="callout small">Você vê tudo nesta tela, mas só o Victor faz alterações.</p>';
+const pessoaOpts = (cur, vazio = '') => `${vazio ? `<option value="">${vazio}</option>` : ''}${team().map(p => `<option value="${p.id}" ${cur === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}`;
+const DOW = [1,2,3,4,5,6];
 
 function navBadge(k){
   if (k === 'hoje') { const n = dayStats().atrasado; return n ? `<span class="count bad">${n}</span>` : ''; }
@@ -25,9 +32,17 @@ function renderSocio(){
   const bnav = `<nav class="bnav" aria-label="Menu">${bn.map(([k, l, ic]) => `<button class="${v === k ? 'on' : ''}" data-act="nav" data-v="${k}">${icon(ic)}${l}</button>`).join('')}<button class="${!bn.some(x => x[0] === v) ? 'on' : ''}" data-act="more">${icon('mais')}Mais</button></nav>`;
   const sheet = S.ui.more ? `<div class="sheet" data-act="more"><div class="sheet-in" data-stop="1">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.map(([k, l, ic]) =>
     `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}</div></div>` : '';
-  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, equipe:pgEquipe, gerente:pgGerente, pops:pgPops, rotina:pgRotina}[v] || pgPainel)();
+  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, equipe:pgEquipe, gerente:pgGerente, pops:pgPops, rotina:pgRotina}[v] || pgPainel)();
   return side + `<main class="work">${page}</main>` + bnav + sheet;
 }
+
+/* Botão de notificações (sócios, gerente e equipe) */
+function avisoPush(){
+  if (S.ui.push === true) return '';
+  if (!pushSuportado() && !ehIOS()) return '';
+  return `<div class="notice push-card"><span><b>Receba os avisos no celular.</b> ${ehIOS() && !instalado() ? 'No iPhone: Compartilhar → Adicionar à Tela de Início, abra por lá e toque em Ativar.' : 'Atrasos, cobranças e o resumo do dia chegam como notificação.'}</span><button class="btn sm primary" data-act="push">Ativar</button></div>`;
+}
+const avisoFechado = () => S.fechadoHoje ? `<div class="callout"><b>Hoje é dia sem expediente${S.fechadoHoje.motivo ? `: ${esc(S.fechadoHoje.motivo)}` : ''}.</b> Nenhum checklist conta para os números.</div>` : '';
 
 /* ---------- Painel ---------- */
 function pgPainel(){
@@ -40,28 +55,28 @@ function pgPainel(){
   const tasks = [late.length ? task(late.length, late.length === 1 ? 'checklist atrasado agora' : 'checklists atrasados agora', 'bad', 'nav', 'hoje') : '',
     oo.length ? task(oo.length, oo.length === 1 ? 'ocorrência em aberto' : 'ocorrências em aberto', 'warn', 'nav', 'ocorrencias') : '',
     pv.length ? task(pv.length, 'esperando a conferência da gerente', '', 'nav', 'gerente') : '',
-    pr.length ? task(pr.length, 'leituras de POP pendentes', '', 'nav', 'pops') : ''].join('');
+    pr.length ? task(pr.length, 'termos de ciência pendentes', '', 'nav', 'pops') : ''].join('');
+  const ausHoje = S.ausencias.filter(a => a.inicio <= TODAY_ISO && TODAY_ISO <= a.fim);
 
-  // Alertas e padrões
-  const ppl = team().map(p => ({p, a:histAgg(x => x.byP[p.id])})).sort((a, b) => a.a.rate - b.a.rate);
+  const ppl = team().map(p => ({p, a:histAgg(x => x.byP[p.id])}));
   const best = ppl.filter(x => x.a.rate >= .95);
   const slots = S.inst.map(i => ({i, a:histAgg(x => x.bySlot[i.key])})).filter(x => x.a.exp >= 8).sort((a, b) => a.a.rate - b.a.rate)[0];
   const ins = [
-    slots && slots.a.rate < .75 ? ['warn', `${tpl(slots.i.tpl).title} das ${hm(slots.i.start)} é o horário mais fraco`, `Feita no prazo em só ${pct(slots.a.rate)} dos dias. Coincide com o almoço da outra atendente, das 14h às 15h: avalie mudar a janela.`] : null,
-    pr.length ? ['', `${pr.length} ${pr.length === 1 ? 'pessoa ainda não leu' : 'leituras pendentes de'} POP atualizado`, pr.map(x => `${first(x.who)}: ${x.pop.id} v${x.pop.version}`).join(' · ')] : null,
+    slots && slots.a.rate < .75 ? ['warn', `${tpl(slots.i.tpl).title} das ${hm(slots.i.start)} é o horário mais fraco`, `Feita no prazo em só ${pct(slots.a.rate)} dos dias. Avalie mudar a janela em Rotina e checklists.`] : null,
+    ausHoje.length ? ['', `${ausHoje.length} ${ausHoje.length === 1 ? 'pessoa ausente' : 'pessoas ausentes'} hoje`, ausHoje.map(a => `${first(person(a.pessoa_id))}${a.substituto ? ` (cobre: ${first(person(a.substituto))})` : ''}`).join(' · ')] : null,
+    pr.length ? ['', `${pr.length} ${pr.length === 1 ? 'termo de ciência pendente' : 'termos de ciência pendentes'}`, pr.slice(0, 8).map(x => `${first(x.who)}: ${x.pop.id}`).join(' · ') + (pr.length > 8 ? '…' : '')] : null,
     best.length ? ['good', `${best.length} de ${ppl.length} pessoas acima de 95% no prazo`, 'Nas últimas 4 semanas. O detalhe por pessoa está em Equipe.'] : null,
   ].filter(Boolean);
 
-  const ph_ = photos().slice(0, 8);
-  const resumoAt = toMin(S.rules.resumo), sent = n >= resumoAt;
+  const ph_ = photos().slice(0, 8), salvo = S.resumos.find(r => r.data === TODAY_ISO);
   return `${ph('Sócios · painel', 'A operação de hoje', `${DIA_LABEL[0].toUpperCase() + DIA_LABEL.slice(1)}. Agora são ${hm(n)}. Tudo o que a equipe marca no app aparece aqui na hora.`)}
-    ${avisoInicio()}
+    ${avisoPush()}${avisoInicio()}${avisoFechado()}
     ${tasks ? `<section class="tasks"><h2>Precisa de atenção</h2><div class="task-row">${tasks}</div></section>` : `<p class="callout good"><b>Tudo em dia.</b> Nenhum atraso, ocorrência aberta ou conferência pendente.</p>`}
     <div class="grid kpis">
       ${kpi('Conformidade hoje', rateTxt(d.rate), `${d.ok} de ${d.due} checklists vencidos foram feitos no prazo`, rateKind(d.rate), bar(d.rate, rateKind(d.rate), S.rules.meta))}
       ${kpi('Checklists do dia', `${d.done} de ${d.total}`, `${d.atrasado} atrasados · ${d.aberto} abertos · ${d.agendado} agendados`)}
       ${kpi('Média de 4 semanas', rateTxt(h.rate), h.exp ? `${pct(h.doneRate)} feitos, contando os atrasados` : 'Aparece depois do primeiro dia completo', rateKind(h.rate))}
-      ${kpi('Rondas da gerente', `${g.ronDone.length} de ${g.ron.length}`, g.ronItems.length ? `${g.ronOk} de ${g.ronItems.length} itens conformes` : 'Primeira ronda às 12:00')}
+      ${kpi('Rondas da gerente', `${g.ronDone.length} de ${g.ron.length}`, g.ronItems.length ? `${g.ronOk} de ${g.ronItems.length} itens conformes` : 'Nenhuma feita ainda')}
       ${kpi('Gerente atendeu', rateTxt(g.rate), `${g.got} de ${g.exp} lembretes: conferir, cobrar, rondas e fixos`, rateKind(g.rate))}
     </div>
     <div class="grid cols-2">
@@ -73,7 +88,7 @@ function pgPainel(){
           ${!late.length && !open.length && !next.length ? `<p class="muted">${n >= DAY_END - 15 ? 'O dia acabou. Veja o resumo abaixo.' : 'Nada aberto ou previsto para os próximos 90 minutos.'}</p>` : ''}
         </div></section>
       <section class="panel"><div class="panel-h"><h2>Alertas e padrões</h2><p>últimas 4 semanas</p></div>
-        <div class="insights">${ins.map(([k, t, s]) => `<div class="ins"><span class="dot" style="background:var(--${k === 'bad' ? 'bad' : k === 'warn' ? 'warn' : k === 'good' ? 'good' : 'accent'})"></span><div><b>${esc(t)}</b><p>${esc(s)}</p></div></div>`).join('')}</div></section>
+        ${ins.length ? `<div class="insights">${ins.map(([k, t, s]) => `<div class="ins"><span class="dot" style="background:var(--${k === 'bad' ? 'bad' : k === 'warn' ? 'warn' : k === 'good' ? 'good' : 'accent'})"></span><div><b>${esc(t)}</b><p>${esc(s)}</p></div></div>`).join('')}</div>` : '<p class="muted">Os padrões aparecem depois das primeiras semanas de uso.</p>'}</section>
     </div>
     <div class="grid cols-2">
       <section class="panel"><div class="panel-h"><h2>Conformidade por dia</h2><p>checklists feitos no prazo ÷ previstos</p></div>${dailyChart()}
@@ -81,13 +96,14 @@ function pgPainel(){
       <section class="panel"><div class="panel-h"><h2>Fotos de hoje</h2><p>${photos().length} registradas</p></div>
         ${ph_.length ? `<div class="photos">${ph_.map(x => `<button class="ph-fig" data-act="open" data-id="${x.i.id}">${photo(x.it.t, x.at, x.path)}<span class="small"><b>${esc(x.it.t)}</b></span><span class="small muted">${esc(first(person(x.i.who)))} · ${hm(x.at)}</span></button>`).join('')}</div>` : '<p class="muted">Nenhuma foto ainda.</p>'}</section>
     </div>
-    <section class="panel"><div class="panel-h"><h2>Resumo diário no WhatsApp</h2><p>${sent ? `enviado às ${S.rules.resumo}` : `prévia, envio às ${S.rules.resumo}`}</p></div><div class="wa" id="wa-text">${resumo()}</div><div class="row" style="margin-top:10px"><button class="btn sm" data-act="copiar">Copiar para o WhatsApp</button></div></section>`;
+    <section class="panel"><div class="panel-h"><h2>Resumo do dia</h2><p>${salvo ? `enviado aos sócios às ${S.rules.resumo} como notificação` : `prévia, sai às ${S.rules.resumo} como notificação`}</p></div><div class="wa" id="wa-text">${resumo()}</div><div class="row" style="margin-top:10px"><button class="btn sm" data-act="copiar">Copiar para o WhatsApp</button></div>
+      ${S.resumos.filter(r => r.data !== TODAY_ISO).length ? `<details class="prev"><summary class="small">Resumos dos últimos dias</summary><ul class="plain small">${S.resumos.filter(r => r.data !== TODAY_ISO).map(r => `<li><b>${dLabelISO(r.data)}</b> · ${esc(r.texto)}</li>`).join('')}</ul></details>` : ''}</section>`;
 }
 
 function resumo(){
   const d = dayStats(), g = gerenteStats(), oo = S.occ.filter(o => !o.day && vis(o.at));
   const ppl = team().map(p => ({p, s:dayStats(i => i.who === p.id)})).filter(x => x.s.due);
-  const top = ppl.filter(x => x.s.ok === x.s.due).map(x => first(x.p)), att = S.inst.filter(i => status(i) === 'atrasado').map(i => `${tpl(i.tpl).title} das ${hm(i.start)}`);
+  const top = ppl.filter(x => x.s.ok === x.s.due), att = S.inst.filter(i => status(i) === 'atrasado').map(i => `${tpl(i.tpl).title} das ${hm(i.start)}`);
   return esc(`*Hype · ${DIA_CURTO}${NOW() < toMin(S.rules.resumo) ? ` (até ${hm(NOW())})` : ''}*
 Conformidade: ${rateTxt(d.rate)} no prazo (${d.ok} de ${d.due} checklists)
 Com atraso: ${d.tarde} · Atrasados agora: ${d.atrasado}
@@ -116,129 +132,258 @@ function pgHoje(){
   const groups = {}; list.forEach(i => (groups[Math.floor(i.start / 60)] ??= []).push(i));
   const d = dayStats();
   return `${ph(eyebrow(), 'Linha do dia', 'Cada barra é um checklist na sua janela de horário. Toque para ver os itens, os horários e as fotos.')}
+    ${avisoFechado()}
     <section class="panel"><div class="panel-h"><h2>Por pessoa</h2><div class="legend"><span><i class="dot" style="background:var(--good)"></i>no prazo</span><span><i class="dot" style="background:var(--warn)"></i>com atraso</span><span><i class="dot" style="background:var(--bad)"></i>atrasado</span><span><i class="dot" style="background:var(--accent)"></i>aberto</span><span><i class="dot" style="background:var(--line)"></i>agendado</span><span><i class="dash"></i>agora</span></div></div>
-      <div class="tl-wrap"><div class="tl">${axis}${rows}</div></div></section>
+      <div class="tl-wrap" id="tl-wrap"><div class="tl">${axis}${rows}</div></div></section>
     <section class="panel"><div class="panel-h"><div class="row gap8">${segUi('st', [['todos', `Todos ${d.total}`], ['atrasados', `Atrasados ${d.atrasado}`], ['abertos', `Abertos ${d.aberto}`], ['feitos', `Feitos ${d.done}`], ['proximos', `Próximos ${d.agendado}`]], f)}
       <label class="sr" for="f-p">Pessoa</label><select class="inp w-auto" id="f-p" data-f="p"><option value="todos">Toda a equipe</option>${team().map(p => `<option value="${p.id}" ${fp === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div></div>
       ${list.length ? Object.entries(groups).map(([h, arr]) => `<p class="day-h">${h}h</p><div class="stack gap6">${arr.map(i => instCard(i)).join('')}</div>`).join('') : '<p class="muted">Nada com esse filtro.</p>'}</section>`;
 }
 
 /* ---------- Ocorrências ---------- */
+function formOcorrencia(gestor){
+  return `<details class="panel" id="det-occ"><summary class="sum">Registrar ocorrência</summary>
+    <form class="stack gap8" data-form="occ"><div class="form-grid">
+      <div class="field span2"><label for="no-t">O que aconteceu</label><input class="inp" id="no-t" required placeholder="Ex.: Cliente reclamou do tempo de espera"></div>
+      <div class="field"><label for="no-w">Quem está envolvido</label><select class="inp" id="no-w">${pessoaOpts('', 'Ninguém em especial')}</select></div>
+      ${gestor ? `<div class="field"><label for="no-s">Origem</label><select class="inp" id="no-s"><option>Cliente</option><option>Ronda da gerente</option><option>Observação</option></select></div>
+      <div class="field"><label for="no-r">Quem resolve</label><select class="inp" id="no-r">${pessoaOpts('', 'A gerente')}</select></div>
+      <div class="field"><label for="no-p">Prazo</label><input class="inp" type="date" id="no-p"></div>` : ''}</div>
+      <div class="field"><label for="no-d">Detalhes</label><textarea class="inp" id="no-d" rows="2"></textarea></div>
+      <div class="field"><label for="no-f">Foto (opcional)</label><input class="inp" type="file" id="no-f" accept="image/*" capture="environment"></div>
+      <div><button class="btn primary">Registrar</button></div></form></details>`;
+}
 function pgOcc(){
   const f = S.ui.f.oc || 'abertas';
   const all = S.occ.filter(occVis), list = all.filter(o => f === 'todas' || (f === 'abertas' ? o.status !== 'resolvida' : o.status === 'resolvida'));
-  return `${ph(eyebrow(), 'Ocorrências', 'Tudo o que saiu do padrão: item não feito, item reprovado na ronda e reclamação de cliente. A gerente registra a ação; você acompanha.')}
-    <div class="grid kpis">${kpi('Em aberto', occOpen().length, 'aberta ou em tratamento', occOpen().length ? 'warn' : 'good')}${kpi('Hoje', all.filter(o => !o.day).length, 'abertas hoje')}${kpi('Resolvidas', all.filter(o => o.status === 'resolvida').length, 'nos últimos dias')}</div>
+  const atras = all.filter(o => o.status !== 'resolvida' && o.prazo && o.prazo < TODAY_ISO).length;
+  return `${ph(eyebrow(), 'Ocorrências', 'Tudo o que saiu do padrão: item não feito, item reprovado na ronda, reclamação de cliente e o que a equipe registrar. Cada uma tem quem resolve e prazo.')}
+    <div class="grid kpis">${kpi('Em aberto', occOpen().length, 'aberta ou em tratamento', occOpen().length ? 'warn' : 'good')}${kpi('Fora do prazo', atras, 'abertas com prazo vencido', atras ? 'bad' : '')}${kpi('Hoje', all.filter(o => !o.day).length, 'registradas hoje')}${kpi('Resolvidas', all.filter(o => o.status === 'resolvida').length, 'nos últimos 30 dias')}</div>
+    ${canManage() ? formOcorrencia(true) : ''}
     <div class="row between">${segUi('oc', [['abertas','Em aberto'], ['resolvidas','Resolvidas'], ['todas','Todas']], f)}</div>
-    <div class="stack gap8">${list.length ? list.map(o => occCard(o, {edit:true})).join('') : '<p class="muted">Nenhuma ocorrência aqui.</p>'}</div>`;
+    <div class="stack gap8">${list.length ? list.map(o => occCard(o, {edit:canManage()})).join('') : '<p class="muted">Nenhuma ocorrência aqui.</p>'}</div>`;
 }
 
-/* ---------- Equipe ---------- */
-const mailIn = p => sou_socio_ui() ? `<label class="sr" for="em-${p.id}">E-mail de ${esc(p.name)}</label><input class="inp mail" type="email" id="em-${p.id}" data-email="${p.id}" value="${esc(p.email)}" placeholder="sem acesso">` : esc(p.email || 'sem acesso');
-const sou_socio_ui = () => { const p = me(); return p && (p.role === 'socio' || p.socio); };
+/* ---------- Relatórios ---------- */
+function mesesOpts(cur){
+  const out = []; const d = recife();
+  for (let k = 0; k < 6; k++) { const m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - k, 1)); const v = m.toISOString().slice(0, 7);
+    out.push(`<option value="${v}" ${cur === v ? 'selected' : ''}>${MESES[m.getUTCMonth()]} de ${m.getUTCFullYear()}</option>`); }
+  return out.join('');
+}
+function pgRelatorios(){
+  const mes = S.ui.f.mes || TODAY_ISO.slice(0, 7), dados = REL[mes];
+  if (!dados) carregarRelatorio(mes);
+  const agg = (rows, key) => { const o = {}; (rows || []).forEach(r => { const k = r[key], x = o[k] ??= {prev:0, ok:0, late:0, miss:0, nao:0}; x.prev += r.previstos; x.ok += r.no_prazo; x.late += r.atraso; x.miss += r.nao_feito; x.nao += r.itens_nao; }); return o; };
+  const porP = agg(dados, 'pessoa_id'), porR = agg(dados, 'rotina_id'), tot = Object.values(porP).reduce((a, x) => ({prev:a.prev + x.prev, ok:a.ok + x.ok, late:a.late + x.late, miss:a.miss + x.miss}), {prev:0, ok:0, late:0, miss:0});
+  const linha = (nome, x) => `<tr><td>${nome}</td><td class="num">${x.prev}</td><td class="num"><b class="${rateKind(x.prev ? x.ok / x.prev : null)}-t">${rateTxt(x.prev ? x.ok / x.prev : null)}</b></td><td class="num">${x.late}</td><td class="num">${x.miss}</td><td class="num">${x.nao}</td></tr>`;
+  const head = '<thead><tr><th></th><th class="num">Previstos</th><th class="num">No prazo</th><th class="num">Com atraso</th><th class="num">Não feitos</th><th class="num">Itens não feitos</th></tr></thead>';
+  return `${ph(eyebrow(), 'Relatórios', 'Os números do mês por pessoa e por checklist. Bom para os one-on-ones de terça e quarta e para a reunião de gestão.', `<label class="sr" for="f-mes">Mês</label><select class="inp w-auto" id="f-mes" data-f="mes">${mesesOpts(mes)}</select><button class="btn" data-act="csv" data-v="${mes}">Baixar planilha (CSV)</button>`)}
+    ${!dados ? '<p class="muted">Carregando o relatório…</p>' : !dados.length ? '<p class="callout">Ainda não há dias completos neste mês. O relatório conta até ontem.</p>' : `
+    <div class="grid kpis">${kpi('No prazo no mês', rateTxt(tot.prev ? tot.ok / tot.prev : null), `${tot.ok} de ${tot.prev} checklists`, rateKind(tot.prev ? tot.ok / tot.prev : null))}${kpi('Com atraso', tot.late)}${kpi('Não feitos', tot.miss, '', tot.miss ? 'bad' : '')}</div>
+    <section class="panel"><div class="panel-h"><h2>Por pessoa</h2></div><div class="tw"><table class="t">${head}<tbody>${Object.entries(porP).sort((a, b) => (person(a[0])?.ordem ?? 0) - (person(b[0])?.ordem ?? 0)).map(([id, x]) => linha(`<span class="who-cell">${av(person(id))}${esc(person(id)?.name || id)}</span>`, x)).join('')}</tbody></table></div></section>
+    <section class="panel"><div class="panel-h"><h2>Por checklist</h2></div><div class="tw"><table class="t">${head}<tbody>${Object.entries(porR).sort((a, b) => (a[1].ok / a[1].prev) - (b[1].ok / b[1].prev)).map(([id, x]) => linha(esc(S.allTpls.find(t => t.id === id)?.title || id), x)).join('')}</tbody></table></div>
+      <p class="small muted pager-info">Ordenado do checklist com menos entregas no prazo para o com mais.</p></section>`}`;
+}
+const REL = {};
+async function carregarRelatorio(mes){
+  if (REL[mes] === null) return; REL[mes] = null;
+  const [y, m] = mes.split('-').map(Number), fim = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+  const {data, error} = await sb.rpc('relatorio', {de:mes + '-01', ate:fim});
+  if (error) { delete REL[mes]; toast(esc(error.message)); return; }
+  REL[mes] = data || []; if (S.ui.view === 'relatorios') render();
+}
+
+/* ---------- Equipe e ausências ---------- */
+const mailIn = p => canEdit() ? `<label class="sr" for="em-${p.id}">E-mail de ${esc(p.name)}</label><input class="inp mail" type="email" id="em-${p.id}" data-email="${p.id}" value="${esc(p.email)}" placeholder="sem acesso">` : esc(p.email || 'sem acesso');
+
+function blocoAusencias(){
+  const fut = S.ausencias.filter(a => a.fim >= TODAY_ISO), fech = S.fechados.filter(f => f.data >= TODAY_ISO);
+  return `<section class="panel" id="ausencias"><div class="panel-h"><h2>Ausências e dias sem expediente</h2><p>atestado, falta, férias, feriado</p></div>
+    <div class="grid cols-eq">
+      <div class="stack gap8"><p class="day-h">Ausências</p>
+        ${fut.length ? fut.map(a => `<div class="rem"><span class="grow"><b>${esc(person(a.pessoa_id)?.name)}</b> · ${dLabelISO(a.inicio)}${a.fim !== a.inicio ? ` a ${dLabelISO(a.fim)}` : ''}${a.motivo ? ` · ${esc(a.motivo)}` : ''}<span class="small muted block">${a.substituto ? `Cobre: ${esc(person(a.substituto)?.name)}` : 'Sem substituto: as tarefas saem do dia'}</span></span>${canManage() ? `<button class="linkbtn small" data-act="ausDel" data-id="${a.id}">Remover</button>` : ''}</div>`).join('') : '<p class="small muted">Ninguém ausente nos próximos dias.</p>'}
+        ${canManage() ? `<form class="stack gap8 mini-form" data-form="aus"><div class="form-grid">
+          <div class="field"><label for="au-p">Quem</label><select class="inp" id="au-p" required>${pessoaOpts('')}</select></div>
+          <div class="field"><label for="au-i">De</label><input class="inp" type="date" id="au-i" value="${TODAY_ISO}" required></div>
+          <div class="field"><label for="au-f">Até</label><input class="inp" type="date" id="au-f" value="${TODAY_ISO}" required></div>
+          <div class="field"><label for="au-s">Quem cobre</label><select class="inp" id="au-s">${pessoaOpts('', 'Ninguém')}</select></div>
+          <div class="field span2"><label for="au-m">Motivo</label><input class="inp" id="au-m" placeholder="Ex.: atestado médico"></div></div>
+          <p class="small muted">Os checklists ainda não começados passam para quem cobre. Se a gerente faltar, quem cobre ganha as funções dela no dia.</p>
+          <div><button class="btn sm primary">Registrar ausência</button></div></form>` : ''}</div>
+      <div class="stack gap8"><p class="day-h">Dias sem expediente</p>
+        ${fech.length ? fech.map(f => `<div class="rem"><span class="grow"><b>${dLabelISO(f.data)}</b>${f.motivo ? ` · ${esc(f.motivo)}` : ''}</span>${canManage() ? `<button class="linkbtn small" data-act="reabrir" data-v="${f.data}">Reabrir</button>` : ''}</div>`).join('') : '<p class="small muted">Nenhum dia fechado à frente.</p>'}
+        ${canManage() ? `<form class="stack gap8 mini-form" data-form="fechar"><div class="form-grid">
+          <div class="field"><label for="fd-d">Data</label><input class="inp" type="date" id="fd-d" value="${TODAY_ISO}" required></div>
+          <div class="field span2"><label for="fd-m">Motivo</label><input class="inp" id="fd-m" placeholder="Ex.: feriado de Natal"></div></div>
+          <p class="small muted">Num dia fechado o app não cria checklists, e os que não começaram saem do dia.</p>
+          <div><button class="btn sm">Fechar o dia</button></div></form>` : ''}</div>
+    </div></section>`;
+}
 
 function pgEquipe(){
   const sel = S.ui.selP;
   const rows = team().map(p => {
     const d = dayStats(i => i.who === p.id), a = histAgg(x => x.byP[p.id]), pr = pendingReads(p.id).length;
-    return `<tr class="${sel === p.id ? 'sel' : ''}"><td><button class="who-cell linkrow" data-act="selP" data-v="${p.id}">${av(p)}<span><b>${esc(p.name)}</b><span class="small muted block">${roleL(p)} · ${esc(p.turno)}</span></span></button></td>
+    return `<tr class="${sel === p.id ? 'sel' : ''}"><td><button class="who-cell linkrow" data-act="selP" data-v="${p.id}">${av(p)}<span><b>${esc(p.name)}</b><span class="small muted block">${roleL(p)} · ${esc(p.turno)}${p.folga != null ? ` · folga ${WEEK[p.folga]}` : ''}</span></span></button></td>
       <td class="num">${d.done} de ${d.total}${d.atrasado ? ` ${chip(d.atrasado + ' atrasado', 'bad')}` : ''}</td>
       <td class="num"><span class="${rateKind(a.rate)}-t"><b>${rateTxt(a.rate)}</b></span></td><td class="num">${a.late}</td><td class="num">${a.miss}</td>
       <td>${dots(p.id)}</td><td class="num">${streak(p.id)} ${streak(p.id) === 1 ? 'dia' : 'dias'}</td>
       <td>${pr ? chip(pr + ' pendente', 'warn') : chip('em dia', 'good')}</td><td>${mailIn(p)}</td></tr>`;
   }).join('');
-  const p = sel && person(sel);
-  return `${ph(eyebrow(), 'Equipe', 'Quem cumpre a rotina no prazo, quem atrasa e quem ainda não leu as versões novas dos POPs.')}
+  const p = sel && person(sel), inativos = S.people.filter(x => x.active === false);
+  return `${ph(eyebrow(), 'Equipe e ausências', 'Quem cumpre a rotina no prazo, quem está ausente e quem ainda não assinou os POPs. O e-mail é o que a pessoa usa para entrar no app.')}
     <section class="panel"><div class="tw"><table class="t"><thead><tr><th>Pessoa</th><th class="num">Hoje</th><th class="num">No prazo, 4 sem.</th><th class="num">Com atraso</th><th class="num">Não feitos</th><th>Últimos 24 dias</th><th class="num">Sequência</th><th>Termo de ciência</th><th>E-mail de acesso</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="small muted pager-info">Cada tracinho é um dia: verde, tudo no prazo; âmbar, algo com atraso; vermelho, algo não feito. Sequência conta os dias seguidos com tudo no prazo.</p></section>
-    ${p ? `<section class="panel"><div class="panel-h"><div class="row nowrap gap8">${av(p, true)}<div><h2>${esc(p.name)}</h2><p>${roleL(p)} · ${esc(p.turno)}</p></div></div><button class="btn sm" data-act="selP" data-v="">Fechar</button></div>
-      <div class="grid cols-eq"><div class="stack gap6"><p class="day-h">Checklists de hoje</p>${S.inst.filter(i => i.who === p.id).sort((a, b) => a.start - b.start).map(i => instCard(i, {who:false})).join('')}</div>
-      <div class="stack gap6"><p class="day-h">Ocorrências</p>${S.occ.filter(o => o.who === p.id && occVis(o)).map(o => occCard(o)).join('') || '<p class="muted small">Nenhuma ocorrência recente.</p>'}
-      <p class="day-h">POPs do cargo</p><div class="row gap6">${S.pops.filter(x => popPeople(x).some(y => y.id === p.id)).map(x => { const ok = (x.reads[p.id] || 0) >= x.version; return `<button class="chip ${ok ? 'good' : 'warn'} linkchip" data-act="pop" data-id="${x.id}">${x.id} ${ok ? 'lido' : 'pendente'}</button>`; }).join('')}</div></div></div></section>`
-      : '<p class="small muted">Toque no nome de alguém para ver o dia, as ocorrências e os POPs da pessoa. O e-mail é o que a pessoa usa para entrar no app.</p>'}`;
+      <p class="small muted pager-info">Cada tracinho é um dia: verde, tudo no prazo; âmbar, algo com atraso; vermelho, algo não feito. Toque no nome para ver e editar a pessoa.</p></section>
+    ${p ? fichaPessoa(p) : ''}
+    ${blocoAusencias()}
+    ${canEdit() ? `<details class="panel" id="det-nova-pessoa"><summary class="sum">Incluir pessoa na equipe</summary>
+      <form class="stack gap8" data-form="pessoa"><div class="form-grid">
+        <div class="field"><label for="np-nome">Nome</label><input class="inp" id="np-nome" required></div>
+        <div class="field"><label for="np-papel">Cargo</label><select class="inp" id="np-papel"><option value="barbeiro">Barbeiro</option><option value="atendente">Atendente</option><option value="gerente">Gerente</option></select></div>
+        <div class="field"><label for="np-rot">Função</label><input class="inp" id="np-rot" placeholder="Ex.: Barbeiro de fechamento"></div>
+        <div class="field"><label for="np-turno">Turno</label><input class="inp" id="np-turno" placeholder="Ex.: fechamento, 10:50"></div>
+        <div class="field"><label for="np-folga">Folga</label><select class="inp" id="np-folga"><option value="">Não definida</option>${DOW.map(d => `<option value="${d}">${WEEK_FULL[d]}</option>`).join('')}</select></div>
+        <div class="field"><label for="np-email">E-mail de acesso</label><input class="inp" type="email" id="np-email"></div></div>
+        <div><button class="btn primary">Incluir</button></div></form></details>` : ''}
+    ${inativos.length ? `<details class="panel"><summary class="sum">Pessoas desligadas (${inativos.length})</summary><div class="stack gap6">${inativos.map(x => `<div class="rem"><span class="grow">${esc(x.name)} · ${roleL(x)}</span>${canEdit() ? `<button class="linkbtn small" data-act="reativar" data-id="${x.id}">Reativar</button>` : ''}</div>`).join('')}</div></details>` : ''}`;
+}
+function fichaPessoa(p){
+  const ed = canEdit();
+  return `<section class="panel"><div class="panel-h"><div class="row nowrap gap8">${av(p, true)}<div><h2>${esc(p.name)}</h2><p>${roleL(p)} · ${esc(p.turno)}</p></div></div><button class="btn sm" data-act="selP" data-v="">Fechar</button></div>
+    ${ed ? `<form class="form-grid ficha" data-form="ficha" data-id="${p.id}">
+      <div class="field"><label for="fp-nome">Nome</label><input class="inp" id="fp-nome" value="${esc(p.name)}"></div>
+      <div class="field"><label for="fp-rot">Função</label><input class="inp" id="fp-rot" value="${esc(p.label || '')}"></div>
+      <div class="field"><label for="fp-turno">Turno</label><input class="inp" id="fp-turno" value="${esc(p.turno)}"></div>
+      <div class="field"><label for="fp-folga">Folga</label><select class="inp" id="fp-folga"><option value="">Não definida</option>${DOW.map(d => `<option value="${d}" ${p.folga === d ? 'selected' : ''}>${WEEK_FULL[d]}</option>`).join('')}</select></div>
+      <div class="field row gap6 ficha-acts"><button class="btn sm primary">Salvar</button><button type="button" class="btn sm no" data-act="desligar" data-id="${p.id}">Desligar</button></div></form>` : ''}
+    <div class="grid cols-eq"><div class="stack gap6"><p class="day-h">Checklists de hoje</p>${S.inst.filter(i => i.who === p.id).sort((a, b) => a.start - b.start).map(i => instCard(i, {who:false})).join('') || '<p class="small muted">Nenhum hoje.</p>'}</div>
+    <div class="stack gap6"><p class="day-h">Ocorrências</p>${S.occ.filter(o => o.who === p.id && occVis(o)).map(o => occCard(o)).join('') || '<p class="muted small">Nenhuma ocorrência recente.</p>'}
+    <p class="day-h">Termo de ciência dos POPs</p><div class="row gap6">${S.pops.filter(x => popPeople(x).some(y => y.id === p.id)).map(x => { const ok = (x.reads[p.id] || 0) >= x.version; return `<button class="chip ${ok ? 'good' : 'warn'} linkchip" data-act="pop" data-id="${x.id}">${x.id} ${ok ? 'assinado' : 'pendente'}</button>`; }).join('')}</div></div></div></section>`;
 }
 
 /* ---------- Gerente e lembretes ---------- */
 function pgGerente(){
-  const g = gerenteStats(), j = person('jessica'), log = gerenteLog(), r = S.rules;
+  const g = gerenteStats(), j = S.people.find(p => p.role === 'gerente'), log = gerenteLog(), r = S.rules, d = dis();
   const ownRate = g.own.length ? g.ownOk.length / g.own.length : null;
-  return `${ph(eyebrow(), 'Gerente e lembretes', `${j.name} é quem garante a rotina na loja. O sistema lembra ela do que conferir e de quem cobrar, e mede se os lembretes foram atendidos.`)}
+  return `${ph(eyebrow(), 'Gerente e lembretes', `${j ? esc(j.name) : 'A gerente'} garante a rotina na loja. O sistema avisa ela no celular do que conferir e de quem cobrar, e mede se os avisos foram atendidos.`)}
     <div class="grid kpis">
       ${kpi('Lembretes atendidos', rateTxt(g.rate), `${g.got} de ${g.exp} até agora`, rateKind(g.rate), bar(g.rate, rateKind(g.rate), r.meta))}
       ${kpi('Conferências', `${g.ver.length} de ${g.verList.length}`, g.ver.length ? `${mins(g.verAvg)} em média para conferir (limite ${r.conferir} min)` : 'Nenhuma ainda', g.verAvg > r.conferir ? 'warn' : '')}
       ${kpi('Atrasos cobrados', `${g.nudged.length} de ${g.late.length}`, g.nudged.length ? `${mins(g.nudgeAvg)} em média depois do prazo` : 'Nenhum atraso até agora', g.nudged.length < g.late.length ? 'warn' : '')}
-      ${kpi('Rondas', `${g.ronDone.length} de ${g.ron.length}`, g.ronItems.length ? `${g.ronOk} de ${g.ronItems.length} itens conformes` : 'Primeira às 12:00')}
+      ${kpi('Rondas', `${g.ronDone.length} de ${g.ron.length}`, g.ronItems.length ? `${g.ronOk} de ${g.ronItems.length} itens conformes` : 'Nenhuma feita ainda')}
       ${kpi('Checklists dela', `${g.ownOk.length} de ${g.own.length}`, 'no prazo, dos que já venceram', rateKind(ownRate))}
     </div>
+    ${roNote()}
     <div class="grid cols-2">
-      <section class="panel"><div class="panel-h"><h2>O que a gerente fez hoje</h2><p>${log.length} registros</p></div>
+      <section class="panel"><div class="panel-h"><h2>O que a gerência fez hoje</h2><p>${log.length} registros</p></div>
         ${log.length ? `<ol class="log">${log.map(e => `<li class="${e.k}"><span class="num">${hm(e.at)}</span><div><b>${esc(e.t)}</b><p class="small muted">${esc(e.s)}</p></div></li>`).join('')}</ol>` : '<p class="muted">Nada ainda.</p>'}</section>
       <div class="stack gap14">
-        <section class="panel"><div class="panel-h"><h2>Regras dos lembretes</h2><p>valem para todos os dias</p></div>
+        <section class="panel"><div class="panel-h"><h2>Regras</h2><p>valem para todos os dias</p></div>
           <div class="stack gap14">
-            <div class="rule"><div><b>Início da operação</b><p class="small muted">A partir desta data o app cria os checklists de cada dia</p></div><input class="inp w-auto" type="date" id="r-inicio" data-rule="inicio" data-kind="str" value="${r.inicio || ''}"></div>
-            <div class="rule"><div><b>Antes dos checklists dela</b><p class="small muted">Avisar quantos minutos antes da janela abrir</p></div><div class="affix w-num"><input type="number" id="r-antes" data-rule="antes" value="${r.antes}" min="0"><span>min</span></div></div>
-            <div class="rule"><div><b>Escalar atraso aos sócios</b><p class="small muted">Se o checklist continuar atrasado depois de</p></div><div class="affix w-num"><input type="number" id="r-escalar" data-rule="escalar" value="${r.escalar}" min="5"><span>min</span></div></div>
-            <div class="rule"><div><b>Prazo para conferir</b><p class="small muted">Depois que a pessoa conclui, a gerente confere em até</p></div><div class="affix w-num"><input type="number" id="r-conferir" data-rule="conferir" value="${r.conferir}" min="5"><span>min</span></div></div>
-            <div class="rule"><div><b>Meta de conformidade</b><p class="small muted">Abaixo disso o número fica âmbar ou vermelho</p></div><div class="affix w-num"><input type="number" id="r-meta" data-rule="meta" data-kind="pct" value="${Math.round(r.meta * 100)}" min="50" max="100"><span>%</span></div></div>
-            <label class="toggle"><input type="checkbox" id="r-rondas" data-rule="rondas" data-kind="bool" ${r.rondas ? 'checked' : ''}><span><b>Rondas surpresa</b><span>Duas por dia, em horário sorteado pelo sistema. A equipe não sabe quando.</span></span></label>
-            <div class="rule"><div><b>Resumo no WhatsApp dos sócios</b><p class="small muted">Horário de envio</p></div><input class="inp w-auto" type="time" id="r-resumo" data-rule="resumo" data-kind="str" value="${r.resumo}"></div>
+            <div class="rule"><div><b>Início da operação</b><p class="small muted">A partir desta data o app cria os checklists de cada dia</p></div><input class="inp w-auto" type="date" id="r-inicio" data-rule="inicio" data-kind="str" value="${r.inicio || ''}" ${d}></div>
+            <div class="rule"><div><b>Aviso antes da ronda</b><p class="small muted">Minutos antes do horário sorteado</p></div><div class="affix w-num"><input type="number" id="r-antes" data-rule="antes" value="${r.antes}" min="0" ${d}><span>min</span></div></div>
+            <div class="rule"><div><b>Escalar atraso aos sócios</b><p class="small muted">Se o checklist continuar atrasado depois de</p></div><div class="affix w-num"><input type="number" id="r-escalar" data-rule="escalar" value="${r.escalar}" min="5" ${d}><span>min</span></div></div>
+            <div class="rule"><div><b>Prazo para conferir</b><p class="small muted">Depois que a pessoa conclui, a gerente confere em até</p></div><div class="affix w-num"><input type="number" id="r-conferir" data-rule="conferir" value="${r.conferir}" min="5" ${d}><span>min</span></div></div>
+            <div class="rule"><div><b>Meta de conformidade</b><p class="small muted">Abaixo disso o número fica âmbar ou vermelho</p></div><div class="affix w-num"><input type="number" id="r-meta" data-rule="meta" data-kind="pct" value="${Math.round(r.meta * 100)}" min="50" max="100" ${d}><span>%</span></div></div>
+            <label class="toggle"><input type="checkbox" id="r-rondas" data-rule="rondas" data-kind="bool" ${r.rondas ? 'checked' : ''} ${d}><span><b>Rondas surpresa</b><span>O horário da ronda é sorteado até 1 hora antes ou depois do previsto. A equipe não vê.</span></span></label>
+            <div class="rule"><div><b>Resumo do dia aos sócios</b><p class="small muted">Horário da notificação</p></div><input class="inp w-auto" type="time" id="r-resumo" data-rule="resumo" data-kind="str" value="${r.resumo}" ${d}></div>
           </div></section>
-        <section class="panel"><div class="panel-h"><h2>Lembretes fixos</h2><p>além dos automáticos</p></div>
+        <section class="panel"><div class="panel-h"><h2>Lembretes fixos</h2><p>chegam no celular da gerente</p></div>
           <div class="stack gap6">${S.reminders.map(x => `<div class="rem ${x.on ? '' : 'off'}"><span class="num"><b>${x.at}</b></span><span class="grow">${esc(x.text)}</span>${vis(S.remDone[x.id]) ? chip('feito ' + hm(S.remDone[x.id]), 'good') : toMin(x.at) <= NOW() && x.on ? chip('pendente', 'warn') : ''}
-            <label class="toggle sm" title="Ativo"><input type="checkbox" id="rem-${x.id}" data-rem="${x.id}" ${x.on ? 'checked' : ''}><span class="sr">Ativo</span></label></div>`).join('')}</div>
-          <form class="row gap6 add-rem" data-form="rem"><label class="sr" for="nr-at">Hora</label><input class="inp w-auto" type="time" id="nr-at" value="16:00" required><label class="sr" for="nr-t">Lembrete</label><input class="inp grow" id="nr-t" placeholder="Ex.: Conferir o estoque de lâminas" required><button class="btn sm primary">Adicionar</button></form></section>
+            <label class="toggle sm" title="Ativo"><input type="checkbox" id="rem-${x.id}" data-rem="${x.id}" ${x.on ? 'checked' : ''} ${d}><span class="sr">Ativo</span></label></div>`).join('')}</div>
+          ${canEdit() ? `<form class="row gap6 add-rem" data-form="rem"><label class="sr" for="nr-at">Hora</label><input class="inp w-auto" type="time" id="nr-at" value="16:00" required><label class="sr" for="nr-t">Lembrete</label><input class="inp grow" id="nr-t" placeholder="Ex.: Conferir o estoque de lâminas" required><button class="btn sm primary">Adicionar</button></form>` : ''}</section>
       </div>
     </div>`;
 }
 
 /* ---------- Biblioteca de POPs ---------- */
+const linhas = arr => (arr || []).map(s => typeof s === 'string' ? s : (s.crit ? '!' : '') + s.t).join('\n');
+function editorPop(p){
+  return `<form class="stack gap8" data-form="editpop" data-id="${p.id}">
+    <div class="form-grid"><div class="field span2"><label for="ep-t">Título</label><input class="inp" id="ep-t" value="${esc(p.title)}"></div>
+      <div class="field"><label for="ep-q">Quem faz</label><input class="inp" id="ep-q" value="${esc(p.who || '')}"></div>
+      <div class="field"><label for="ep-f">Quando</label><input class="inp" id="ep-f" value="${esc(p.freq || '')}"></div>
+      <div class="field"><label for="ep-d">A quem recorrer</label><input class="inp" id="ep-d" value="${esc(p.owner || '')}"></div></div>
+    <div class="field"><label for="ep-o">Objetivo</label><textarea class="inp" id="ep-o" rows="2">${esc(p.objective || '')}</textarea></div>
+    <div class="field"><label for="ep-m">Materiais, um por linha</label><textarea class="inp" id="ep-m" rows="3">${esc(linhas(p.materials))}</textarea></div>
+    <div class="field"><label for="ep-s">Passo a passo, um por linha. Comece com ! os passos críticos.</label><textarea class="inp" id="ep-s" rows="9">${esc(linhas(p.steps))}</textarea></div>
+    <div class="field"><label for="ep-qa">Padrão de qualidade, um por linha</label><textarea class="inp" id="ep-qa" rows="3">${esc(linhas(p.quality))}</textarea></div>
+    <div class="field"><label for="ep-e">O que não pode acontecer, um por linha</label><textarea class="inp" id="ep-e" rows="3">${esc(linhas(p.errors))}</textarea></div>
+    <div class="row gap6"><button class="btn primary" name="modo" value="versao">Publicar versão ${p.version + 1}</button><button class="btn" name="modo" value="correcao">Salvar só uma correção</button><button type="button" class="btn" data-act="popEditar" data-v="">Cancelar</button></div>
+    <p class="small muted">Nova versão pede que todos do cargo assinem o termo de ciência de novo. Correção (erro de digitação, por exemplo) mantém a versão e as assinaturas.</p></form>`;
+}
 function pgPops(){
-  if (S.ui.pop) {
-    const p = pop(S.ui.pop);
+  if (S.ui.pop && pop(S.ui.pop)) {
+    const p = pop(S.ui.pop), editando = S.ui.popEdit === p.id && canEdit();
     return `<div class="row"><button class="btn sm" data-act="popClose">${icon('voltar', 'ni xs')}Biblioteca</button></div>
-      ${ph(eyebrow(), `${p.id} · ${esc(p.title)}`, '', `<button class="btn" data-act="bump" data-id="${p.id}">Publicar nova versão</button>`)}
-      <section class="panel">${popBody(p, me())}</section>
-      <p class="small muted">Publicar nova versão pede que todos do cargo leiam de novo e confirmem no app. No sistema real, aqui também se edita o texto de cada passo.</p>`;
+      ${ph(eyebrow(), `${p.id} · ${esc(p.title)}`, '', canEdit() && !editando ? `<button class="btn primary" data-act="popEditar" data-v="${p.id}">Editar POP</button>` : '')}
+      <section class="panel">${editando ? editorPop(p) : popBody(p, me())}</section>
+      ${p.versions.length ? `<section class="panel"><div class="panel-h"><h2>Versões anteriores</h2><p>guardadas a cada nova publicação</p></div><div class="stack gap6">${p.versions.map(v => `<details class="ver"><summary><b>Versão ${v.versao}</b> <span class="small muted">substituída em ${dLabelISO(recife(Date.parse(v.publicado_em)).toISOString().slice(0, 10))}${v.por ? ` por ${esc(first(person(v.por)))}` : ''}</span></summary><ol class="steps sm">${(v.conteudo.passos || []).map(s => `<li><span>${esc(s.t)}</span>${s.crit ? '<span class="tag crit">crítico</span>' : ''}</li>`).join('')}</ol></details>`).join('')}</div></section>` : ''}`;
   }
-  const byArea = {}; S.pops.forEach(p => (byArea[p.area] ??= []).push(p));
-  return `${ph(eyebrow(), 'Biblioteca de POPs', `POP HYPE versão 1.0, outubro de 2026. ${S.pops.length} seções, do abrir ao fechar. A equipe assina o termo de ciência de cada versão no app.`)}
+  return `${ph(eyebrow(), 'Biblioteca de POPs', `POP HYPE e as versões publicadas aqui. ${S.pops.length} seções, do abrir ao fechar. A equipe assina o termo de ciência de cada versão no app.`)}
     <section class="panel cultura"><div class="panel-h"><h2>Cultura HYPE</h2><p>por que fazemos as coisas do jeito HYPE</p></div>
       <div class="grid cols-eq"><div class="stack gap4"><p class="eyebrow">Missão</p><p>${esc(CULTURA.missao)}</p></div><div class="stack gap4"><p class="eyebrow">Visão</p><p>${esc(CULTURA.visao)}</p></div></div>
       <div class="valores">${CULTURA.valores.map(([n, d, f], k) => `<div class="valor"><span class="cid">0${k + 1}</span><b>${n}</b><span class="small">${esc(d)}</span><span class="small muted">"${esc(f)}"</span></div>`).join('')}</div></section>
-    <details class="panel newpop"><summary>Novo POP</summary>
+    ${canEdit() ? `<details class="panel newpop" id="det-novo-pop"><summary>Novo POP</summary>
       <form class="stack gap8" data-form="pop"><div class="form-grid">
-        <div class="field span2"><label for="np-t">Título</label><input class="inp" id="np-t" required placeholder="Ex.: Atendimento de criança"></div>
+        <div class="field span2"><label for="np-t">Título</label><input class="inp" id="np-t" required placeholder="Ex.: Higienização das ferramentas"></div>
         <div class="field"><label for="np-a">Área</label><select class="inp" id="np-a">${Object.entries(AREAS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
         <div class="field"><label for="np-r">Quem faz</label><select class="inp" id="np-r"><option value="barbeiro">Barbeiros</option><option value="atendente">Atendentes</option><option value="gerente">Gerente</option><option value="todos">Todos</option></select></div>
         <div class="field"><label for="np-f">Quando</label><input class="inp" id="np-f" placeholder="Ex.: A cada cliente"></div></div>
         <div class="field"><label for="np-o">Objetivo</label><input class="inp" id="np-o" placeholder="O que esse procedimento garante?"></div>
-        <div class="field"><label for="np-s">Passo a passo, um por linha. Comece com ! os passos críticos.</label><textarea class="inp" id="np-s" rows="5" placeholder="Receber a criança e o responsável pelo nome&#10;!Confirmar com o responsável o corte desejado"></textarea></div>
-        <div><button class="btn primary">Publicar POP</button></div></form></details>
+        <div class="field"><label for="np-s">Passo a passo, um por linha. Comece com ! os passos críticos.</label><textarea class="inp" id="np-s" rows="5"></textarea></div>
+        <div><button class="btn primary">Publicar POP</button></div></form></details>` : ''}
     <div class="grid pop-grid">${S.pops.map(p => {
       const ppl = popPeople(p), read = ppl.filter(x => (p.reads[x.id] || 0) >= p.version).length;
-      return `<button class="pop-card" data-act="pop" data-id="${p.id}"><span class="row between nowrap"><span class="cid">${p.id} · ${AREAS[p.area]}</span>${chip('v' + p.version)}</span><b>${esc(p.title)}</b><span class="small muted">${esc(p.who)}</span><span class="small muted">${esc(p.freq)}</span>
+      return `<button class="pop-card" data-act="pop" data-id="${p.id}"><span class="row between nowrap"><span class="cid">${p.id} · ${AREAS[p.area] || p.area}</span>${chip('v' + p.version)}</span><b>${esc(p.title)}</b><span class="small muted">${esc(p.who)}</span><span class="small muted">${esc(p.freq)}</span>
         <span class="row between nowrap small"><span>${p.steps.length} passos${p.steps.some(s => s.crit) ? ` · ${p.steps.filter(s => s.crit).length} críticos` : ''}</span><span class="${read < ppl.length ? 'warn-t' : 'good-t'}">${read} de ${ppl.length} assinaram</span></span></button>`;
     }).join('')}</div>`;
 }
 
 /* ---------- Rotina ---------- */
 function pgRotina(){
-  const rows = S.tpls.flatMap(t => t.slots.map((s, k) => ({t, s, k}))).sort((a, b) => toMin(a.s[0]) - toMin(b.s[0]));
-  const whoOpt = (cur, t) => t.each ? `<span class="muted">${Array.isArray(t.each) ? t.each.map(id => first(person(id))).join(' e ') : 'Cada barbeiro presente'}</span>` : t.also ? `<span>${[cur.s[2], ...t.also].map(id => first(person(id))).join(' e ')}</span>` : `<label class="sr" for="sw-${t.id}-${cur.k}">Responsável</label><select class="inp w-auto" id="sw-${t.id}-${cur.k}" data-slot="${t.id}|${cur.k}|2">${team().map(p => `<option value="${p.id}" ${cur.s[2] === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`;
-  return `${ph(eyebrow(), 'Rotina e checklists', 'A agenda fixa da semana. Toda madrugada o sistema cria os checklists do dia a partir daqui. Mudanças valem a partir de amanhã.')}
+  const d = dis(), ed = canEdit();
+  const rows = S.allTpls.filter(t => t.active).flatMap(t => t.slots.map((s, k) => ({t, s, k}))).sort((a, b) => toMin(a.s[0]) - toMin(b.s[0]));
+  const diasTxt = (t, s) => { const ds = s[4] || t.days; return (ds.length === 6 ? 'seg a sáb' : ds.length === 5 && !ds.includes(6) ? 'seg a sex' : ds.map(x => WEEK[x]).join(', ')) + (t.every2 ? ', quinzenal' : ''); };
+  const whoOpt = (cur, t) => t.each ? `<span class="muted">${Array.isArray(t.each) ? t.each.map(id => first(person(id))).join(' e ') : 'Cada barbeiro presente'}</span>`
+    : t.rodizio ? `<span class="muted">Revezamento (escala abaixo)</span>`
+    : t.also ? `<span>${[cur.s[2], ...t.also].map(id => first(person(id))).join(' e ')}</span>`
+    : `<label class="sr" for="sw-${t.id}-${cur.k}">Responsável</label><select class="inp w-auto" id="sw-${t.id}-${cur.k}" data-slot="${t.id}|${cur.k}|2" ${d}>${pessoaOpts(cur.s[2])}</select>`;
+  const rod = S.allTpls.filter(t => t.active && t.rodizio);
+  return `${ph(eyebrow(), 'Rotina e checklists', 'A agenda fixa da semana. Toda madrugada o sistema cria os checklists do dia a partir daqui, respeitando folgas, ausências e dias fechados. Mudanças valem a partir de amanhã.')}
+    ${roNote()}
     <section class="panel"><div class="tw"><table class="t rot"><thead><tr><th>Janela</th><th>Checklist</th><th>POP</th><th>Responsável</th><th>Dias</th><th class="num">Itens</th><th>Conferência</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td class="nowrap"><label class="sr" for="ss-${r.t.id}-${r.k}">Início</label><input class="inp time" type="time" id="ss-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|0" value="${r.s[0]}"> às <label class="sr" for="sd-${r.t.id}-${r.k}">Prazo</label><input class="inp time" type="time" id="sd-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|1" value="${r.s[1]}"></td>
+      ${rows.map(r => `<tr><td class="nowrap"><label class="sr" for="ss-${r.t.id}-${r.k}">Início</label><input class="inp time" type="time" id="ss-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|0" value="${r.s[0]}" ${d}> às <label class="sr" for="sd-${r.t.id}-${r.k}">Prazo</label><input class="inp time" type="time" id="sd-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|1" value="${r.s[1]}" ${d}></td>
         <td><b>${esc(r.t.title)}</b>${r.t.kind === 'ronda' ? ` ${chip('ronda', 'acc')}` : ''}</td><td><button class="chip linkchip" data-act="pop" data-id="${r.t.pop}">${r.t.pop}</button></td><td>${whoOpt(r, r.t)}</td>
-        <td class="small">${r.t.days.length === 6 ? 'seg a sáb' : r.t.days.map(d => WEEK[d]).join(', ')}${r.t.every2 ? ', quinzenal' : ''}</td>
+        <td class="small">${diasTxt(r.t, r.s)}</td>
         <td class="num">${r.t.items.length}${r.t.items.some(i => i.photo) ? ` <span class="small muted">· ${r.t.items.filter(i => i.photo).length} com foto</span>` : ''}</td>
         <td>${r.t.verify ? chip('gerente confere', 'good') : chip(r.t.kind === 'ronda' ? 'é a própria conferência' : 'sem conferência')}</td></tr>`).join('')}
     </tbody></table></div></section>
+    <section class="panel"><div class="panel-h"><h2>Escala dos revezamentos</h2><p>quem faz em cada dia da semana</p></div>
+      <div class="tw"><table class="t"><thead><tr><th>Tarefa</th>${DOW.map(x => `<th>${WEEK[x]}</th>`).join('')}</tr></thead><tbody>
+        ${rod.map(t => `<tr><td><b>${esc(t.title)}</b><span class="small muted block">${t.days.length === 6 ? 'todo dia' : t.days.map(x => WEEK[x]).join(', ')}</span></td>${DOW.map(x => t.days.includes(x)
+          ? `<td><label class="sr" for="rz-${t.id}-${x}">${esc(t.title)} ${WEEK_FULL[x]}</label><select class="inp w-auto sm-sel" id="rz-${t.id}-${x}" data-rodizio="${t.id}|${x}" ${d}>${pessoaOpts(t.escala[x] || '', `Padrão: ${first(person(t.slots[0]?.[2]))}`)}</select></td>` : '<td class="muted small">não tem</td>').join('')}</tr>`).join('')}
+      </tbody></table></div>
+      <p class="small muted pager-info">Sem nome escolhido, vale o responsável padrão. Se a pessoa estiver de folga ou ausente no dia, a tarefa não é criada para ela.</p></section>
     <div class="grid cols-eq">
-      <section class="panel"><div class="panel-h"><h2>Turnos e folgas</h2><p>POP, pág. 6</p></div><div class="tw"><table class="t"><thead><tr><th>Profissional</th><th>Turno</th><th>Folga</th></tr></thead><tbody>${ESCALA.turnos.map(([id, t, f]) => `<tr><td><span class="who-cell">${av(person(id))}${esc(person(id).name)}</span></td><td class="small">${esc(t)}</td><td class="small">${esc(f)}</td></tr>`).join('')}</tbody></table></div>
+      <section class="panel"><div class="panel-h"><h2>Turnos e folgas</h2><p>edite em Equipe</p></div><div class="tw"><table class="t"><thead><tr><th>Profissional</th><th>Turno</th><th>Folga</th></tr></thead><tbody>${team().map(p => `<tr><td><span class="who-cell">${av(p)}${esc(p.name)}</span></td><td class="small">${esc(p.turno)}</td><td class="small">${p.folga != null ? WEEK_FULL[p.folga] : 'a definir'}</td></tr>`).join('')}</tbody></table></div>
         <p class="small muted pager-info">${esc(ESCALA.horario)} ${esc(ESCALA.posicoes)}</p></section>
-      <section class="panel"><div class="panel-h"><h2>Rodízios</h2><p>viram checklist nos dias certos</p></div><div class="tw"><table class="t"><thead><tr><th>Tarefa</th><th>Quando</th><th>Quem</th></tr></thead><tbody>${ESCALA.rodizios.map(r => `<tr><td>${esc(r[0])}</td><td class="small nowrap">${esc(r[1])}</td><td class="small">${esc(r[2])}</td></tr>`).join('')}</tbody></table></div></section>
+      <section class="panel"><div class="panel-h"><h2>Reuniões</h2><p>POP-10 · acontecem mesmo em dia de folga</p></div><div class="tw"><table class="t"><thead><tr><th>Dia</th><th>Horário</th><th>Reunião</th></tr></thead><tbody>${ESCALA.reunioes.map(r => `<tr><td>${r[0]}</td><td class="nowrap num">${r[1]}</td><td>${esc(r[2])}<span class="small muted block">${esc(r[3])}</span></td></tr>`).join('')}</tbody></table></div></section>
     </div>
-    <section class="panel"><div class="panel-h"><h2>Reuniões</h2><p>POP-10 · a gerente registra que aconteceu e quem esteve</p></div><div class="tw"><table class="t"><thead><tr><th>Dia</th><th>Horário</th><th>Reunião</th><th>Frequência</th></tr></thead><tbody>${ESCALA.reunioes.map(r => `<tr><td>${r[0]}</td><td class="nowrap num">${r[1]}</td><td>${esc(r[2])}</td><td class="small">${esc(r[3])}</td></tr>`).join('')}</tbody></table></div></section>
-    <section class="panel" id="itens"><div class="panel-h"><h2>Itens de cada checklist</h2><p>Marque quais itens exigem foto. A pessoa só consegue marcar o item tirando a foto.</p></div><div class="grid cols-eq">${S.tpls.map(t => `<div class="tpl-box"><div class="row between nowrap"><b>${esc(t.title)}</b><span class="cid">${t.pop}</span></div><ol class="steps sm">${t.items.map(it => `<li><span>${esc(it.t)}${it.crit ? ' <span class="tag crit">crítico</span>' : ''}</span><label class="ph-toggle ${it.photo ? 'on' : ''}" for="ph-${t.id}-${it.id}"><input type="checkbox" id="ph-${t.id}-${it.id}" data-photo="${t.id}|${it.id}" ${it.photo ? 'checked' : ''}>${icon('camera', 'ni xs')}foto</label></li>`).join('')}</ol></div>`).join('')}</div></section>`;
+    <section class="panel" id="itens"><div class="panel-h"><h2>Itens de cada checklist</h2><p>${ed ? 'Edite o texto, marque foto obrigatória, inclua ou retire itens.' : 'Itens com foto obrigatória e itens críticos.'}</p></div><div class="grid cols-eq">${S.allTpls.map(t => `<div class="tpl-box ${t.active ? '' : 'off'}"><div class="row between nowrap"><b>${esc(t.title)}</b><span class="row nowrap gap6"><span class="cid">${t.pop}</span>${ed ? `<button class="linkbtn small" data-act="rotAtivo" data-id="${t.id}" data-v="${t.active ? '0' : '1'}">${t.active ? 'Pausar' : 'Reativar'}</button>` : ''}</span></div>
+      <ol class="steps sm">${t.items.map(it => `<li><span>${ed ? `<label class="sr" for="it-${it.id}">Texto do item</label><input class="inp it-in" id="it-${it.id}" data-item="${it.id}" value="${esc(it.t)}">` : esc(it.t)}${it.crit ? ' <span class="tag crit">crítico</span>' : ''}</span>
+        <span class="row nowrap gap6"><label class="ph-toggle ${it.photo ? 'on' : ''}" for="ph-${t.id}-${it.id}"><input type="checkbox" id="ph-${t.id}-${it.id}" data-photo="${t.id}|${it.id}" ${it.photo ? 'checked' : ''} ${d}>${icon('camera', 'ni xs')}foto</label>${ed ? `<button class="linkbtn small" data-act="itemDel" data-id="${it.id}" aria-label="Retirar item">Retirar</button>` : ''}</span></li>`).join('')}</ol>
+      ${ed ? `<form class="row gap6" data-form="item" data-id="${t.id}"><label class="sr" for="ni-${t.id}">Novo item</label><input class="inp grow" id="ni-${t.id}" placeholder="Novo item" required><button class="btn sm">Incluir</button></form>` : ''}</div>`).join('')}</div></section>
+    ${ed ? `<details class="panel" id="det-nova-rotina"><summary class="sum">Criar checklist novo</summary>
+      <form class="stack gap8" data-form="rotina"><div class="form-grid">
+        <div class="field span2"><label for="nr-tit">Nome</label><input class="inp" id="nr-tit" required placeholder="Ex.: Conferência do estoque de lâminas"></div>
+        <div class="field"><label for="nr-pop">POP</label><select class="inp" id="nr-pop">${S.pops.map(p => `<option value="${p.id}">${p.id} · ${esc(p.title)}</option>`).join('')}</select></div>
+        <div class="field"><label for="nr-ini">Início</label><input class="inp" type="time" id="nr-ini" value="10:00" required></div>
+        <div class="field"><label for="nr-fim">Prazo</label><input class="inp" type="time" id="nr-fim" value="10:30" required></div>
+        <div class="field"><label for="nr-resp">Responsável</label><select class="inp" id="nr-resp">${pessoaOpts('')}</select></div></div>
+        <fieldset class="dias"><legend class="small muted">Dias</legend>${DOW.map(x => `<label class="toggle sm"><input type="checkbox" name="nr-dia" value="${x}" checked><span>${WEEK[x]}</span></label>`).join('')}</fieldset>
+        <label class="toggle"><input type="checkbox" id="nr-conf" checked><span><b>A gerente confere</b></span></label>
+        <div class="field"><label for="nr-itens">Itens, um por linha. Comece com ! os críticos e com # os que exigem foto.</label><textarea class="inp" id="nr-itens" rows="4" required></textarea></div>
+        <div><button class="btn primary">Criar checklist</button></div></form></details>` : ''}`;
 }

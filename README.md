@@ -25,6 +25,19 @@ A base dos POPs é o documento "HYPE Cultura e POP" v1.0 (outubro de 2026). A co
 - Fotos ficam no bucket privado `fotos` do Supabase Storage.
 - As ações da equipe passam por funções do banco (`marcar_item`, `concluir`, `conferir`, `cobrar` e outras), que conferem quem pode fazer o quê.
 
+## O que o sistema faz (versão de 16/11/2026)
+
+- **Checklists do dia** criados toda madrugada, respeitando folga, sábado (08:50 e fechamento às 18h), dias sem expediente, ausências com substituto e a escala dos revezamentos.
+- **Notificações no celular** (Web Push): hora do checklist, atraso para a pessoa e para a gerente, escalonamento aos sócios, cobrança na hora, conferência pendente, lembretes fixos, aviso da ronda e resumo do dia às 21h. No iPhone o app precisa estar na Tela de Início.
+- **Funciona sem internet** para marcar itens e concluir: as marcações ficam guardadas e saem quando a conexão volta. Foto precisa de internet.
+- **Victor** edita tudo: equipe, e-mails, folgas, POPs (com versões guardadas), itens dos checklists, rotinas novas, escala dos revezamentos e regras. **Robson** vê tudo e não altera. **Jessica** confere, cobra, faz as rondas, trata ocorrências e registra ausências e dias fechados.
+- **Ocorrências** com quem resolve, prazo e foto. A equipe também pode avisar a gerência de um problema.
+- **Relatórios** por mês, por pessoa e por checklist, com planilha CSV.
+- **Fotos** com mais de 90 dias são apagadas toda madrugada.
+- **Erros** que aparecem no celular de alguém ficam registrados na tabela `erros_app`.
+
+Peças no Supabase: função `notificar` (Edge Function), agendamentos `hype_pop_gerar_dia`, `hype_pop_notificar` (a cada 2 min) e `hype_pop_limpeza`, chaves das notificações em `privado.config`.
+
 ## Publicar uma mudança
 
 Edite os arquivos e faça push para `main`. O GitHub Pages publica sozinho em cerca de um minuto.

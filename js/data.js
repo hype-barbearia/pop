@@ -18,12 +18,12 @@ async function carregar(){
   const d30 = isoMinus(30);
   await sb.rpc('garantir_dia');
   const q = await Promise.all([
-    sb.from('pessoas').select('*').eq('ativo', true).order('ordem'),
+    sb.from('pessoas').select('*').order('ordem'),
     sb.from('pops').select('*').eq('ativo', true).order('ordem'),
     sb.from('pop_leituras').select('pop_id,pessoa_id,versao'),
-    sb.from('rotinas').select('*').eq('ativo', true).order('ordem'),
+    sb.from('rotinas').select('*').order('ordem'),
     sb.from('rotina_janelas').select('*').order('inicio'),
-    sb.from('rotina_itens').select('*').eq('ativo', true).order('ordem'),
+    sb.from('rotina_itens').select('*').order('ordem'),
     sb.from('execucoes').select('*').eq('data', TODAY_ISO),
     sb.from('execucao_itens').select('*, execucoes!inner(data)').eq('execucoes.data', TODAY_ISO),
     sb.from('cobrancas').select('*, execucoes!inner(data)').eq('execucoes.data', TODAY_ISO).order('em'),
@@ -33,19 +33,28 @@ async function carregar(){
     sb.from('lembretes_feitos').select('*').eq('data', TODAY_ISO),
     sb.from('regras').select('*').maybeSingle(),
     sb.rpc('historico', {dias:28}),
+    sb.from('ausencias').select('*').gte('fim', isoMinus(1)).order('inicio'),
+    sb.from('dias_fechados').select('*').gte('data', isoMinus(7)).order('data'),
+    sb.from('rodizio_escala').select('*'),
+    sb.from('pop_versoes').select('pop_id,versao,publicado_em,por,conteudo').order('versao', {ascending:false}),
+    sb.from('resumos').select('*').order('data', {ascending:false}).limit(7),
   ]);
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi] = q.map(check);
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs] = q.map(check);
 
-  const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || ''}));
+  const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem}));
   const pops = po.map(p => {
     const reads = {}; le.filter(r => r.pop_id === p.id).forEach(r => reads[r.pessoa_id] = Math.max(reads[r.pessoa_id] || 0, r.versao));
     return {id:p.id, title:p.titulo, area:p.area, roles:p.cargos, who:p.quem, owner:p.dono, freq:p.frequencia, objective:p.objetivo, materials:p.materiais || [], steps:p.passos || [],
-      quality:p.qualidade || [], errors:p.erros || [], tables:p.tabelas, guide:p.guia, version:p.versao, updated:p.atualizado, approved:p.aprovado_por || 'Sócios', reads};
+      quality:p.qualidade || [], errors:p.erros || [], tables:p.tabelas, guide:p.guia, version:p.versao, updated:p.atualizado, approved:p.aprovado_por || 'Sócios', reads, versions:pv.filter(v => v.pop_id === p.id)};
   });
   const janelas = Object.fromEntries(ja.map(j => [j.id, j]));
-  const tpls = ro.map(r => ({id:r.id, title:r.titulo, pop:r.pop_id, kind:r.tipo, verify:r.conferir, days:r.dias, each:r.cada || r.cada_papel || null, also:r.junto, every2:r.quinzenal,
-    items:it.filter(i => i.rotina_id === r.id).map(i => ({id:i.id, t:i.texto, photo:i.foto, crit:i.critico})),
-    slots:ja.filter(j => j.rotina_id === r.id).map(j => [hmT(j.inicio), hmT(j.prazo), j.responsavel, j.id])}));
+  const allTpls = ro.map(r => ({id:r.id, title:r.titulo, pop:r.pop_id, kind:r.tipo, verify:r.conferir, days:r.dias, each:r.cada || r.cada_papel || null, also:r.junto, every2:r.quinzenal,
+    active:r.ativo, rodizio:r.rodizio, ignoraFolga:r.ignora_folga,
+    items:it.filter(i => i.rotina_id === r.id && i.ativo).map(i => ({id:i.id, t:i.texto, photo:i.foto, crit:i.critico, ordem:i.ordem})),
+    allItems:it.filter(i => i.rotina_id === r.id),
+    escala:Object.fromEntries(re.filter(e => e.rotina_id === r.id).map(e => [e.dow, e.pessoa_id])),
+    slots:ja.filter(j => j.rotina_id === r.id).map(j => [hmT(j.inicio), hmT(j.prazo), j.responsavel, j.id, j.dias])}));
+  const tpls = allTpls.filter(t => t.active || ex.some(x => x.rotina_id === t.id));
   const inst = ex.filter(x => tpls.some(t => t.id === x.rotina_id)).map(x => {
     const checks = {};
     ei.filter(c => c.execucao_id === x.id).forEach(c => checks[c.item_id] = {at:minOf(c.marcado_em), ok:c.ok, photo:c.foto_path || undefined, note:c.obs || ''});
@@ -55,7 +64,7 @@ async function carregar(){
       redo:x.refazer_em ? {at:minOf(x.refazer_em), note:x.refazer_obs || ''} : null};
   });
   const occ = oc.map(o => ({id:'OC-' + o.id, num:o.id, at:minOf(o.em), day:o.data !== TODAY_ISO ? dLabelISO(o.data) : null, who:o.pessoa_id, src:o.origem, inst:o.execucao_id,
-    title:o.titulo, desc:o.descricao || '', status:o.status, pop:o.pop_id,
+    title:o.titulo, desc:o.descricao || '', status:o.status, pop:o.pop_id, resp:o.responsavel_id, prazo:o.prazo, foto:o.foto_path, by:o.criado_por,
     actions:oa.filter(a => a.ocorrencia_id === o.id).map(a => { const iso = recife(Date.parse(a.em)).toISOString().slice(0, 10); return {at:minOf(a.em), day:iso !== TODAY_ISO ? dLabelISO(iso) : null, by:a.por, t:a.texto}; })}));
   const reminders = lb.filter(l => l.dias.includes(TODAY_WD) || !l.ativo).map(l => ({id:l.id, at:hmT(l.hora), text:l.texto, on:l.ativo}));
   const remDone = Object.fromEntries(lf.map(l => [l.lembrete_id, minOf(l.em)]));
@@ -64,14 +73,15 @@ async function carregar(){
   const rules = {antes:r.antes ?? 10, escalar:r.escalar ?? 30, conferir:r.conferir ?? 30, meta:Number(r.meta ?? .9), rondas:r.rondas_surpresa ?? true, resumo:hmT(r.resumo) || '21:00', inicio:r.inicio_operacao || null};
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
-  S = {people, pops, tpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui};
+  S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
+    ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = nowMin();
   await assinarFotos();
 }
 
 /* Fotos: links temporários para exibir */
 async function assinarFotos(){
-  const paths = S.inst.flatMap(i => Object.values(i.checks).map(c => c.photo).filter(Boolean)).filter(p => !PHOTO_URL[p]);
+  const paths = [...S.inst.flatMap(i => Object.values(i.checks).map(c => c.photo)), ...S.occ.map(o => o.foto)].filter(Boolean).filter(p => !PHOTO_URL[p]);
   if (!paths.length) return;
   const {data} = await sb.storage.from('fotos').createSignedUrls(paths, 6 * 3600);
   (data || []).forEach(d => { if (d.signedUrl) PHOTO_URL[d.path] = d.signedUrl; });
@@ -97,7 +107,55 @@ let RT_TIMER, RT_CH;
 function tempoReal(){
   if (RT_CH) return;
   RT_CH = sb.channel('hype-pop');
-  ['execucoes','execucao_itens','cobrancas','ocorrencias','ocorrencia_acoes','lembretes_feitos','pop_leituras'].forEach(t =>
+  ['execucoes','execucao_itens','cobrancas','ocorrencias','ocorrencia_acoes','lembretes_feitos','pop_leituras','ausencias','dias_fechados'].forEach(t =>
     RT_CH.on('postgres_changes', {event:'*', schema:'public', table:t}, () => { clearTimeout(RT_TIMER); RT_TIMER = setTimeout(recarregar, 700); }));
   RT_CH.subscribe();
 }
+
+/* ---------- Fila para quando a internet cair ---------- */
+const FILA_KEY = 'hype-pop-fila';
+const fila = () => { try { return JSON.parse(localStorage.getItem(FILA_KEY)) || []; } catch (e) { return []; } };
+const filaSalvar = f => { try { localStorage.setItem(FILA_KEY, JSON.stringify(f)); } catch (e) {} };
+const semRede = e => !navigator.onLine || /fetch|network|Failed to fetch|Load failed/i.test(String(e?.message || e));
+function enfileirar(fn, args){ const f = fila(); f.push({fn, args, em:Date.now()}); filaSalvar(f); }
+let ENVIANDO = false;
+async function esvaziarFila(){
+  if (ENVIANDO || !navigator.onLine) return 0;
+  const f = fila(); if (!f.length) return 0;
+  ENVIANDO = true; let ok = 0;
+  try {
+    while (f.length) {
+      const x = f[0];
+      const {error} = await sb.rpc(x.fn, x.args);
+      if (error && semRede(error)) break;
+      f.shift(); filaSalvar(f); ok++;
+      if (error) registrarErro('Fila: ' + error.message, x.fn);
+    }
+  } finally { ENVIANDO = false; }
+  return ok;
+}
+
+/* ---------- Notificações no celular ---------- */
+const b64u = s => { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+const pushSuportado = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const ehIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
+const instalado = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+async function swRegistro(){ return navigator.serviceWorker.register('sw.js'); }
+async function pushAtivo(){
+  if (!pushSuportado() || Notification.permission !== 'granted') return false;
+  const reg = await navigator.serviceWorker.getRegistration(); return !!(reg && await reg.pushManager.getSubscription());
+}
+async function ativarPush(){
+  if (!pushSuportado()) throw new Error(ehIOS() && !instalado() ? 'No iPhone, primeiro adicione o app à tela de início (Compartilhar → Adicionar à Tela de Início) e abra por lá.' : 'Este navegador não recebe notificações.');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('As notificações foram bloqueadas. Libere nas configurações do navegador.');
+  const reg = await swRegistro(); await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64u(HYPE_CONFIG.vapid)});
+  const j = sub.toJSON();
+  check(await sb.rpc('inscrever_push', {endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, ua:navigator.userAgent.slice(0, 200)}));
+}
+
+/* ---------- Registro de erros ---------- */
+function registrarErro(msg, ctx){ try { sb.rpc('registrar_erro', {msg:String(msg).slice(0, 2000), ctx:String(ctx || location.hash || '').slice(0, 2000)}); } catch (e) {} }
+window.addEventListener('error', e => registrarErro(e.message, `${e.filename}:${e.lineno}`));
+window.addEventListener('unhandledrejection', e => registrarErro(e.reason?.message || e.reason, 'promise'));
