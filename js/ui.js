@@ -35,7 +35,9 @@ const NI = {
   check:'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
   hist:'M3 3v5h5M3.05 13A9 9 0 1 0 6 5.3L3 8M12 7v5l4 2',
   camera:'M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
-  mais:'M5 12h.01M12 12h.01M19 12h.01', voltar:'M15 18l-6-6 6-6',
+  mais:'M5 12h.01M12 12h.01M19 12h.01',
+  perfil:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  nota:'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5', voltar:'M15 18l-6-6 6-6',
 };
 const icon = (k, cls = 'ni') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${NI[k]}"/></svg>`;
 

@@ -4,7 +4,7 @@
    ========================================================= */
 const SNAV = [
   ['Operação', [['painel','Painel','painel'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
-  ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['gerente','Gerente e lembretes','sino']]],
+  ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['notas','Notas fiscais','nota'], ['gerente','Gerente e lembretes','sino']]],
   ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina']]],
 ];
 const eyebrow = () => `Sócios · ${DIA_CURTO} · agora ${hm(NOW())}`;
@@ -20,6 +20,7 @@ function navBadge(k){
   if (k === 'hoje') { const n = dayStats().atrasado; return n ? `<span class="count bad">${n}</span>` : ''; }
   if (k === 'ocorrencias') { const n = occOpen().length; return n ? `<span class="count">${n}</span>` : ''; }
   if (k === 'pops') { const n = pendingReads().length; return n ? `<span class="count">${n}</span>` : ''; }
+  if (k === 'notas') { const c = compAtual(), n = S.docs.filter(d => d.competencia === c && d.status === 'enviada').length; return n ? `<span class="count">${n}</span>` : ''; }
   return '';
 }
 
@@ -32,7 +33,7 @@ function renderSocio(){
   const bnav = `<nav class="bnav" aria-label="Menu">${bn.map(([k, l, ic]) => `<button class="${v === k ? 'on' : ''}" data-act="nav" data-v="${k}">${icon(ic)}${l}</button>`).join('')}<button class="${!bn.some(x => x[0] === v) ? 'on' : ''}" data-act="more">${icon('mais')}Mais</button></nav>`;
   const sheet = S.ui.more ? `<div class="sheet" data-act="more"><div class="sheet-in" data-stop="1">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.map(([k, l, ic]) =>
     `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}</div></div>` : '';
-  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, equipe:pgEquipe, gerente:pgGerente, pops:pgPops, rotina:pgRotina}[v] || pgPainel)();
+  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina}[v] || pgPainel)();
   return side + `<main class="work">${page}</main>` + bnav + sheet;
 }
 
@@ -253,7 +254,9 @@ function fichaPessoa(p){
   return `<section class="panel"><div class="panel-h"><div class="row nowrap gap8">${av(p, true)}<div><h2>${esc(p.name)}</h2><p>${roleL(p)} · ${esc(p.turno)}</p></div></div><button class="btn sm" data-act="selP" data-v="">Fechar</button></div>
     ${ed ? `<form class="form-grid ficha" data-form="ficha" data-id="${p.id}">
       <div class="field"><label for="fp-nome">Nome</label><input class="inp" id="fp-nome" value="${esc(p.name)}"></div>
+      <div class="field"><label for="fp-full">Nome completo</label><input class="inp" id="fp-full" value="${esc(p.fullName || '')}"></div>
       <div class="field"><label for="fp-rot">Função</label><input class="inp" id="fp-rot" value="${esc(p.label || '')}"></div>
+      <label class="toggle"><input type="checkbox" id="fp-parc" ${p.parceiro ? 'checked' : ''}><span><b>Profissional-parceiro</b><span>Envia nota fiscal todo mês (Salão-Parceiro).</span></span></label>
       <div class="field"><label for="fp-turno">Turno</label><input class="inp" id="fp-turno" value="${esc(p.turno)}"></div>
       <div class="field"><label for="fp-folga">Folga</label><select class="inp" id="fp-folga"><option value="">Não definida</option>${DOW.map(d => `<option value="${d}" ${p.folga === d ? 'selected' : ''}>${WEEK_FULL[d]}</option>`).join('')}</select></div>
       <div class="field row gap6 ficha-acts"><button class="btn sm primary">Salvar</button><button type="button" class="btn sm no" data-act="desligar" data-id="${p.id}">Desligar</button></div></form>` : ''}
@@ -288,6 +291,14 @@ function pgGerente(){
             <div class="rule"><div><b>Meta de conformidade</b><p class="small muted">Abaixo disso o número fica âmbar ou vermelho</p></div><div class="affix w-num"><input type="number" id="r-meta" data-rule="meta" data-kind="pct" value="${Math.round(r.meta * 100)}" min="50" max="100" ${d}><span>%</span></div></div>
             <label class="toggle"><input type="checkbox" id="r-rondas" data-rule="rondas" data-kind="bool" ${r.rondas ? 'checked' : ''} ${d}><span><b>Rondas surpresa</b><span>O horário da ronda é sorteado até 1 hora antes ou depois do previsto. A equipe não vê.</span></span></label>
             <div class="rule"><div><b>Resumo do dia aos sócios</b><p class="small muted">Horário da notificação</p></div><input class="inp w-auto" type="time" id="r-resumo" data-rule="resumo" data-kind="str" value="${r.resumo}" ${d}></div>
+          </div></section>
+        <section class="panel"><div class="panel-h"><h2>Notas fiscais</h2><p>Salão-Parceiro</p></div>
+          <div class="stack gap14">
+            <div class="rule"><div><b>Prazo da nota fiscal</b><p class="small muted">Dia do mês seguinte para enviar a NFS-e</p></div><div class="affix w-num"><input type="number" id="r-nfdia" data-rule="nfDia" value="${r.nfDia}" min="1" max="28" ${d}><span>dia</span></div></div>
+            <label class="toggle"><input type="checkbox" id="r-nfdas" data-rule="nfDas" data-kind="bool" ${r.nfDas ? 'checked' : ''} ${d}><span><b>Pedir o comprovante do DAS do MEI</b><span>Vence dia 20. Mostra que o MEI do parceiro está em dia.</span></span></label>
+            <div class="field"><label for="r-nfrazao">Razão social da Hype (tomador)</label><input class="inp" id="r-nfrazao" data-rule="nfRazao" data-kind="str" value="${esc(r.nfRazao)}" ${d}></div>
+            <div class="field"><label for="r-nfcnpj">CNPJ da Hype</label><input class="inp" id="r-nfcnpj" data-rule="nfCnpj" data-kind="str" value="${esc(r.nfCnpj)}" inputmode="numeric" ${d}></div>
+            <div class="field"><label for="r-nfdesc">Descrição sugerida do serviço ({mes} vira o mês da nota)</label><textarea class="inp" id="r-nfdesc" data-rule="nfDesc" data-kind="str" rows="3" ${d}>${esc(r.nfDesc)}</textarea></div>
           </div></section>
         <section class="panel"><div class="panel-h"><h2>Lembretes fixos</h2><p>chegam no celular da gerente</p></div>
           <div class="stack gap6">${S.reminders.map(x => `<div class="rem ${x.on ? '' : 'off'}"><span class="num"><b>${x.at}</b></span><span class="grow">${esc(x.text)}</span>${vis(S.remDone[x.id]) ? chip('feito ' + hm(S.remDone[x.id]), 'good') : toMin(x.at) <= NOW() && x.on ? chip('pendente', 'warn') : ''}
@@ -386,4 +397,32 @@ function pgRotina(){
         <label class="toggle"><input type="checkbox" id="nr-conf" checked><span><b>A gerente confere</b></span></label>
         <div class="field"><label for="nr-itens">Itens, um por linha. Comece com ! os críticos e com # os que exigem foto.</label><textarea class="inp" id="nr-itens" rows="4" required></textarea></div>
         <div><button class="btn primary">Criar checklist</button></div></form></details>` : ''}`;
+}
+
+/* ---------- Notas fiscais do Salão-Parceiro ---------- */
+function blocoNotas(comp, phone){
+  const parceiros = team().filter(p => p.parceiro), opts = [1, 2, 3, 4, 5, 6].map(k => compMenos(k));
+  const docCell = (p, tipo, prazo) => { const d = docDe(p.id, comp, tipo), atras = !docOk(d) && TODAY_ISO > prazo;
+    return `<div class="stack gap4">${d ? docChip(d) : chip(atras ? 'atrasada' : 'pendente', atras ? 'bad' : 'warn')}
+      ${d ? `<span class="small muted">${d.numero ? `nº ${esc(d.numero)} · ` : ''}${d.valor != null ? `R$ ${nf2(d.valor)} · ` : ''}${dLabelISO(recife(Date.parse(d.enviado_em)).toISOString().slice(0, 10))}</span>
+        <span class="row gap6"><button class="linkbtn small" data-act="verDoc" data-v="${esc(d.arquivo_path)}">Ver arquivo</button>
+        ${canManage() && d.status === 'enviada' ? `<button class="btn sm ok" data-act="revDoc" data-id="${d.id}" data-v="aceita">Aceitar</button><button class="btn sm no" data-act="revDoc" data-id="${d.id}" data-v="recusada">Recusar</button>` : ''}</span>
+        ${d.status === 'recusada' && d.obs ? `<span class="small bad-t">${esc(d.obs)}</span>` : ''}` : ''}</div>`; };
+  return `<section class="${phone ? 'card' : 'panel'}" id="notas"><div class="row between"><h3 class="${phone ? '' : 'h-sm'}">Notas fiscais de ${compLabel(comp)}</h3>
+      <label class="sr" for="f-comp">Mês</label><select class="inp w-auto sm-sel" id="f-comp" data-f="comp">${opts.map(c => `<option value="${c}" ${c === comp ? 'selected' : ''}>${compLabel(c)}</option>`).join('')}</select></div>
+    <p class="small muted">Prazo da NFS-e: ${dLabelISO(prazoNF(comp))}${S.rules.nfDas ? ` · DAS: ${dLabelISO(prazoDAS(comp))}` : ''}. Para recusar, escreva o motivo no campo antes de tocar em Recusar.</p>
+    ${canManage() ? `<label class="sr" for="rev-nota">Motivo da recusa</label><input class="inp" id="rev-nota" placeholder="Motivo da recusa (ex.: valor diferente do relatório)">` : ''}
+    ${parceiros.length ? `<div class="tw"><table class="t"><thead><tr><th>Parceiro</th><th>NFS-e</th>${S.rules.nfDas ? '<th>DAS</th>' : ''}</tr></thead><tbody>
+      ${parceiros.map(p => `<tr><td><span class="who-cell">${av(p)}${esc(p.name)}</span></td><td>${docCell(p, 'nfse', prazoNF(comp))}</td>${S.rules.nfDas ? `<td>${docCell(p, 'das', prazoDAS(comp))}</td>` : ''}</tr>`).join('')}
+    </tbody></table></div>` : '<p class="muted small">Nenhum profissional-parceiro marcado. Marque em Equipe, na ficha de cada barbeiro.</p>'}</section>`;
+}
+function pgNotas(){
+  const comp = S.ui.f.comp || compAtual(), parceiros = team().filter(p => p.parceiro);
+  const env = parceiros.filter(p => docOk(docDe(p.id, comp, 'nfse'))).length, ace = parceiros.filter(p => docDe(p.id, comp, 'nfse')?.status === 'aceita').length;
+  const total = sum(parceiros.map(p => docDe(p.id, comp, 'nfse')).filter(docOk), d => +d.valor);
+  return `${ph(eyebrow(), 'Notas fiscais', 'Salão-Parceiro (Lei 13.352/2016): cada barbeiro parceiro emite todo mês a NFS-e da sua cota-parte para a Hype e envia pelo app. A gerência confere aqui.')}
+    ${!S.rules.nfCnpj ? `<p class="callout"><b>Falta o CNPJ e a razão social da Hype</b> para os barbeiros emitirem a nota. ${canEdit() ? 'Preencha em Gerente e lembretes.' : 'O Victor preenche em Gerente e lembretes.'}</p>` : ''}
+    <div class="grid kpis">${kpi('Notas enviadas', `${env} de ${parceiros.length}`, compLabel(comp), env < parceiros.length && TODAY_ISO > prazoNF(comp) ? 'bad' : '')}${kpi('Conferidas', `${ace} de ${env}`, 'aceitas pela gerência')}${kpi('Valor informado', `R$ ${nf2(total)}`, 'soma das NFS-e enviadas')}</div>
+    ${blocoNotas(comp, false)}
+    <p class="small muted">Os arquivos ficam guardados no Supabase, numa pasta privada de cada barbeiro. Quem envia vê só os seus. Confirme as regras de emissão com a contabilidade da Hype.</p>`;
 }

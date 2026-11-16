@@ -2,8 +2,8 @@
    App de celular: gerente, barbeiros e atendentes
    ========================================================= */
 const TABS = {
-  gerente:[['agora','Agora','sino'], ['equipe','Equipe','equipe'], ['ocorrencias','Ocorrências','alerta'], ['pops','POPs','livro']],
-  equipe:[['hoje','Hoje','check'], ['pops','POPs','livro'], ['hist','Histórico','hist']],
+  gerente:[['agora','Agora','sino'], ['equipe','Equipe','equipe'], ['ocorrencias','Ocorrências','alerta'], ['pops','POPs','livro'], ['perfil','Perfil','perfil']],
+  equipe:[['hoje','Hoje','check'], ['pops','POPs','livro'], ['hist','Histórico','hist'], ['perfil','Perfil','perfil']],
 };
 const greet = () => NOW() < 12 * 60 ? 'Bom dia' : NOW() < 18 * 60 ? 'Boa tarde' : 'Boa noite';
 
@@ -12,14 +12,15 @@ function renderPhone(p){
   let body;
   if (S.ui.open && inst(S.ui.open)) body = scInst(p);
   else if (S.ui.pop) body = scPop(p);
-  else body = ({agora:gAgora, equipe:gEquipe, ocorrencias:gOcc, pops:mPops, hoje:eHoje, hist:eHist}[S.ui.tab] || (isG ? gAgora : eHoje))(p);
+  else body = ({agora:gAgora, equipe:gEquipe, ocorrencias:gOcc, pops:mPops, hoje:eHoje, hist:eHist, perfil:mPerfil}[S.ui.tab] || (isG ? gAgora : eHoje))(p);
   const feedN = isG ? gerenteFeed().filter(f => f.k === 'bad' || f.k === 'warn').length : 0;
   const myReads = pendingReads(p.id).length;
   return `<div class="phone">
     <div class="p-top">${av(p, true)}<div class="grow"><b>${esc(p.name)}</b><span>${roleL(p)} · ${esc(p.turno)}</span></div>${p.socio ? `<button class="btn sm" data-act="asSocio">Painel dos sócios</button>` : ''}<div class="p-clock"><b class="num">${hm(NOW())}</b><span>${DIA_CURTO}</span></div></div>
     <div class="p-body">${body}</div>
     <nav class="tabbar" aria-label="Abas">${tabs.map(([k, l, ic]) => { const n = k === 'agora' ? feedN : k === 'pops' ? myReads : 0;
-      return `<button class="${S.ui.tab === k && !S.ui.open && !S.ui.pop ? 'on' : ''}" data-act="tab" data-v="${k}"><span class="tab-ic">${icon(ic)}${n ? `<span class="count bad">${n}</span>` : ''}</span>${l}</button>`; }).join('')}</nav></div>`;
+      const nf = k === 'perfil' && p.parceiro ? pendNF(p.id) : 0;
+      return `<button class="${S.ui.tab === k && !S.ui.open && !S.ui.pop ? 'on' : ''}" data-act="tab" data-v="${k}"><span class="tab-ic">${icon(ic)}${n || nf ? `<span class="count bad">${n || nf}</span>` : ''}</span>${l}</button>`; }).join('')}</nav></div>`;
 }
 
 const backBtn = () => `<button class="back" data-act="close">${icon('voltar', 'ni xs')}Voltar</button>`;
@@ -60,6 +61,7 @@ function gEquipe(p){
     ${ppl.map(x => { const d = dayStats(i => i.who === x.id), list = S.inst.filter(i => i.who === x.id).sort((a, b) => a.start - b.start);
       return `<section class="card"><div class="row between nowrap"><div class="row nowrap gap8">${av(x)}<div><b>${esc(x.name)}</b><p class="small muted">${roleL(x)} · ${esc(x.turno)}</p></div></div>${d.atrasado ? chip(d.atrasado + ' atrasado', 'bad') : chip(`${d.ok} de ${d.due} no prazo`, rateKind(d.rate))}</div>
         <div class="stack gap6">${list.map(i => instCard(i, {who:false})).join('') || '<p class="small muted">Nenhum checklist hoje.</p>'}</div></section>`; }).join('')}
+    ${blocoNotas(S.ui.f.comp || compAtual(), true)}
     ${blocoAusencias()}`;
 }
 
@@ -111,4 +113,43 @@ function eHist(p){
     <section class="card"><h3>Dia a dia</h3><div class="feed">${h.map(d => { const x = d.byP[p.id]; if (!x) return '';
       return `<div class="feed-i"><div><b>${WEEK[d.wd]}, ${d.label}</b><span>${x.exp} checklists</span></div><div class="r">${x.ok === x.exp ? chip('tudo no prazo', 'good') : chip(`${x.ok} de ${x.exp} no prazo`, x.miss ? 'bad' : 'warn')}</div></div>`; }).join('')}</div></section>
     <section class="card"><h3>Ocorrências com você ou registradas por você</h3>${occ.length ? occ.map(o => occCard(o)).join('') : '<p class="small muted">Nenhuma. Continue assim.</p>'}</section>`;
+}
+
+/* ---------- Perfil (todos) ---------- */
+const pendNF = pid => { const c = compAtual(); return (!docOk(docDe(pid, c, 'nfse')) && TODAY_ISO >= c.slice(0, 8) + '01' ? 1 : 0); };
+const docOk = d => d && d.status !== 'recusada';
+const docChip = d => !d ? chip('pendente', 'warn') : d.status === 'aceita' ? chip('aceita', 'good') : d.status === 'recusada' ? chip('recusada', 'bad') : chip('enviada, aguardando conferência', 'acc');
+function mPerfil(p){
+  const assin = S.pops.filter(x => popPeople(x).some(y => y.id === p.id)), ok = assin.filter(x => (x.reads[p.id] || 0) >= x.version).length;
+  const aus = S.ausencias.filter(a => a.pessoa_id === p.id && a.fim >= TODAY_ISO);
+  return `<div><p class="eyebrow">Perfil</p><h1 class="p-title">${esc(p.fullName)}</h1></div>
+    <section class="card perfil"><div class="row nowrap gap8">${av(p, true)}<div><b>${esc(p.fullName)}</b><p class="small muted">${roleL(p)}</p></div></div>
+      <dl class="meta-grid"><div><dt>E-mail de acesso</dt><dd>${esc(p.email || 'não cadastrado')}</dd></div><div><dt>Cargo</dt><dd>${ROLE[p.role]}</dd></div>
+        <div><dt>Turno</dt><dd>${esc(p.turno || 'a definir')}</dd></div><div><dt>Folga</dt><dd>${p.folga != null ? WEEK_FULL[p.folga] : 'a definir'}</dd></div>
+        <div><dt>Termo de ciência</dt><dd>${ok} de ${assin.length} POPs assinados</dd></div>
+        <div><dt>Notificações</dt><dd>${S.ui.push ? 'ativas neste aparelho' : `<button class="btn sm primary" data-act="push">Ativar neste aparelho</button>`}</dd></div></dl>
+      ${aus.length ? `<p class="small">Ausência registrada: ${aus.map(a => `${dLabelISO(a.inicio)}${a.fim !== a.inicio ? ` a ${dLabelISO(a.fim)}` : ''}${a.motivo ? ` (${esc(a.motivo)})` : ''}`).join(', ')}</p>` : ''}
+      <p class="small muted">Para corrigir algum dado, fale com a Jessica.</p></section>
+    ${p.parceiro ? perfilNotas(p) : ''}
+    <button class="btn" data-act="sair">Sair do app</button>`;
+}
+function perfilNotas(p){
+  const opts = [1, 2, 3].map(k => compMenos(k)), comp = opts.includes(S.ui.f.compP) ? S.ui.f.compP : compAtual();
+  const nf = docDe(p.id, comp, 'nfse'), das = docDe(p.id, comp, 'das'), limNF = prazoNF(comp), limDAS = prazoDAS(comp);
+  const desc = (S.rules.nfDesc || '').replace('{mes}', compCurta(comp));
+  const linha = (tipo, d, titulo, prazo, comCampos) => `<div class="nf-item ${docOk(d) ? 'ok' : ''}"><span class="cbox" aria-hidden="true">${docOk(d) ? '✓' : ''}</span>
+    <div class="grow stack gap6"><div class="row between"><b>${titulo}</b>${docChip(d)}</div>
+      <p class="small muted">Prazo: ${dLabelISO(prazo)}${d ? ` · enviado em ${dLabelISO(recife(Date.parse(d.enviado_em)).toISOString().slice(0, 10))}${d.numero ? ` · nº ${esc(d.numero)}` : ''}${d.valor != null ? ` · R$ ${nf2(d.valor)}` : ''}` : ''}</p>
+      ${d?.status === 'recusada' ? `<p class="callout bad small"><b>Recusada:</b> ${esc(d.obs || '')} Envie de novo corrigida.</p>` : ''}
+      ${d ? `<button class="linkbtn small" data-act="verDoc" data-v="${esc(d.arquivo_path)}">Ver o arquivo enviado</button>` : ''}
+      ${!docOk(d) ? `<form class="stack gap6" data-form="doc" data-tipo="${tipo}" data-comp="${comp}">${comCampos ? `<div class="form-grid"><div class="field"><label for="dn-${tipo}">Número da nota</label><input class="inp" id="dn-${tipo}" inputmode="numeric" required></div>
+        <div class="field"><label for="dv-${tipo}">Valor (R$)</label><input class="inp" id="dv-${tipo}" inputmode="decimal" placeholder="0,00" required></div></div>` : ''}
+        <div class="field"><label for="df-${tipo}">Arquivo (PDF, XML ou foto)</label><input class="inp" type="file" id="df-${tipo}" accept="application/pdf,.pdf,.xml,text/xml,image/*" required></div>
+        <div><button class="btn sm primary">Enviar para a gestão</button></div></form>` : ''}</div></div>`;
+  return `<section class="card"><div class="row between"><h3>Notas fiscais · Salão-Parceiro</h3><label class="sr" for="f-compP">Mês</label><select class="inp w-auto sm-sel" id="f-compP" data-f="compP">${opts.map(c => `<option value="${c}" ${c === comp ? 'selected' : ''}>${compLabel(c)}</option>`).join('')}</select></div>
+    <p class="small muted">Como profissional-parceiro (Lei 13.352/2016), você emite todo mês a nota fiscal de serviço para a Hype com o valor da sua cota-parte do mês anterior. Aqui você envia a nota e a gestão confere.</p>
+    ${linha('nfse', nf, `NFS-e de ${compLabel(comp)} emitida para a Hype`, limNF, true)}
+    ${S.rules.nfDas ? linha('das', das, `DAS do MEI de ${compLabel(comp)} pago`, limDAS, false) : ''}
+    <details class="prev"><summary class="small"><b>Dados para emitir a nota</b></summary><dl class="meta-grid"><div><dt>Tomador (razão social)</dt><dd>${esc(S.rules.nfRazao || 'a definir pelos sócios')}</dd></div><div><dt>CNPJ</dt><dd>${esc(S.rules.nfCnpj || 'a definir pelos sócios')}</dd></div><div><dt>Descrição do serviço</dt><dd id="nf-desc">${esc(desc)}</dd></div></dl><button class="btn sm" data-act="copiarDesc">Copiar a descrição</button></details>
+    <p class="day-h">Últimos meses</p><div class="feed">${[1, 2, 3, 4, 5, 6].map(k => compMenos(k)).map(c => `<div class="feed-i"><div><b>${compLabel(c)}</b></div><div class="r row gap6">NF ${docChip(docDe(p.id, c, 'nfse'))}${S.rules.nfDas ? ` DAS ${docChip(docDe(p.id, c, 'das'))}` : ''}</div></div>`).join('')}</div></section>`;
 }

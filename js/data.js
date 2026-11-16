@@ -38,10 +38,11 @@ async function carregar(){
     sb.from('rodizio_escala').select('*'),
     sb.from('pop_versoes').select('pop_id,versao,publicado_em,por,conteudo').order('versao', {ascending:false}),
     sb.from('resumos').select('*').order('data', {ascending:false}).limit(7),
+    sb.from('documentos_fiscais').select('*').gte('competencia', compMenos(7)).order('enviado_em', {ascending:false}),
   ]);
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs] = q.map(check);
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis] = q.map(check);
 
-  const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem}));
+  const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem, fullName:p.nome_completo || p.nome, parceiro:p.parceiro}));
   const pops = po.map(p => {
     const reads = {}; le.filter(r => r.pop_id === p.id).forEach(r => reads[r.pessoa_id] = Math.max(reads[r.pessoa_id] || 0, r.versao));
     return {id:p.id, title:p.titulo, area:p.area, roles:p.cargos, who:p.quem, owner:p.dono, freq:p.frequencia, objective:p.objetivo, materials:p.materiais || [], steps:p.passos || [],
@@ -70,11 +71,12 @@ async function carregar(){
   const remDone = Object.fromEntries(lf.map(l => [l.lembrete_id, minOf(l.em)]));
   const nudges = co.map(c => ({inst:c.execucao_id, at:minOf(c.em), by:c.por}));
   const r = rg || {};
-  const rules = {antes:r.antes ?? 10, escalar:r.escalar ?? 30, conferir:r.conferir ?? 30, meta:Number(r.meta ?? .9), rondas:r.rondas_surpresa ?? true, resumo:hmT(r.resumo) || '21:00', inicio:r.inicio_operacao || null};
+  const rules = {antes:r.antes ?? 10, escalar:r.escalar ?? 30, conferir:r.conferir ?? 30, meta:Number(r.meta ?? .9), rondas:r.rondas_surpresa ?? true, resumo:hmT(r.resumo) || '21:00', inicio:r.inicio_operacao || null,
+    nfDia:r.nf_dia_limite ?? 5, nfDas:r.nf_exigir_das ?? true, nfCnpj:r.nf_cnpj || '', nfRazao:r.nf_razao || '', nfDesc:r.nf_descricao || ''};
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
-    ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
+    docs:dfis, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = nowMin();
   await assinarFotos();
 }
@@ -107,7 +109,7 @@ let RT_TIMER, RT_CH;
 function tempoReal(){
   if (RT_CH) return;
   RT_CH = sb.channel('hype-pop');
-  ['execucoes','execucao_itens','cobrancas','ocorrencias','ocorrencia_acoes','lembretes_feitos','pop_leituras','ausencias','dias_fechados'].forEach(t =>
+  ['execucoes','execucao_itens','cobrancas','ocorrencias','ocorrencia_acoes','lembretes_feitos','pop_leituras','ausencias','dias_fechados','documentos_fiscais'].forEach(t =>
     RT_CH.on('postgres_changes', {event:'*', schema:'public', table:t}, () => { clearTimeout(RT_TIMER); RT_TIMER = setTimeout(recarregar, 700); }));
   RT_CH.subscribe();
 }
@@ -159,3 +161,24 @@ async function ativarPush(){
 function registrarErro(msg, ctx){ try { sb.rpc('registrar_erro', {msg:String(msg).slice(0, 2000), ctx:String(ctx || location.hash || '').slice(0, 2000)}); } catch (e) {} }
 window.addEventListener('error', e => registrarErro(e.message, `${e.filename}:${e.lineno}`));
 window.addEventListener('unhandledrejection', e => registrarErro(e.reason?.message || e.reason, 'promise'));
+
+/* ---------- Notas fiscais do Salão-Parceiro ---------- */
+function compMenos(n){ const d = recife(); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - n, 1)).toISOString().slice(0, 10); }
+const compLabel = c => `${MESES[+c.slice(5, 7) - 1]} de ${c.slice(0, 4)}`;
+const compCurta = c => `${c.slice(5, 7)}/${c.slice(0, 4)}`;
+const compAtual = () => compMenos(1);                      // a nota de um mês é emitida no mês seguinte
+function prazoNF(comp){ const [y, m] = comp.split('-').map(Number), last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); return new Date(Date.UTC(y, m, Math.min(S.rules.nfDia, last))).toISOString().slice(0, 10); }
+function prazoDAS(comp){ const [y, m] = comp.split('-').map(Number); return new Date(Date.UTC(y, m, 20)).toISOString().slice(0, 10); }
+const docDe = (pid, comp, tipo) => S.docs.find(d => d.pessoa_id === pid && d.competencia === comp && d.tipo === tipo);   // o mais recente
+async function enviarDocumento(comp, tipo, numero, valor, file){
+  const ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'pdf';
+  const path = `${S.ui.user}/${comp.slice(0, 7)}-${tipo}-${Date.now()}.${ext}`;
+  check(await sb.storage.from('documentos').upload(path, file, {contentType:file.type || undefined}));
+  check(await sb.rpc('enviar_documento', {competencia:comp, tipo, numero:numero || null, valor:valor === '' || valor == null ? null : +valor, arquivo:path}));
+}
+async function abrirDocumento(path){
+  const w = window.open('', '_blank');
+  const {data, error} = await sb.storage.from('documentos').createSignedUrl(path, 600);
+  if (error) { w?.close(); throw new Error(error.message); }
+  if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+}

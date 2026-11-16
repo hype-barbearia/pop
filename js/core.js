@@ -30,4 +30,5 @@ const sum = (a, f = x => x) => a.reduce((t, x) => t + (f(x) || 0), 0);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const firstName = n => String(n).split(' ')[0];
 const initials = n => String(n).split(' ').map(x => x[0]).slice(0, 2).join('');
+const nf2 = v => Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
 const mins = m => m < 60 ? `${Math.round(m)} min` : `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}`;

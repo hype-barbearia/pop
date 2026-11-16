@@ -174,6 +174,11 @@ const A = {
     const txt = '\ufeff' + linhasCsv.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'text/csv;charset=utf-8'})); a.download = `hype-pop-${mes}.csv`; a.click();
   },
+  verDoc(d){ abrirDocumento(d.v).catch(e => toast(esc(e.message))); },
+  revDoc(d){ const nota = ($('#rev-nota')?.value || '').trim();
+    if (d.v === 'recusada' && !nota) { toast('Escreva o motivo da recusa no campo acima da tabela.'); $('#rev-nota')?.focus(); return; }
+    run(() => rpc('revisar_documento', {doc:+d.id, resultado:d.v, nota:nota || null}), d.v === 'aceita' ? 'Documento aceito.' : 'Documento recusado. O barbeiro foi avisado.'); },
+  copiarDesc(){ const t = $('#nf-desc')?.innerText || ''; navigator.clipboard?.writeText(t).then(() => toast('Descrição copiada.'), () => toast('Selecione o texto e copie.')); },
   copiar(){ const t = $('#wa-text')?.innerText || ''; navigator.clipboard?.writeText(t).then(() => toast('Resumo copiado. Cole no WhatsApp dos sócios.'), () => toast('Não deu para copiar. Selecione o texto e copie.')); },
 };
 
@@ -206,8 +211,9 @@ document.addEventListener('change', e => {
   if (el.dataset.rule) {
     const k = el.dataset.rule, kind = el.dataset.kind; let v = kind === 'bool' ? el.checked : kind === 'str' ? el.value : +el.value;
     if (kind === 'pct') v = clamp(v, 50, 100) / 100; if (kind !== 'bool' && kind !== 'str' && isNaN(v)) return;
-    const col = {antes:'antes', escalar:'escalar', conferir:'conferir', meta:'meta', rondas:'rondas_surpresa', resumo:'resumo', inicio:'inicio_operacao'}[k];
-    if (kind === 'str' && !v) v = null;
+    const col = {antes:'antes', escalar:'escalar', conferir:'conferir', meta:'meta', rondas:'rondas_surpresa', resumo:'resumo', inicio:'inicio_operacao',
+      nfDia:'nf_dia_limite', nfDas:'nf_exigir_das', nfCnpj:'nf_cnpj', nfRazao:'nf_razao', nfDesc:'nf_descricao'}[k];
+    if (kind === 'str' && !v) v = k === 'nfDesc' ? '' : null;
     upd('regras', {[col]:v}, 'id', 1, 'Regra atualizada.'); return;
   }
   if (el.dataset.rem) { upd('lembretes', {ativo:el.checked}, 'id', +el.dataset.rem, el.checked ? 'Lembrete ativado.' : 'Lembrete pausado.'); return; }
@@ -239,6 +245,12 @@ document.addEventListener('submit', async e => {
     run(async () => { const foto = file ? await enviarFoto('ocorrencias', 'oc', file) : null;
       await rpc('abrir_ocorrencia', {titulo:t, pessoa:$('#no-w').value, origem:$('#no-s')?.value || 'Equipe', descricao:$('#no-d').value.trim() || null, pop:null,
         responsavel:$('#no-r')?.value || null, prazo:$('#no-p')?.value || null, foto}); $('#det-occ') && ($('#det-occ').open = false); }, 'Ocorrência registrada. A gerência foi avisada.'); }
+  if (f === 'doc') { const tipo = e.target.dataset.tipo, comp = e.target.dataset.comp, file = $('#df-' + tipo).files[0]; if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { toast('O arquivo passa de 10 MB. Envie o PDF da nota ou uma foto menor.'); return; }
+    const valor = tipo === 'nfse' ? $('#dv-' + tipo).value.replace(/\./g, '').replace(',', '.').trim() : null;
+    if (tipo === 'nfse' && (valor === '' || isNaN(+valor))) { toast('Informe o valor da nota, por exemplo 1.250,00.'); return; }
+    const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Enviando…';
+    run(() => enviarDocumento(comp, tipo, tipo === 'nfse' ? $('#dn-' + tipo).value.trim() : null, valor, file), tipo === 'nfse' ? 'Nota fiscal enviada. A gestão foi avisada.' : 'Comprovante do DAS enviado.'); }
   if (f === 'aus') { const de = $('#au-i').value, ate = $('#au-f').value; if (ate < de) { toast('A data final precisa ser igual ou depois da inicial.'); return; }
     run(() => rpc('registrar_ausencia', {pessoa:$('#au-p').value, de, ate, motivo:$('#au-m').value.trim() || null, substituto:$('#au-s').value || null}), 'Ausência registrada.'); }
   if (f === 'fechar') { run(() => rpc('fechar_dia', {d:$('#fd-d').value, motivo:$('#fd-m').value.trim() || null}), 'Dia marcado como sem expediente.'); }
@@ -247,7 +259,7 @@ document.addEventListener('submit', async e => {
     run(async () => check(await sb.from('pessoas').insert({id, nome, papel:$('#np-papel').value, rotulo:$('#np-rot').value.trim() || null, turno:$('#np-turno').value.trim() || null,
       folga:$('#np-folga').value === '' ? null : +$('#np-folga').value, email:$('#np-email').value.trim().toLowerCase() || null, cor:Math.floor(Math.random() * 360), ordem:S.people.length})), `${nome} entrou na equipe.`); }
   if (f === 'ficha') { const id = e.target.dataset.id;
-    upd('pessoas', {nome:$('#fp-nome').value.trim(), rotulo:$('#fp-rot').value.trim() || null, turno:$('#fp-turno').value.trim() || null, folga:$('#fp-folga').value === '' ? null : +$('#fp-folga').value}, 'id', id, 'Dados atualizados.'); }
+    upd('pessoas', {nome_completo:$('#fp-full').value.trim() || null, parceiro:$('#fp-parc').checked, nome:$('#fp-nome').value.trim(), rotulo:$('#fp-rot').value.trim() || null, turno:$('#fp-turno').value.trim() || null, folga:$('#fp-folga').value === '' ? null : +$('#fp-folga').value}, 'id', id, 'Dados atualizados.'); }
   if (f === 'editpop') { const id = e.target.dataset.id, nova = (e.submitter?.value || 'versao') === 'versao';
     const ls = sel => $(sel).value.split('\n').map(x => x.trim()).filter(Boolean);
     const dados = {titulo:$('#ep-t').value.trim(), quem:$('#ep-q').value.trim(), frequencia:$('#ep-f').value.trim(), dono:$('#ep-d').value.trim(), objetivo:$('#ep-o').value.trim(),

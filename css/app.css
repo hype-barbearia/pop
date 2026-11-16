@@ -643,3 +643,6 @@ details.ver{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 details.ver[open] summary{margin-bottom:8px}
 .ro input:disabled,.ro select:disabled{opacity:.7;cursor:not-allowed}
 .occ .photo{margin-top:0}
+.nf-item{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.nf-item.ok .cbox{background:var(--good);border-color:var(--good);color:var(--surface)}
+.perfil .meta-grid{margin-top:10px}
