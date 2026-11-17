@@ -3,7 +3,7 @@
    Victor edita tudo. Robson vê tudo, sem alterar.
    ========================================================= */
 const SNAV = [
-  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','alerta'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
+  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','check'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
   ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['notas','Notas fiscais','nota'], ['gerente','Gerente e lembretes','sino']]],
   ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina'], ['info','Informações da casa','nota']]],
 ];
@@ -76,7 +76,7 @@ function pgPainel(){
     ${tasks ? `<section class="tasks"><h2>Precisa de atenção</h2><div class="task-row">${tasks}</div></section>` : `<p class="callout good"><b>Tudo em dia.</b> Nenhum atraso, ocorrência aberta ou conferência pendente.</p>`}
     <div class="grid kpis">
       ${kpi('Conformidade hoje', rateTxt(d.rate), `${d.ok} de ${d.due} checklists vencidos foram feitos no prazo`, rateKind(d.rate), bar(d.rate, rateKind(d.rate), S.rules.meta))}
-      ${kpi('Checklists do dia', `${d.done} de ${d.total}`, `${d.atrasado} atrasados · ${d.aberto} abertos · ${d.agendado} agendados`)}
+      ${kpi('Checklists do dia', `${d.done} de ${d.total}`, [[d.atrasado, 'atrasado'], [d.aberto, 'aberto'], [d.agendado, 'agendado']].map(([n, w]) => `${n} ${w}${n === 1 ? '' : 's'}`).join(' · '))}
       ${kpi('Média de 4 semanas', rateTxt(h.rate), h.exp ? `${pct(h.doneRate)} feitos, contando os atrasados` : 'Aparece depois do primeiro dia completo', rateKind(h.rate))}
       ${kpi('Rondas da gerente', `${g.ronDone.length} de ${g.ron.length}`, g.ronItems.length ? `${g.ronOk} de ${g.ronItems.length} itens conformes` : 'Nenhuma feita ainda')}
       ${kpi('Gerente atendeu', rateTxt(g.rate), `${g.got} de ${g.exp} lembretes: conferir, cobrar, rondas e fixos`, rateKind(g.rate))}

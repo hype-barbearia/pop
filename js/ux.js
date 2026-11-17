@@ -20,9 +20,9 @@ const segs = list => `<div class="segs" role="img" aria-label="Progresso do dia"
 function tlItem(i, {who = false} = {}){
   const t = tpl(i.tpl), s = status(i), g = prog(i);
   const meta = isDone(i) ? `feito às ${hm(i.doneAt)}${i.doneAt > i.due ? ` · ${mins(i.doneAt - i.due)} de atraso` : ''}` : s === 'agendado' ? `até ${hm(i.due)}` : `${g.d}/${g.n} itens · prazo ${hm(i.due)}`;
-  const flag = needsVer(i) ? 'aguardando conferência' : g.nc ? `${g.nc} não ${t.kind === 'ronda' ? 'conforme' : 'feito'}` : '';
+  const flag = g.nc ? `<em>${g.nc} não ${t.kind === 'ronda' ? 'conforme' : 'feito'}</em>` : needsVer(i) ? '<em class="wait">aguardando conferência</em>' : '';
   return `<button class="tli s-${SK[s]}" data-act="open" data-id="${i.id}"><span class="tli-t num">${hm(i.start)}</span><span class="tli-dot"></span>
-    <span class="tli-c"><b>${esc(t.title)}</b><small>${who ? esc(whoTxt(i)) + ' · ' : ''}${meta}${flag ? ` · <em>${flag}</em>` : ''}</small></span><span class="tli-s">${ST[s].l}</span></button>`;
+    <span class="tli-c"><b>${esc(t.title)}</b><small>${who ? esc(whoTxt(i)) + ' · ' : ''}${meta}${flag ? ` · ${flag}` : ''}</small></span><span class="tli-s">${ST[s].l}</span></button>`;
 }
 instCard = (i, o = {}) => tlItem(i, {who:o.who !== false});
 
@@ -69,11 +69,12 @@ function eHoje(p){
     pr.length ? `<button class="alert warn" data-act="tab" data-v="pops"><b>${pr.length} ${pr.length === 1 ? 'POP para assinar' : 'POPs para assinar'}</b><span>Leia e assine o termo de ciência.</span></button>` : '',
     fila().length ? `<div class="alert warn"><b>${fila().length} ${fila().length === 1 ? 'marcação esperando internet' : 'marcações esperando internet'}</b><span>Saem sozinhas quando a conexão voltar.</span></div>` : '',
   ].filter(Boolean).join('');
-  const prox = pend.filter(i => i !== atual);
+  const prox = pend.filter(i => i !== atual), tambem = prox.filter(i => ['atrasado','aberto'].includes(status(i))), depois = prox.filter(i => !tambem.includes(i));
   return `${heroBand(p, `<p class="hb-eb">${greet()}</p><h1 class="hb-h">${esc(first(p))}</h1>
       <p class="hb-sub">${list.length ? `<b>${done.length}</b> de ${list.length} checklists feitos hoje` : 'Sem checklists hoje'}</p>${list.length ? segs(list) : ''}`)}
     <main class="sheet-c">${agora}${avisoPush()}${avisoInicio()}${avisoFechado()}${avisos}
-      ${prox.length ? `<section class="tl"><h2 class="sec-h">Depois</h2>${prox.map(i => tlItem(i)).join('')}</section>` : ''}
+      ${tambem.length ? `<section class="tl"><h2 class="sec-h">Também para agora</h2>${tambem.map(i => tlItem(i)).join('')}</section>` : ''}
+      ${depois.length ? `<section class="tl"><h2 class="sec-h">Depois</h2>${depois.map(i => tlItem(i)).join('')}</section>` : ''}
       ${done.length ? `<details class="tl" id="det-feitos"><summary class="sec-h">Feitos hoje (${done.length})</summary>${done.map(i => tlItem(i)).join('')}</details>` : ''}
       ${formOcorrencia(false).replace('class="panel"', 'class="card soft"').replace('Registrar ocorrência', 'Avisar a gerência de um problema')}
     </main>`;
@@ -156,6 +157,25 @@ feedCard = function(f){
   return `<article class="fc ${f.k}"><div class="fc-tx"><b>${esc(f.title)}</b><span>${esc(f.sub)}</span></div>${acts ? `<div class="btn-row">${acts}</div>` : ''}</article>`;
 };
 
+/* ---------- Gerente: Equipe em cartões que abrem (atrasados já abertos) ---------- */
+gEquipe = function(p){
+  const ppl = team().filter(x => x.id !== p.id), pr = pendingReads();
+  const com = ppl.filter(x => S.inst.some(i => i.who === x.id)), sem = ppl.filter(x => !com.includes(x));
+  const card = x => {
+    const d = dayStats(i => i.who === x.id), list = S.inst.filter(i => i.who === x.id).sort((a, b) => a.start - b.start);
+    const tag = d.atrasado ? chip(`${d.atrasado} ${d.atrasado === 1 ? 'atrasado' : 'atrasados'}`, 'bad') : chip(`${d.done}/${d.total} feitos`, d.done === d.total ? 'good' : '');
+    return `<details class="card pcard" ${d.atrasado ? 'open' : ''}><summary class="pc-h">${av(x)}<span class="pc-n"><b>${esc(x.name)}</b><small>${esc(roleL(x))}</small>${segs(list)}</span>${tag}</summary>
+      <div class="stack gap6">${list.map(i => tlItem(i)).join('')}</div></details>`;
+  };
+  const porNome = Object.entries(pr.reduce((o, x) => (o[first(x.who)] = (o[first(x.who)] || 0) + 1, o), {}));
+  return `<div><p class="eyebrow">Equipe hoje</p><h1 class="p-title">Quem fez o quê</h1></div>
+    ${com.map(card).join('')}
+    ${sem.length ? `<p class="small muted pc-sem">Sem checklists hoje: ${sem.map(x => esc(first(x))).join(', ')}.</p>` : ''}
+    ${pr.length ? `<div class="notice warn"><span><b>${pr.length} termos de ciência pendentes:</b> ${porNome.map(([n, c]) => `${esc(n)} (${c})`).join(', ')}. Cobre na reunião ou no WhatsApp.</span></div>` : ''}
+    ${blocoNotas(periodos(6).includes(S.ui.f.per) ? S.ui.f.per : perAtual(), true)}
+    ${blocoAusencias()}`;
+};
+
 /* ---------- Sócios: faixa de status no painel ---------- */
 const _pgPainel = pgPainel;
 pgPainel = function(){
@@ -163,7 +183,7 @@ pgPainel = function(){
   const tom = late ? 'bad' : oo || pv ? 'warn' : 'good';
   const frase = !S.inst.length ? (preInicio() ? 'A operação ainda não começou' : 'Nenhum checklist hoje')
     : late ? `${late} ${late === 1 ? 'checklist atrasado' : 'checklists atrasados'} agora` : oo ? `Casa rodando, ${oo} ${oo === 1 ? 'ocorrência aberta' : 'ocorrências abertas'}` : 'Casa no padrão';
-  const hero = `<section class="pulse ${tom}"><div class="pulse-l"><p class="hb-eb">${DIA_LABEL[0].toUpperCase() + DIA_LABEL.slice(1)} · ${hm(NOW())}</p><h1>${frase}</h1>
+  const hero = `<section class="pulse ${tom}"><div class="pulse-l"><p class="hb-eb"><span class="d-l">${DIA_LABEL[0].toUpperCase() + DIA_LABEL.slice(1)}</span><span class="d-s">${DIA_CURTO}</span> · ${hm(NOW())}</p><h1>${frase}</h1>
       ${S.inst.length ? segs([...S.inst].sort((a, b) => a.start - b.start)) : ''}</div>
     <div class="pulse-n"><div><b class="num">${rateTxt(d.rate)}</b><span>no prazo</span></div><div><b class="num">${d.done}<small>/${d.total}</small></b><span>feitos</span></div>
       <div><b class="num">${oo}</b><span>ocorrências</span></div><div><b class="num">${pv}</b><span>a conferir</span></div></div></section>`;
@@ -176,4 +196,12 @@ pgPainel = function(){
 const _check = A.check; A.check = d => { vibra(); _check(d); };
 const _finish = A.finish; A.finish = d => { vibra(); _finish(d); };
 const _render = render;
-render = function(){ _render(); document.body.classList.toggle('phone-ui', !!S?.ui?.user && !socioView()); };
+let TELA = '';
+render = function(){
+  _render(); document.body.classList.toggle('phone-ui', !!S?.ui?.user && !socioView());
+  // Rótulos das colunas para as tabelas empilhadas no celular
+  document.querySelectorAll('table.t').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    if (hs.length) t.querySelectorAll('tbody tr, tfoot tr').forEach(tr => [...tr.children].forEach((td, k) => { if (hs[k] && !td.dataset.label) td.dataset.label = hs[k]; })); });
+  const k = S?.ui ? [S.ui.user, S.ui.view, S.ui.tab, S.ui.open, S.ui.pop, S.ui.rotEdit].join('|') : '';
+  if (k !== TELA) { TELA = k; const a = document.getElementById('app'); if (a) { a.classList.remove('entra'); void a.offsetWidth; a.classList.add('entra'); setTimeout(() => a.classList.remove('entra'), 600); } }
+};
