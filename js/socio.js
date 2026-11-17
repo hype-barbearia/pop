@@ -3,7 +3,8 @@
    Victor edita tudo. Robson vê tudo, sem alterar.
    ========================================================= */
 const SNAV = [
-  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','check'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist'], ['tv','Modo TV','tv']]],
+  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','check'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta']]],
+  ['Dashboards', [['relatorios','Relatórios','hist'], ['tv','Modo TV','tv']]],
   ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['notas','Notas fiscais','nota'], ['gerente','Gerente e lembretes','sino']]],
   ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina'], ['info','Informações da casa','nota']]],
 ];
