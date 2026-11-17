@@ -1,0 +1,53 @@
+# Hype POP · testa e publica
+# A cada envio para a main: confere a sintaxe de todos os arquivos, abre todas as telas de todos os
+# tipos de acesso com dados de exemplo (tests/smoke.js) e só então publica em pop.hypebarbearia.com.
+# Se algum teste falhar, a versão que está no ar continua a mesma.
+name: Testar e publicar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Sintaxe dos arquivos
+        run: for f in js/*.js sw.js tests/*.js; do node --check "$f"; done
+      - name: Todas as telas, todos os acessos
+        run: node tests/smoke.js
+
+  publicar:
+    needs: testar
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Montar o site (só o que o app usa)
+        run: |
+          mkdir _site
+          cp -r index.html sw.js manifest.webmanifest icon.svg icon-180.png icon-512.png CNAME .nojekyll css js _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
