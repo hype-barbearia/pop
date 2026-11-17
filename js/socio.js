@@ -359,33 +359,3 @@ function pgRotina(){
 }
 
 /* ---------- Notas fiscais do Salão-Parceiro ---------- */
-function blocoNotas(per, phone){
-  const parceiros = team().filter(p => p.parceiro), opts = periodos(6), comp = compAtual();
-  const acoes = d => `${d ? `<span class="row gap6"><button class="linkbtn small" data-act="verDoc" data-v="${esc(d.arquivo_path)}">Ver arquivo</button>
-      ${canManage() && d.status === 'enviada' ? `<button class="btn sm ok" data-act="revDoc" data-id="${d.id}" data-v="aceita">Aceitar</button><button class="btn sm no" data-act="revDoc" data-id="${d.id}" data-v="recusada">Recusar</button>` : ''}</span>
-      ${d.status === 'recusada' && d.obs ? `<span class="small bad-t">${esc(d.obs)}</span>` : ''}` : ''}`;
-  const nfCell = p => { const d = docDe(p.id, per, 'nfse'), atras = !docOk(d) && TODAY_ISO > perPrazo(per);
-    return `<div class="stack gap4">${d ? docChip(d) : chip(atras ? 'atrasada' : 'pendente', atras ? 'bad' : 'warn')}${d?.numero ? `<span class="small muted">nº ${esc(d.numero)}</span>` : ''}${acoes(d)}</div>`; };
-  const valCell = p => { const v = valorNF(p.id, per);
-    return canManage() && !docOk(docDe(p.id, per, 'nfse')) ? `<div class="affix w-val"><span>R$</span><label class="sr" for="nv-${p.id}">Valor de ${esc(p.name)}</label><input id="nv-${p.id}" inputmode="decimal" data-nfvalor="${p.id}|${per}" value="${v != null ? nf2(v) : ''}" placeholder="0,00"></div>`
-      : v != null ? `<b>R$ ${nf2(v)}</b>` : '<span class="small muted">não informado</span>'; };
-  const dasCell = p => { const d = docDe(p.id, comp, 'das'), atras = !docOk(d) && TODAY_ISO > prazoDAS(comp); return `<div class="stack gap4">${d ? docChip(d) : chip(atras ? 'atrasado' : 'pendente', atras ? 'bad' : 'warn')}${acoes(d)}</div>`; };
-  return `<section class="${phone ? 'card' : 'panel'}" id="notas"><div class="row between"><h3 class="${phone ? '' : 'h-sm'}">Notas da quinzena</h3>
-      <label class="sr" for="f-per">Período</label><select class="inp w-auto sm-sel" id="f-per" data-f="per">${opts.map(c => `<option value="${c}" ${c === per ? 'selected' : ''}>${perLabel(c)}</option>`).join('')}</select></div>
-    <p class="small muted">Período de ${perLabel(per)} · nota até ${dLabelISO(perPrazo(per))}. ${canManage() ? 'Informe o valor de cada barbeiro: ele recebe o aviso para emitir. ' : ''}Para recusar, escreva o motivo antes de tocar em Recusar.</p>
-    ${canManage() ? `<label class="sr" for="rev-nota">Motivo da recusa</label><input class="inp" id="rev-nota" placeholder="Motivo da recusa (ex.: número da nota ilegível)">` : ''}
-    ${parceiros.length ? `<div class="tw"><table class="t"><thead><tr><th>Parceiro</th><th>Valor a emitir</th><th>NFS-e</th></tr></thead><tbody>
-      ${parceiros.map(p => `<tr><td><span class="who-cell">${av(p)}${esc(p.name)}</span></td><td>${valCell(p)}</td><td>${nfCell(p)}</td></tr>`).join('')}</tbody></table></div>
-      ${S.rules.nfDas ? `<p class="day-h">DAS do MEI de ${compLabel(comp)} · vence ${dLabelISO(prazoDAS(comp))}</p><div class="tw"><table class="t"><tbody>${parceiros.map(p => `<tr><td><span class="who-cell">${av(p)}${esc(p.name)}</span></td><td>${dasCell(p)}</td></tr>`).join('')}</tbody></table></div>` : ''}`
-      : '<p class="muted small">Nenhum profissional-parceiro marcado. Marque em Equipe, na ficha de cada barbeiro.</p>'}</section>`;
-}
-function pgNotas(){
-  const per = periodos(6).includes(S.ui.f.per) ? S.ui.f.per : perAtual(), parceiros = team().filter(p => p.parceiro);
-  const defs = parceiros.filter(p => valorNF(p.id, per) != null).length, env = parceiros.filter(p => docOk(docDe(p.id, per, 'nfse'))).length;
-  const ace = parceiros.filter(p => docDe(p.id, per, 'nfse')?.status === 'aceita').length, total = sum(parceiros, p => +(valorNF(p.id, per) || 0));
-  return `${ph(eyebrow(), 'Notas fiscais', 'Salão-Parceiro (Lei 13.352/2016): a cada quinzena a gestão informa o valor da cota-parte de cada barbeiro parceiro, ele emite a NFS-e para a Hype e envia pelo app.')}
-    ${!S.rules.nfCnpj || !S.rules.nfRazao ? `<p class="callout"><b>Faltam dados da Hype para a nota${!S.rules.nfCnpj ? ' (CNPJ)' : ''}${!S.rules.nfRazao ? ' (razão social)' : ''}.</b> ${canEdit() ? 'Preencha em Gerência e regras.' : 'O Victor preenche em Gerência e regras.'}</p>` : ''}
-    <div class="grid kpis">${kpi('Valores informados', `${defs} de ${parceiros.length}`, perLabel(per), defs < parceiros.length && TODAY_ISO >= perPrazo(per) ? 'warn' : '')}${kpi('Notas enviadas', `${env} de ${parceiros.length}`, `prazo ${dLabelISO(perPrazo(per))}`, env < defs && TODAY_ISO > perPrazo(per) ? 'bad' : '')}${kpi('Conferidas', `${ace} de ${env}`, 'aceitas pela gerência')}${kpi('Total da quinzena', `R$ ${nf2(total)}`, 'soma dos valores informados')}</div>
-    ${blocoNotas(per, false)}
-    <p class="small muted">Os arquivos ficam numa pasta privada de cada barbeiro no Supabase. Quem envia vê só os seus. Confirme as regras de emissão com a contabilidade da Hype.</p>`;
-}

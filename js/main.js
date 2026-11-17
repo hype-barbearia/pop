@@ -208,8 +208,9 @@ const A = {
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'text/csv;charset=utf-8'})); a.download = `hype-pop-${mes}.csv`; a.click();
   },
   verDoc(d){ abrirDocumento(d.v).catch(e => toast(esc(e.message))); },
-  revDoc(d){ const nota = ($('#rev-nota')?.value || '').trim();
-    if (d.v === 'recusada' && !nota) { toast('Escreva o motivo da recusa no campo acima da tabela.'); $('#rev-nota')?.focus(); return; }
+  revDoc(d){ const campo = $('#rev-' + d.id) || $('#rev-nota'), nota = (campo?.value || '').trim();
+    if (d.v === 'recusada' && !nota) { toast('Escreva o motivo da recusa: o barbeiro recebe esse texto.'); campo?.focus(); return; }
+    S.ui.nfRec = null;
     run(() => rpc('revisar_documento', {doc:+d.id, resultado:d.v, nota:nota || null}), d.v === 'aceita' ? 'Documento aceito.' : 'Documento recusado. O barbeiro foi avisado.'); },
   copiarDesc(){ const t = $('#nf-desc')?.innerText || ''; navigator.clipboard?.writeText(t).then(() => toast('Descrição copiada.'), () => toast('Selecione o texto e copie.')); },
   copiar(){ const t = $('#wa-text')?.innerText || ''; navigator.clipboard?.writeText(t).then(() => toast('Resumo copiado. Cole no WhatsApp dos sócios.'), () => toast('Não deu para copiar. Selecione o texto e copie.')); },

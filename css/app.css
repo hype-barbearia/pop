@@ -1008,3 +1008,43 @@ body.devon .tvp{top:0}
   .pulse-score > b{font-size:48px}
 }
 .sheet-tema{padding:4px 12px 12px}
+
+/* ===== Notas fiscais (gestão) ===== */
+.nf{display:flex;flex-direction:column;gap:16px}
+.nf-pers{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.nf-pers button{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:8px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;position:relative}
+.nf-pers button small{font-weight:500;color:var(--muted);font-size:11px}
+.nf-pers button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong)}
+.nf-pers .dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dot.good{background:var(--good)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+.nf-top .h-sm{margin:2px 0 4px;font-size:clamp(18px,2vw,22px)}
+.nf-funil{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nf-f{background:var(--surface-2);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.nf-f span{font-size:12.5px;color:var(--muted);font-weight:600} .nf-f b{font-size:26px;font-stretch:118%;font-weight:800;line-height:1} .nf-f b small{font-size:14px;color:var(--muted)}
+.nf-f .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden} .nf-f .bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.nf-f.good .bar i{background:var(--good)} .nf-f.good b{color:var(--good)} .nf-f.bad b{color:var(--bad)} .nf-f.bad .bar i{background:var(--bad)}
+.nf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.nf-c{border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border-top:4px solid var(--line)}
+.nf-c.st-ok{border-top-color:var(--good)} .nf-c.st-conferir,.nf-c.st-emitir{border-top-color:var(--accent)} .nf-c.st-valor{border-top-color:var(--warn)} .nf-c.st-atrasada,.nf-c.st-recusada{border-top-color:var(--bad)}
+.nf-h{display:flex;gap:10px;align-items:center} .nf-h .grow{min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.nf-v{text-align:right;display:flex;flex-direction:column} .nf-v span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700} .nf-v b{font-size:18px;font-stretch:112%}
+.nf-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;position:relative}
+.nf-steps li{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-size:11.5px;color:var(--muted);position:relative}
+.nf-steps li::before{content:"";position:absolute;top:13px;left:-50%;right:50%;height:3px;background:var(--line);z-index:0} .nf-steps li:first-child::before{display:none}
+.nf-steps li.feito::before,.nf-steps li.agora::before{background:var(--good)}
+.nf-steps i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px;background:var(--surface-2);border:2px solid var(--line);position:relative;z-index:1}
+.nf-steps li.feito i{background:var(--good);border-color:var(--good);color:#fff} .nf-steps li.feito{color:var(--fg)}
+.nf-steps li.agora i{border-color:var(--accent);color:var(--accent-strong);background:var(--accent-soft)} .nf-steps li.agora{color:var(--fg);font-weight:700}
+.nf-steps li.agora.bad i{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.nf-acao{display:flex;flex-direction:column;gap:8px} .nf-acao p{margin:0}
+.nf-val{display:flex;gap:8px;align-items:center;flex-wrap:wrap} .nf-val .affix{flex:1;min-width:140px}
+.nf-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.nf-doc{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted)} .nf-doc b{color:var(--fg)}
+.nf-rec{display:flex;flex-direction:column;gap:6px;background:var(--bad-soft);border-radius:12px;padding:10px}
+.nf-motivo{font-size:13px;background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:8px 10px}
+.nf-alerta{margin:0;font-size:13px;background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 10px;font-weight:600}
+.nf-das{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:10px;font-size:12.5px;color:var(--muted)}
+.nf-das-d{width:100%} .nf-das-d summary{cursor:pointer;color:var(--accent-strong)} .nf-das-d[open]{display:flex;flex-direction:column;gap:6px}
+.nf-s{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font-weight:800;font-size:13px;background:var(--surface-2);color:var(--muted)}
+.nf-s.good{background:var(--good-soft);color:var(--good)} .nf-s.acc{background:var(--accent-soft);color:var(--accent-strong)} .nf-s.bad{background:var(--bad-soft);color:var(--bad)} .nf-s.mute{opacity:.6}
+@media (max-width:600px){ .nf-funil{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px} .nf-f{padding:10px} .nf-f b{font-size:20px} .nf-grid{grid-template-columns:1fr} .nf-pers button small{display:none} }
