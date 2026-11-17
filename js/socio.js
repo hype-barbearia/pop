@@ -3,10 +3,11 @@
    Victor edita tudo. Robson vê tudo, sem alterar.
    ========================================================= */
 const SNAV = [
-  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','check'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta']]],
+  ['Hoje', [['painel','Painel','painel'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta']]],
+  ['Decisões', [['definir','Para definir','check'], ['notas','Notas fiscais','nota']]],
   ['Dashboards', [['relatorios','Relatórios','hist'], ['tv','Modo TV','tv']]],
-  ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['notas','Notas fiscais','nota'], ['gerente','Gerente e lembretes','sino']]],
-  ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina'], ['info','Informações da casa','nota']]],
+  ['Equipe', [['equipe','Equipe e ausências','equipe'], ['gerente','Gerência e regras','sino']]],
+  ['Configuração', [['rotina','Rotina e checklists','rotina'], ['pops','Biblioteca de POPs','livro'], ['info','Informações da casa','nota']]],
 ];
 const eyebrow = () => `Sócios · ${DIA_CURTO} · agora ${hm(NOW())}`;
 const canEdit = () => me()?.role === 'socio';
@@ -31,10 +32,10 @@ function renderSocio(){
   const side = `<nav class="side" aria-label="Menu">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.filter(([k]) => k !== 'tv' || (canEdit() && recurso('modo_tv'))).map(([k, l, ic]) =>
     `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}
     <div class="side-foot">Tudo o que a equipe marca no app aparece aqui na hora, com horário e foto.</div></nav>`;
-  const bn = [['painel','Painel','painel'], ['hoje','Dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['equipe','Equipe','equipe']];
-  const bnav = `<nav class="bnav" aria-label="Menu">${bn.map(([k, l, ic]) => `<button class="${v === k ? 'on' : ''}" data-act="nav" data-v="${k}">${icon(ic)}${l}</button>`).join('')}<button class="${!bn.some(x => x[0] === v) ? 'on' : ''}" data-act="more">${icon('mais')}Mais</button></nav>`;
+  const bn = [['painel','Painel','painel'], ['hoje','Dia','hoje'], ['definir','Decidir','check'], ['equipe','Equipe','equipe']];
+  const bnav = `<nav class="bnav" aria-label="Menu">${bn.map(([k, l, ic]) => `<button class="${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="tab-ic">${icon(ic)}${navBadge(k)}</span>${l}</button>`).join('')}<button class="${!bn.some(x => x[0] === v) ? 'on' : ''}" data-act="more">${icon('mais')}Mais</button></nav>`;
   const sheet = S.ui.more ? `<div class="sheet" data-act="more"><div class="sheet-in" data-stop="1">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.filter(([k]) => k !== 'tv' || (canEdit() && recurso('modo_tv'))).map(([k, l, ic]) =>
-    `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}</div></div>` : '';
+    `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}<div class="side-group">Aparência</div><div class="sheet-tema">${seletorTema()}</div></div></div>` : '';
   const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, tv:pgTv, definir:pgDefinir, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina, info:pgInfo}[v] || pgPainel)();
   return side + `<main class="work">${page}</main>` + bnav + sheet;
 }
@@ -48,60 +49,6 @@ function avisoPush(){
 const avisoFechado = () => S.fechadoHoje ? `<div class="callout"><b>Hoje é dia sem expediente${S.fechadoHoje.motivo ? `: ${esc(S.fechadoHoje.motivo)}` : ''}.</b> Nenhum checklist conta para os números.</div>` : '';
 
 /* ---------- Painel ---------- */
-function pgPainel(){
-  const d = dayStats(), n = NOW(), h = histAgg(x => x.tot), g = gerenteStats();
-  const late = S.inst.filter(i => status(i) === 'atrasado').sort((a, b) => a.due - b.due);
-  const open = S.inst.filter(i => status(i) === 'aberto').sort((a, b) => a.due - b.due);
-  const next = S.inst.filter(i => status(i) === 'agendado' && i.start - n <= 90).sort((a, b) => a.start - b.start);
-  const pv = S.inst.filter(needsVer), oo = occOpen(), pr = pendingReads();
-  const task = (num, txt, kind, act, v) => `<button class="task ${kind}" data-act="${act}" data-v="${v}"><b>${num}</b><span>${txt}</span></button>`;
-  const tasks = [late.length ? task(late.length, late.length === 1 ? 'checklist atrasado agora' : 'checklists atrasados agora', 'bad', 'nav', 'hoje') : '',
-    oo.length ? task(oo.length, oo.length === 1 ? 'ocorrência em aberto' : 'ocorrências em aberto', 'warn', 'nav', 'ocorrencias') : '',
-    pv.length ? task(pv.length, 'esperando a conferência da gerente', '', 'nav', 'gerente') : '',
-    pr.length ? task(pr.length, 'termos de ciência pendentes', '', 'nav', 'pops') : ''].join('');
-  const ausHoje = S.ausencias.filter(a => a.inicio <= TODAY_ISO && TODAY_ISO <= a.fim);
-
-  const ppl = team().map(p => ({p, a:histAgg(x => x.byP[p.id])}));
-  const best = ppl.filter(x => x.a.rate >= .95);
-  const slots = S.inst.map(i => ({i, a:histAgg(x => x.bySlot[i.key])})).filter(x => x.a.exp >= 8).sort((a, b) => a.a.rate - b.a.rate)[0];
-  const ins = [
-    slots && slots.a.rate < .75 ? ['warn', `${tpl(slots.i.tpl).title} das ${hm(slots.i.start)} é o horário mais fraco`, `Feita no prazo em só ${pct(slots.a.rate)} dos dias. Avalie mudar a janela em Rotina e checklists.`] : null,
-    ausHoje.length ? ['', `${ausHoje.length} ${ausHoje.length === 1 ? 'pessoa ausente' : 'pessoas ausentes'} hoje`, ausHoje.map(a => `${first(person(a.pessoa_id))}${a.substituto ? ` (cobre: ${first(person(a.substituto))})` : ''}`).join(' · ')] : null,
-    pr.length ? ['', `${pr.length} ${pr.length === 1 ? 'termo de ciência pendente' : 'termos de ciência pendentes'}`, pr.slice(0, 8).map(x => `${first(x.who)}: ${x.pop.id}`).join(' · ') + (pr.length > 8 ? '…' : '')] : null,
-    best.length ? ['good', `${best.length} de ${ppl.length} pessoas acima de 95% no prazo`, 'Nas últimas 4 semanas. O detalhe por pessoa está em Equipe.'] : null,
-  ].filter(Boolean);
-
-  const ph_ = photos().slice(0, 8), salvo = S.resumos.find(r => r.data === TODAY_ISO);
-  return `${painelTopo()}
-    ${avisoPush()}${avisoInicio()}${avisoFechado()}${avisoAdesao()}
-    ${tasks ? `<section class="tasks"><h2>Precisa de atenção</h2><div class="task-row">${tasks}</div></section>` : `<p class="callout good"><b>Tudo em dia.</b> Nenhum atraso, ocorrência aberta ou conferência pendente.</p>`}
-    <div class="grid kpis">
-      ${kpi('Conformidade hoje', rateTxt(d.rate), `${d.ok} de ${d.due} checklists vencidos foram feitos no prazo`, rateKind(d.rate), bar(d.rate, rateKind(d.rate), S.rules.meta))}
-      ${kpi('Checklists do dia', `${d.done} de ${d.total}`, [[d.atrasado, 'atrasado'], [d.aberto, 'aberto'], [d.agendado, 'agendado']].map(([n, w]) => `${n} ${w}${n === 1 ? '' : 's'}`).join(' · '))}
-      ${kpi('Média de 4 semanas', rateTxt(h.rate), h.exp ? `${pct(h.doneRate)} feitos, contando os atrasados` : 'Aparece depois do primeiro dia completo', rateKind(h.rate))}
-      ${kpi('Rondas da gerente', `${g.ronDone.length} de ${g.ron.length}`, g.ronItems.length ? `${g.ronOk} de ${g.ronItems.length} itens conformes` : 'Nenhuma feita ainda')}
-      ${kpi('Gerente atendeu', rateTxt(g.rate), `${g.got} de ${g.exp} lembretes: conferir, cobrar, rondas e fixos`, rateKind(g.rate))}
-    </div>
-    <div class="grid cols-2">
-      <section class="panel"><div class="panel-h"><h2>Agora na barbearia</h2><button class="linkbtn small" data-act="nav" data-v="hoje">Ver o dia inteiro</button></div>
-        <div class="stack gap8">
-          ${late.length ? `<p class="day-h">Atrasados</p>${late.map(i => instCard(i) + (lateMin(i) >= S.rules.escalar && !aprendendo() ? `<p class="small bad-t esc">Escalado aos sócios: ${mins(lateMin(i))} de atraso${nudgesOf(i.id).length ? ', já cobrado pela gerente' : ', sem cobrança da gerente'}.</p>` : '')).join('')}` : ''}
-          ${open.length ? `<p class="day-h">Abertos agora</p>${open.map(i => instCard(i)).join('')}` : ''}
-          ${next.length ? `<p class="day-h">Próximos 90 minutos</p>${next.map(i => instCard(i)).join('')}` : ''}
-          ${!late.length && !open.length && !next.length ? `<p class="muted">${n >= DAY_END - 15 ? 'O dia acabou. Veja o resumo abaixo.' : 'Nada aberto ou previsto para os próximos 90 minutos.'}</p>` : ''}
-        </div></section>
-      <section class="panel"><div class="panel-h"><h2>Alertas e padrões</h2><p>últimas 4 semanas</p></div>
-        ${ins.length ? `<div class="insights">${ins.map(([k, t, s]) => `<div class="ins"><span class="dot" style="background:var(--${k === 'bad' ? 'bad' : k === 'warn' ? 'warn' : k === 'good' ? 'good' : 'accent'})"></span><div><b>${esc(t)}</b><p>${esc(s)}</p></div></div>`).join('')}</div>` : '<p class="muted">Os padrões aparecem depois das primeiras semanas de uso.</p>'}</section>
-    </div>
-    <div class="grid cols-2">
-      <section class="panel"><div class="panel-h"><h2>Conformidade por dia</h2><p>checklists feitos no prazo ÷ previstos</p></div>${dailyChart()}
-        <div class="legend"><span><i class="dot" style="background:var(--good)"></i>na meta</span><span><i class="dot" style="background:var(--accent)"></i>até 10 p.p. abaixo</span><span><i class="dot" style="background:var(--bad)"></i>mais de 10 p.p. abaixo</span><span><i class="dash"></i>meta</span></div></section>
-      <section class="panel"><div class="panel-h"><h2>Fotos de hoje</h2><p>${photos().length} registradas</p></div>
-        ${ph_.length ? `<div class="photos">${ph_.map(x => `<button class="ph-fig" data-act="open" data-id="${x.i.id}">${photo(x.it.t, x.at, x.path)}<span class="small"><b>${esc(x.it.t)}</b></span><span class="small muted">${esc(first(person(x.i.who)))} · ${hm(x.at)}</span></button>`).join('')}</div>` : '<p class="muted">Nenhuma foto ainda.</p>'}</section>
-    </div>
-    <section class="panel"><div class="panel-h"><h2>Resumo do dia</h2><p>${salvo ? `enviado aos sócios às ${S.rules.resumo} como notificação` : `prévia, sai às ${S.rules.resumo} como notificação`}</p></div><div class="wa" id="wa-text">${resumo()}</div><div class="row" style="margin-top:10px"><button class="btn sm" data-act="copiar">Copiar para o WhatsApp</button></div>
-      ${S.resumos.filter(r => r.data !== TODAY_ISO).length ? `<details class="prev"><summary class="small">Resumos dos últimos dias</summary><ul class="plain small">${S.resumos.filter(r => r.data !== TODAY_ISO).map(r => `<li><b>${dLabelISO(r.data)}</b> · ${esc(r.texto)}</li>`).join('')}</ul></details>` : ''}</section>`;
-}
 
 function resumo(){
   const d = dayStats(), g = gerenteStats(), oo = S.occ.filter(o => !o.day && vis(o.at));
@@ -271,11 +218,11 @@ function fichaPessoa(p){
     <p class="day-h">Termo de ciência dos POPs</p><div class="row gap6">${S.pops.filter(x => popPeople(x).some(y => y.id === p.id)).map(x => { const ok = (x.reads[p.id] || 0) >= x.version; return `<button class="chip ${ok ? 'good' : 'warn'} linkchip" data-act="pop" data-id="${x.id}">${x.id} ${ok ? 'assinado' : 'pendente'}</button>`; }).join('')}</div></div></div></section>`;
 }
 
-/* ---------- Gerente e lembretes ---------- */
+/* ---------- Gerência e regras ---------- */
 function pgGerente(){
   const g = gerenteStats(), j = S.people.find(p => p.role === 'gerente'), log = gerenteLog(), r = S.rules, d = dis();
   const ownRate = g.own.length ? g.ownOk.length / g.own.length : null;
-  return `${ph(eyebrow(), 'Gerente e lembretes', `${j ? esc(j.name) : 'A gerente'} garante a rotina na loja. O sistema avisa ela no celular do que conferir e de quem cobrar, e mede se os avisos foram atendidos.`)}
+  return `${ph(eyebrow(), 'Gerência e regras', `${j ? esc(j.name) : 'A gerente'} garante a rotina na loja. O sistema avisa ela no celular do que conferir e de quem cobrar, e mede se os avisos foram atendidos.`)}
     <div class="grid kpis">
       ${kpi('Lembretes atendidos', rateTxt(g.rate), `${g.got} de ${g.exp} até agora`, rateKind(g.rate), bar(g.rate, rateKind(g.rate), r.meta))}
       ${kpi('Conferências', `${g.ver.length} de ${g.verList.length}`, g.ver.length ? `${mins(g.verAvg)} em média para conferir (limite ${r.conferir} min)` : 'Nenhuma ainda', g.verAvg > r.conferir ? 'warn' : '')}
@@ -437,7 +384,7 @@ function pgNotas(){
   const defs = parceiros.filter(p => valorNF(p.id, per) != null).length, env = parceiros.filter(p => docOk(docDe(p.id, per, 'nfse'))).length;
   const ace = parceiros.filter(p => docDe(p.id, per, 'nfse')?.status === 'aceita').length, total = sum(parceiros, p => +(valorNF(p.id, per) || 0));
   return `${ph(eyebrow(), 'Notas fiscais', 'Salão-Parceiro (Lei 13.352/2016): a cada quinzena a gestão informa o valor da cota-parte de cada barbeiro parceiro, ele emite a NFS-e para a Hype e envia pelo app.')}
-    ${!S.rules.nfCnpj || !S.rules.nfRazao ? `<p class="callout"><b>Faltam dados da Hype para a nota${!S.rules.nfCnpj ? ' (CNPJ)' : ''}${!S.rules.nfRazao ? ' (razão social)' : ''}.</b> ${canEdit() ? 'Preencha em Gerente e lembretes.' : 'O Victor preenche em Gerente e lembretes.'}</p>` : ''}
+    ${!S.rules.nfCnpj || !S.rules.nfRazao ? `<p class="callout"><b>Faltam dados da Hype para a nota${!S.rules.nfCnpj ? ' (CNPJ)' : ''}${!S.rules.nfRazao ? ' (razão social)' : ''}.</b> ${canEdit() ? 'Preencha em Gerência e regras.' : 'O Victor preenche em Gerência e regras.'}</p>` : ''}
     <div class="grid kpis">${kpi('Valores informados', `${defs} de ${parceiros.length}`, perLabel(per), defs < parceiros.length && TODAY_ISO >= perPrazo(per) ? 'warn' : '')}${kpi('Notas enviadas', `${env} de ${parceiros.length}`, `prazo ${dLabelISO(perPrazo(per))}`, env < defs && TODAY_ISO > perPrazo(per) ? 'bad' : '')}${kpi('Conferidas', `${ace} de ${env}`, 'aceitas pela gerência')}${kpi('Total da quinzena', `R$ ${nf2(total)}`, 'soma dos valores informados')}</div>
     ${blocoNotas(per, false)}
     <p class="small muted">Os arquivos ficam numa pasta privada de cada barbeiro no Supabase. Quem envia vê só os seus. Confirme as regras de emissão com a contabilidade da Hype.</p>`;

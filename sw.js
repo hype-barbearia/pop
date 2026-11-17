@@ -3,9 +3,9 @@
    - App abre sem internet: guarda uma cópia dos arquivos do app. Sempre tenta a rede primeiro,
      então com internet a pessoa recebe a versão nova na hora; a cópia só é usada quando a rede falha.
    Os dados (Supabase) não passam por aqui: o app guarda a última leitura do dia por conta própria. */
-const CACHE = 'hype-pop-app-v5';
+const CACHE = 'hype-pop-app-v6';
 const ARQUIVOS = ['./', './index.html', './css/app.css', './manifest.webmanifest', './icon.svg', './icon-180.png',
-  ...['config','core','consts','engine','data','ui','socio','app','main','admin','ux','recursos','tv','dev','simulador'].map(f => `./js/${f}.js`),
+  ...['config','core','consts','engine','data','ui','socio','app','main','admin','ux','recursos','tv','dev','simulador','gestao'].map(f => `./js/${f}.js`),
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
 
 self.addEventListener('install', e => {

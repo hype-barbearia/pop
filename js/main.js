@@ -9,7 +9,7 @@ let PENDING = false, TICK, TELA = '';
 function topRight(){
   const p = me(); if (!p) return '';
   return `${p.socio ? `<button class="btn sm" data-act="modo">${S.ui.mode === 'socio' ? 'Meu app de barbeiro' : 'Painel dos sócios'}</button>` : ''}
-    <span class="who">${av(p)}<b>${esc(p.name)}</b></span><button class="linkbtn" data-act="sair">Sair</button>`;
+    ${seletorTema()}<span class="who">${av(p)}<b>${esc(p.name)}</b></span><button class="linkbtn" data-act="sair">Sair</button>`;
 }
 
 function render(){

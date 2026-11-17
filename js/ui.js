@@ -13,7 +13,7 @@ const ph = (eyebrow, title, lead = '', actions = '') => `<header class="ph"><div
 const segUi = (key, items, cur) => `<div class="seg" role="group">${items.map(([k, l]) => `<button class="${cur === k ? 'on' : ''}" aria-pressed="${cur === k}" data-act="f" data-k="${key}" data-v="${k}">${l}</button>`).join('')}</div>`;
 /* Aviso enquanto a operação não começou */
 const preInicio = () => !S.rules.inicio || TODAY_ISO < S.rules.inicio;
-const avisoInicio = () => avisoOffline() + avisoAprendizado() + (!preInicio() ? '' : `<div class="callout"><b>${S.rules.inicio ? `A operação começa em ${dLabelISO(S.rules.inicio)}.` : 'A data de início da operação ainda não foi definida.'}</b> Até lá o app não cria checklists. Use este tempo para ler e assinar os POPs.${S.rules.inicio ? '' : ' Os sócios definem a data em Gerente e lembretes.'}</div>`);
+const avisoInicio = () => avisoOffline() + avisoAprendizado() + (!preInicio() ? '' : `<div class="callout"><b>${S.rules.inicio ? `A operação começa em ${dLabelISO(S.rules.inicio)}.` : 'A data de início da operação ainda não foi definida.'}</b> Até lá o app não cria checklists. Use este tempo para ler e assinar os POPs.${S.rules.inicio ? '' : ' Os sócios definem a data em Gerência e regras.'}</div>`);
 const areaChip = a => `<span class="chip area">${AREAS[a]}</span>`;
 
 function ring(v, size = 92, label, neutral){

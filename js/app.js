@@ -71,6 +71,7 @@ function mPerfil(p){
       ${aus.length ? `<p class="small">Ausência registrada: ${aus.map(a => `${dLabelISO(a.inicio)}${a.fim !== a.inicio ? ` a ${dLabelISO(a.fim)}` : ''}${a.motivo ? ` (${esc(a.motivo)})` : ''}`).join(', ')}</p>` : ''}
       <p class="small muted">Para corrigir algum dado, fale com a Jessica.</p></section>
     ${p.parceiro ? perfilNotas(p) : ''}
+    <section class="card soft stack gap8"><h2 class="sec-h">Aparência</h2>${seletorTema()}<p class="small muted">Automático segue o modo claro ou escuro do celular.</p></section>
     ${blocoPrivacidadePerfil(p)}
     <button class="btn" data-act="sair">Sair do app</button>`;
 }

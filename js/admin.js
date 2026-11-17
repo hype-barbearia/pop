@@ -241,7 +241,7 @@ function conflitos(){
     .sort((a, b) => (a.k === 'bad' ? 0 : 1) - (b.k === 'bad' ? 0 : 1));
 }
 
-const ONDE = {equipe:'Equipe e ausências', rotina:'Rotina e checklists', gerente:'Gerente e lembretes', info:'Informações da casa'};
+const ONDE = {equipe:'Equipe e ausências', rotina:'Rotina e checklists', gerente:'Gerência e regras', info:'Informações da casa'};
 function pgDefinir(){
   const abertos = S.defs.filter(x => !x.resolvido_em), feitos = S.defs.filter(x => x.resolvido_em), cf = conflitos(), ed = canEdit();
   const ir = o => o && ONDE[o] ? `<button class="btn sm" data-act="defIr" data-v="${o}">Abrir ${ONDE[o]} →</button>` : '';

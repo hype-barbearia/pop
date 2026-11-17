@@ -183,16 +183,3 @@ function gEquipe(p){
 }
 
 /* ---------- Sócios: faixa de status no painel ---------- */
-function painelTopo(){
-  const d = dayStats(), late = d.atrasado, oo = occOpen().length, pv = S.inst.filter(needsVer).length;
-  const tom = late ? 'bad' : oo || pv ? 'warn' : 'good';
-  const frase = !S.inst.length ? (preInicio() ? 'A operação ainda não começou' : 'Nenhum checklist hoje')
-    : late ? `${late} ${late === 1 ? 'checklist atrasado' : 'checklists atrasados'} agora` : oo ? `Casa rodando, ${oo} ${oo === 1 ? 'ocorrência aberta' : 'ocorrências abertas'}` : 'Casa no padrão';
-  const hero = `<section class="pulse ${tom}"><div class="pulse-l"><p class="hb-eb"><span class="d-l">${DIA_LABEL[0].toUpperCase() + DIA_LABEL.slice(1)}</span><span class="d-s">${DIA_CURTO}</span> · ${hm(NOW())}</p><h1>${frase}</h1>
-      ${S.inst.length ? segs([...S.inst].sort((a, b) => a.start - b.start)) : ''}</div>
-    <div class="pulse-n"><div><b class="num">${rateTxt(d.rate)}</b><span>no prazo</span></div><div><b class="num">${d.done}<small>/${d.total}</small></b><span>feitos</span></div>
-      <div><b class="num">${oo}</b><span>ocorrências</span></div><div><b class="num">${pv}</b><span>a conferir</span></div></div></section>`;
-  const nDef = S.defs.filter(x => !x.resolvido_em).length + popsRevisar().length, nCf = conflitos().length;
-  const defs = nDef + nCf ? `<div class="callout def-banner"><span><b>${nDef + nCf} ${nDef + nCf === 1 ? 'ponto para definir' : 'pontos para definir'}</b>: ${[nDef ? `${nDef} em aberto` : '', nCf ? `${nCf} ${nCf === 1 ? 'conflito' : 'conflitos'} de horário` : ''].filter(Boolean).join(' e ')}.</span><button class="btn sm primary" data-act="nav" data-v="definir">Ver a lista</button></div>` : '';
-  return hero + defs;
-}
