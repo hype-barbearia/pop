@@ -3,7 +3,7 @@
    - App abre sem internet: guarda uma cópia dos arquivos do app. Sempre tenta a rede primeiro,
      então com internet a pessoa recebe a versão nova na hora; a cópia só é usada quando a rede falha.
    Os dados (Supabase) não passam por aqui: o app guarda a última leitura do dia por conta própria. */
-const CACHE = 'hype-pop-app-v2';
+const CACHE = 'hype-pop-app-v3';
 const ARQUIVOS = ['./', './index.html', './css/app.css', './manifest.webmanifest', './icon.svg', './icon-180.png',
   ...['config','core','consts','engine','data','ui','socio','app','main','admin','ux','recursos','tv'].map(f => `./js/${f}.js`),
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
@@ -22,7 +22,9 @@ self.addEventListener('fetch', e => {
   const u = new URL(r.url); if (!doApp(u)) return;
   e.respondWith((async () => {
     try {
-      const res = await fetch(r);
+      // Arquivos do próprio app: sempre confere com o servidor (o GitHub deixa o navegador guardar por 10 min,
+      // o que atrasava as atualizações). A conferência é rápida: se nada mudou, o servidor responde só "igual".
+      const res = await fetch(r, u.origin === self.location.origin ? {cache:'no-cache'} : undefined);
       if (res.ok || res.type === 'opaque') { const c = res.clone(); caches.open(CACHE).then(k => k.put(r, c)).catch(() => {}); }
       return res;
     } catch (err) {
