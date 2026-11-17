@@ -649,3 +649,12 @@ details.ver[open] summary{margin-bottom:8px}
 .w-val{width:140px}
 .nf-valor{font-size:15px}
 .nf-valor b{font-stretch:115%}
+
+.editor{border-color:var(--accent)}
+.jan-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px dashed var(--line)}
+.dias-box{display:inline-flex;gap:8px;flex-wrap:wrap}
+.ph-toggle.crit.on{background:var(--bad-soft);color:var(--bad)}
+.inp.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.lem-ed{gap:8px}
+.lem-ed .inp.grow{min-width:200px}
+.gap10{gap:10px}

@@ -215,7 +215,7 @@ document.addEventListener('change', e => {
     const k = el.dataset.rule, kind = el.dataset.kind; let v = kind === 'bool' ? el.checked : kind === 'str' ? el.value : +el.value;
     if (kind === 'pct') v = clamp(v, 50, 100) / 100; if (kind !== 'bool' && kind !== 'str' && isNaN(v)) return;
     const col = {antes:'antes', escalar:'escalar', conferir:'conferir', meta:'meta', rondas:'rondas_surpresa', resumo:'resumo', inicio:'inicio_operacao',
-      nfDia:'nf_dia_limite', nfDas:'nf_exigir_das', nfCnpj:'nf_cnpj', nfRazao:'nf_razao', nfDesc:'nf_descricao'}[k];
+      inicioHora:'inicio_hora', nfDia:'nf_dia_limite', nfDas:'nf_exigir_das', nfCnpj:'nf_cnpj', nfRazao:'nf_razao', nfDesc:'nf_descricao'}[k];
     if (kind === 'str' && !v) v = k === 'nfDesc' ? '' : null;
     upd('regras', {[col]:v}, 'id', 1, 'Regra atualizada.'); return;
   }
@@ -261,13 +261,14 @@ document.addEventListener('submit', async e => {
     run(async () => check(await sb.from('pessoas').insert({id, nome, papel:$('#np-papel').value, rotulo:$('#np-rot').value.trim() || null, turno:$('#np-turno').value.trim() || null,
       folga:$('#np-folga').value === '' ? null : +$('#np-folga').value, email:$('#np-email').value.trim().toLowerCase() || null, cor:Math.floor(Math.random() * 360), ordem:S.people.length})), `${nome} entrou na equipe.`); }
   if (f === 'ficha') { const id = e.target.dataset.id;
-    upd('pessoas', {nome_completo:$('#fp-full').value.trim() || null, parceiro:$('#fp-parc').checked, nome:$('#fp-nome').value.trim(), rotulo:$('#fp-rot').value.trim() || null, turno:$('#fp-turno').value.trim() || null, folga:$('#fp-folga').value === '' ? null : +$('#fp-folga').value}, 'id', id, 'Dados atualizados.'); }
+    upd('pessoas', {...($('#fp-papel') ? {papel:$('#fp-papel').value} : {}), nome_completo:$('#fp-full').value.trim() || null, parceiro:$('#fp-parc').checked, nome:$('#fp-nome').value.trim(), rotulo:$('#fp-rot').value.trim() || null, turno:$('#fp-turno').value.trim() || null, folga:$('#fp-folga').value === '' ? null : +$('#fp-folga').value}, 'id', id, 'Dados atualizados.'); }
   if (f === 'editpop') { const id = e.target.dataset.id, nova = (e.submitter?.value || 'versao') === 'versao';
     const ls = sel => $(sel).value.split('\n').map(x => x.trim()).filter(Boolean);
     const dados = {titulo:$('#ep-t').value.trim(), quem:$('#ep-q').value.trim(), frequencia:$('#ep-f').value.trim(), dono:$('#ep-d').value.trim(), objetivo:$('#ep-o').value.trim(),
       materiais:ls('#ep-m'), passos:ls('#ep-s').map(x => x.startsWith('!') ? {t:x.slice(1).trim(), crit:true} : {t:x}), qualidade:ls('#ep-qa'), erros:ls('#ep-e')};
     S.ui.popEdit = null;
-    run(() => rpc('salvar_pop', {pop:id, dados, nova_versao:nova}), nova ? 'Nova versão publicada. A equipe vai assinar o termo de ciência de novo.' : 'Correção salva.'); }
+    const extra = popExtras();
+    run(async () => { await rpc('salvar_pop', {pop:id, dados, nova_versao:nova}); if (extra) check(await sb.from('pops').update(extra).eq('id', id)); }, nova ? 'Nova versão publicada. A equipe vai assinar o termo de ciência de novo.' : 'Correção salva.'); }
   if (f === 'item') { const tid = e.target.dataset.id, t = e.target.querySelector('input').value.trim(); if (!t) return;
     const all = S.allTpls.find(x => x.id === tid).allItems, n = Math.max(0, ...all.map(i => +i.id.split('.i')[1] || 0)) + 1;
     run(async () => check(await sb.from('rotina_itens').insert({id:`${tid}.i${n}`, rotina_id:tid, ordem:Math.max(0, ...all.map(i => i.ordem)) + 1, texto:t})), 'Item incluído. Vale para os próximos checklists.'); }

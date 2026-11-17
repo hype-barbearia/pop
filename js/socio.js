@@ -5,7 +5,7 @@
 const SNAV = [
   ['Operação', [['painel','Painel','painel'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
   ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['notas','Notas fiscais','nota'], ['gerente','Gerente e lembretes','sino']]],
-  ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina']]],
+  ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina'], ['info','Informações da casa','nota']]],
 ];
 const eyebrow = () => `Sócios · ${DIA_CURTO} · agora ${hm(NOW())}`;
 const canEdit = () => me()?.role === 'socio';
@@ -33,7 +33,7 @@ function renderSocio(){
   const bnav = `<nav class="bnav" aria-label="Menu">${bn.map(([k, l, ic]) => `<button class="${v === k ? 'on' : ''}" data-act="nav" data-v="${k}">${icon(ic)}${l}</button>`).join('')}<button class="${!bn.some(x => x[0] === v) ? 'on' : ''}" data-act="more">${icon('mais')}Mais</button></nav>`;
   const sheet = S.ui.more ? `<div class="sheet" data-act="more"><div class="sheet-in" data-stop="1">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.map(([k, l, ic]) =>
     `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}</div></div>` : '';
-  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina}[v] || pgPainel)();
+  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina, info:pgInfo}[v] || pgPainel)();
   return side + `<main class="work">${page}</main>` + bnav + sheet;
 }
 
@@ -254,6 +254,7 @@ function fichaPessoa(p){
   return `<section class="panel"><div class="panel-h"><div class="row nowrap gap8">${av(p, true)}<div><h2>${esc(p.name)}</h2><p>${roleL(p)} · ${esc(p.turno)}</p></div></div><button class="btn sm" data-act="selP" data-v="">Fechar</button></div>
     ${ed ? `<form class="form-grid ficha" data-form="ficha" data-id="${p.id}">
       <div class="field"><label for="fp-nome">Nome</label><input class="inp" id="fp-nome" value="${esc(p.name)}"></div>
+      <div class="field"><label for="fp-papel">Cargo</label><select class="inp" id="fp-papel">${['barbeiro','atendente','gerente'].map(x => `<option value="${x}" ${p.role === x ? 'selected' : ''}>${ROLE[x]}</option>`).join('')}</select></div>
       <div class="field"><label for="fp-full">Nome completo</label><input class="inp" id="fp-full" value="${esc(p.fullName || '')}"></div>
       <div class="field"><label for="fp-rot">Função</label><input class="inp" id="fp-rot" value="${esc(p.label || '')}"></div>
       <label class="toggle"><input type="checkbox" id="fp-parc" ${p.parceiro ? 'checked' : ''}><span><b>Profissional-parceiro</b><span>Envia nota fiscal todo mês (Salão-Parceiro).</span></span></label>
@@ -284,7 +285,7 @@ function pgGerente(){
       <div class="stack gap14">
         <section class="panel"><div class="panel-h"><h2>Regras</h2><p>valem para todos os dias</p></div>
           <div class="stack gap14">
-            <div class="rule"><div><b>Início da operação</b><p class="small muted">A partir desta data o app cria os checklists de cada dia</p></div><input class="inp w-auto" type="date" id="r-inicio" data-rule="inicio" data-kind="str" value="${r.inicio || ''}" ${d}></div>
+            <div class="rule"><div><b>Início da operação</b><p class="small muted">A partir desta data e hora o app cria os checklists</p></div><span class="row nowrap gap6"><input class="inp w-auto" type="date" id="r-inicio" data-rule="inicio" data-kind="str" value="${r.inicio || ''}" ${d}><input class="inp w-auto" type="time" id="r-inicioh" data-rule="inicioHora" data-kind="str" value="${r.inicioHora || ''}" ${d}></span></div>
             <div class="rule"><div><b>Aviso antes da ronda</b><p class="small muted">Minutos antes do horário sorteado</p></div><div class="affix w-num"><input type="number" id="r-antes" data-rule="antes" value="${r.antes}" min="0" ${d}><span>min</span></div></div>
             <div class="rule"><div><b>Escalar atraso aos sócios</b><p class="small muted">Se o checklist continuar atrasado depois de</p></div><div class="affix w-num"><input type="number" id="r-escalar" data-rule="escalar" value="${r.escalar}" min="5" ${d}><span>min</span></div></div>
             <div class="rule"><div><b>Prazo para conferir</b><p class="small muted">Depois que a pessoa conclui, a gerente confere em até</p></div><div class="affix w-num"><input type="number" id="r-conferir" data-rule="conferir" value="${r.conferir}" min="5" ${d}><span>min</span></div></div>
@@ -301,8 +302,8 @@ function pgGerente(){
             <div class="field"><label for="r-nfdesc">Descrição sugerida do serviço ({periodo} vira o período da nota)</label><textarea class="inp" id="r-nfdesc" data-rule="nfDesc" data-kind="str" rows="3" ${d}>${esc(r.nfDesc)}</textarea></div>
           </div></section>
         <section class="panel"><div class="panel-h"><h2>Lembretes fixos</h2><p>chegam no celular da gerente</p></div>
-          <div class="stack gap6">${S.reminders.map(x => `<div class="rem ${x.on ? '' : 'off'}"><span class="num"><b>${x.at}</b></span><span class="grow">${esc(x.text)}</span>${vis(S.remDone[x.id]) ? chip('feito ' + hm(S.remDone[x.id]), 'good') : toMin(x.at) <= NOW() && x.on ? chip('pendente', 'warn') : ''}
-            <label class="toggle sm" title="Ativo"><input type="checkbox" id="rem-${x.id}" data-rem="${x.id}" ${x.on ? 'checked' : ''} ${d}><span class="sr">Ativo</span></label></div>`).join('')}</div>
+          ${canEdit() ? editorLembretes() : `<div class="stack gap6">${S.reminders.map(x => `<div class="rem ${x.on ? '' : 'off'}"><span class="num"><b>${x.at}</b></span><span class="grow">${esc(x.text)}</span>${vis(S.remDone[x.id]) ? chip('feito ' + hm(S.remDone[x.id]), 'good') : toMin(x.at) <= NOW() && x.on ? chip('pendente', 'warn') : ''}
+            <label class="toggle sm" title="Ativo"><input type="checkbox" id="rem-${x.id}" data-rem="${x.id}" ${x.on ? 'checked' : ''} ${d}><span class="sr">Ativo</span></label></div>`).join('')}</div>`}
           ${canEdit() ? `<form class="row gap6 add-rem" data-form="rem"><label class="sr" for="nr-at">Hora</label><input class="inp w-auto" type="time" id="nr-at" value="16:00" required><label class="sr" for="nr-t">Lembrete</label><input class="inp grow" id="nr-t" placeholder="Ex.: Conferir o estoque de lâminas" required><button class="btn sm primary">Adicionar</button></form>` : ''}</section>
       </div>
     </div>`;
@@ -316,6 +317,7 @@ function editorPop(p){
       <div class="field"><label for="ep-q">Quem faz</label><input class="inp" id="ep-q" value="${esc(p.who || '')}"></div>
       <div class="field"><label for="ep-f">Quando</label><input class="inp" id="ep-f" value="${esc(p.freq || '')}"></div>
       <div class="field"><label for="ep-d">A quem recorrer</label><input class="inp" id="ep-d" value="${esc(p.owner || '')}"></div></div>
+    ${editorPopExtras(p)}
     <div class="field"><label for="ep-o">Objetivo</label><textarea class="inp" id="ep-o" rows="2">${esc(p.objective || '')}</textarea></div>
     <div class="field"><label for="ep-m">Materiais, um por linha</label><textarea class="inp" id="ep-m" rows="3">${esc(linhas(p.materials))}</textarea></div>
     <div class="field"><label for="ep-s">Passo a passo, um por linha. Comece com ! os passos críticos.</label><textarea class="inp" id="ep-s" rows="9">${esc(linhas(p.steps))}</textarea></div>
@@ -371,6 +373,8 @@ function pgRotina(){
         <td class="num">${r.t.items.length}${r.t.items.some(i => i.photo) ? ` <span class="small muted">· ${r.t.items.filter(i => i.photo).length} com foto</span>` : ''}</td>
         <td>${r.t.verify ? chip('gerente confere', 'good') : chip(r.t.kind === 'ronda' ? 'é a própria conferência' : 'sem conferência')}</td></tr>`).join('')}
     </tbody></table></div></section>
+    ${blocoAgenda()}
+    ${S.ui.rotEdit && canEdit() ? editorRotina(S.allTpls.find(t => t.id === S.ui.rotEdit)) : ''}
     <section class="panel"><div class="panel-h"><h2>Escala dos revezamentos</h2><p>quem faz em cada dia da semana</p></div>
       <div class="tw"><table class="t"><thead><tr><th>Tarefa</th>${DOW.map(x => `<th>${WEEK[x]}</th>`).join('')}</tr></thead><tbody>
         ${rod.map(t => `<tr><td><b>${esc(t.title)}</b><span class="small muted block">${t.days.length === 6 ? 'todo dia' : t.days.map(x => WEEK[x]).join(', ')}</span></td>${DOW.map(x => t.days.includes(x)
@@ -382,7 +386,7 @@ function pgRotina(){
         <p class="small muted pager-info">${esc(ESCALA.horario)} ${esc(ESCALA.posicoes)}</p></section>
       <section class="panel"><div class="panel-h"><h2>Reuniões</h2><p>POP-10 · acontecem mesmo em dia de folga</p></div><div class="tw"><table class="t"><thead><tr><th>Dia</th><th>Horário</th><th>Reunião</th></tr></thead><tbody>${ESCALA.reunioes.map(r => `<tr><td>${r[0]}</td><td class="nowrap num">${r[1]}</td><td>${esc(r[2])}<span class="small muted block">${esc(r[3])}</span></td></tr>`).join('')}</tbody></table></div></section>
     </div>
-    <section class="panel" id="itens"><div class="panel-h"><h2>Itens de cada checklist</h2><p>${ed ? 'Edite o texto, marque foto obrigatória, inclua ou retire itens.' : 'Itens com foto obrigatória e itens críticos.'}</p></div><div class="grid cols-eq">${S.allTpls.map(t => `<div class="tpl-box ${t.active ? '' : 'off'}"><div class="row between nowrap"><b>${esc(t.title)}</b><span class="row nowrap gap6"><span class="cid">${t.pop}</span>${ed ? `<button class="linkbtn small" data-act="rotAtivo" data-id="${t.id}" data-v="${t.active ? '0' : '1'}">${t.active ? 'Pausar' : 'Reativar'}</button>` : ''}</span></div>
+    <section class="panel" id="itens"><div class="panel-h"><h2>Itens de cada checklist</h2><p>${ed ? 'Edite o texto, marque foto obrigatória, inclua ou retire itens.' : 'Itens com foto obrigatória e itens críticos.'}</p></div><div class="grid cols-eq">${S.allTpls.map(t => `<div class="tpl-box ${t.active ? '' : 'off'}"><div class="row between nowrap"><b>${esc(t.title)}</b><span class="row nowrap gap6"><span class="cid">${t.pop}</span>${ed ? `<button class="linkbtn small" data-act="rotEditar" data-v="${t.id}">Editar</button><button class="linkbtn small" data-act="rotAtivo" data-id="${t.id}" data-v="${t.active ? '0' : '1'}">${t.active ? 'Pausar' : 'Reativar'}</button>` : ''}</span></div>
       <ol class="steps sm">${t.items.map(it => `<li><span>${ed ? `<label class="sr" for="it-${it.id}">Texto do item</label><input class="inp it-in" id="it-${it.id}" data-item="${it.id}" value="${esc(it.t)}">` : esc(it.t)}${it.crit ? ' <span class="tag crit">crítico</span>' : ''}</span>
         <span class="row nowrap gap6"><label class="ph-toggle ${it.photo ? 'on' : ''}" for="ph-${t.id}-${it.id}"><input type="checkbox" id="ph-${t.id}-${it.id}" data-photo="${t.id}|${it.id}" ${it.photo ? 'checked' : ''} ${d}>${icon('camera', 'ni xs')}foto</label>${ed ? `<button class="linkbtn small" data-act="itemDel" data-id="${it.id}" aria-label="Retirar item">Retirar</button>` : ''}</span></li>`).join('')}</ol>
       ${ed ? `<form class="row gap6" data-form="item" data-id="${t.id}"><label class="sr" for="ni-${t.id}">Novo item</label><input class="inp grow" id="ni-${t.id}" placeholder="Novo item" required><button class="btn sm">Incluir</button></form>` : ''}</div>`).join('')}</div></section>

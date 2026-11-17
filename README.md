@@ -38,6 +38,8 @@ A base dos POPs é o documento "HYPE Cultura e POP" v1.0 (outubro de 2026). A co
 
 - **Perfil** para cada pessoa: dados, e-mail, folga, termos assinados e notificações. Para os barbeiros parceiros, as **notas fiscais quinzenais do Salão-Parceiro**: do dia 1 ao 15, nota até o dia 16; do dia 16 ao fim do mês, nota até o dia 1º. A gestão informa o valor de cada barbeiro em **Notas fiscais**, ele recebe o aviso, emite a NFS-e para a Hype e envia número e arquivo. A gestão confere e aceita ou recusa com motivo. Também há o comprovante mensal do DAS do MEI (vence dia 20).
 
+- **Tudo editável pelo Victor:** nome, POP, tipo, dias, quem faz (fixo, revezamento, lista ou cargo), horários (incluir, remover, dias específicos), itens (texto, foto, crítico, ordem) e conferência de cada checklist; **agenda avulsa** para o que não tem horário fixo (como a reunião de técnicas); lembretes (hora, texto, dias, apagar); POPs (texto, área, quem assina, preços, indicações, arquivar); **Informações da casa** (cultura, horário, posições, reuniões, áreas); pessoas (cargo, função, turno, folga, parceiro, e-mail); regras e início da operação.
+
 Peças no Supabase: função `notificar` (Edge Function), agendamentos `hype_pop_gerar_dia`, `hype_pop_notificar` (a cada 2 min), `hype_pop_fiscal` (10:05) e `hype_pop_limpeza`, buckets privados `fotos` e `documentos`, chaves das notificações em `privado.config`.
 
 ## Publicar uma mudança

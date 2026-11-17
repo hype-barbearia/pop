@@ -40,8 +40,11 @@ async function carregar(){
     sb.from('resumos').select('*').order('data', {ascending:false}).limit(7),
     sb.from('documentos_fiscais').select('*').gte('competencia', compMenos(7)).order('enviado_em', {ascending:false}),
     sb.from('nf_valores').select('*').gte('periodo', compMenos(4)),
+    sb.from('config_textos').select('*'),
+    sb.from('rotina_agendamentos').select('*').gte('data', isoMinus(1)).order('data').order('inicio'),
   ]);
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv] = q.map(check);
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags] = q.map(check);
+  aplicarTextos(cfg);
 
   const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem, fullName:p.nome_completo || p.nome, parceiro:p.parceiro}));
   const pops = po.map(p => {
@@ -55,12 +58,12 @@ async function carregar(){
     items:it.filter(i => i.rotina_id === r.id && i.ativo).map(i => ({id:i.id, t:i.texto, photo:i.foto, crit:i.critico, ordem:i.ordem})),
     allItems:it.filter(i => i.rotina_id === r.id),
     escala:Object.fromEntries(re.filter(e => e.rotina_id === r.id).map(e => [e.dow, e.pessoa_id])),
-    slots:ja.filter(j => j.rotina_id === r.id).map(j => [hmT(j.inicio), hmT(j.prazo), j.responsavel, j.id, j.dias])}));
+    slots:ja.filter(j => j.rotina_id === r.id && j.ativo !== false).map(j => [hmT(j.inicio), hmT(j.prazo), j.responsavel, j.id, j.dias])}));
   const tpls = allTpls.filter(t => t.active || ex.some(x => x.rotina_id === t.id));
   const inst = ex.filter(x => tpls.some(t => t.id === x.rotina_id)).map(x => {
     const checks = {};
     ei.filter(c => c.execucao_id === x.id).forEach(c => checks[c.item_id] = {at:minOf(c.marcado_em), ok:c.ok, photo:c.foto_path || undefined, note:c.obs || ''});
-    return {id:x.id, key:`${x.rotina_id}.${x.pessoa_id}.${hmT(janelas[x.janela_id]?.inicio).replace(':', '')}`, tpl:x.rotina_id, who:x.pessoa_id,
+    return {id:x.id, avulso:!!x.agendamento_id, key:`${x.rotina_id}.${x.pessoa_id}.${x.janela_id ? hmT(janelas[x.janela_id]?.inicio).replace(':', '') : 'AVULSO'}`, tpl:x.rotina_id, who:x.pessoa_id,
       start:minOf(x.inicio), due:minOf(x.prazo), checks, doneAt:minOf(x.concluida_em),
       ver:x.conferido_em ? {at:minOf(x.conferido_em), res:x.conferido_resultado, note:x.conferido_obs || '', by:x.conferido_por} : null,
       redo:x.refazer_em ? {at:minOf(x.refazer_em), note:x.refazer_obs || ''} : null};
@@ -68,16 +71,17 @@ async function carregar(){
   const occ = oc.map(o => ({id:'OC-' + o.id, num:o.id, at:minOf(o.em), day:o.data !== TODAY_ISO ? dLabelISO(o.data) : null, who:o.pessoa_id, src:o.origem, inst:o.execucao_id,
     title:o.titulo, desc:o.descricao || '', status:o.status, pop:o.pop_id, resp:o.responsavel_id, prazo:o.prazo, foto:o.foto_path, by:o.criado_por,
     actions:oa.filter(a => a.ocorrencia_id === o.id).map(a => { const iso = recife(Date.parse(a.em)).toISOString().slice(0, 10); return {at:minOf(a.em), day:iso !== TODAY_ISO ? dLabelISO(iso) : null, by:a.por, t:a.texto}; })}));
-  const reminders = lb.filter(l => l.dias.includes(TODAY_WD) || !l.ativo).map(l => ({id:l.id, at:hmT(l.hora), text:l.texto, on:l.ativo}));
+  const reminders = lb.filter(l => l.dias.includes(TODAY_WD) || !l.ativo).map(l => ({id:l.id, at:hmT(l.hora), text:l.texto, on:l.ativo, days:l.dias}));
+  const allReminders = lb.map(l => ({id:l.id, at:hmT(l.hora), text:l.texto, on:l.ativo, days:l.dias}));
   const remDone = Object.fromEntries(lf.map(l => [l.lembrete_id, minOf(l.em)]));
   const nudges = co.map(c => ({inst:c.execucao_id, at:minOf(c.em), by:c.por}));
   const r = rg || {};
-  const rules = {antes:r.antes ?? 10, escalar:r.escalar ?? 30, conferir:r.conferir ?? 30, meta:Number(r.meta ?? .9), rondas:r.rondas_surpresa ?? true, resumo:hmT(r.resumo) || '21:00', inicio:r.inicio_operacao || null,
+  const rules = {antes:r.antes ?? 10, escalar:r.escalar ?? 30, conferir:r.conferir ?? 30, meta:Number(r.meta ?? .9), rondas:r.rondas_surpresa ?? true, resumo:hmT(r.resumo) || '21:00', inicio:r.inicio_operacao || null, inicioHora:hmT(r.inicio_hora) || '',
     nfDia:r.nf_dia_limite ?? 5, nfDas:r.nf_exigir_das ?? true, nfCnpj:r.nf_cnpj || '', nfRazao:r.nf_razao || '', nfDesc:r.nf_descricao || ''};
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
-    docs:dfis, nfValores:nfv, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
+    allReminders, docs:dfis, nfValores:nfv, agenda:ags, cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = nowMin();
   await assinarFotos();
 }
@@ -191,4 +195,13 @@ async function abrirDocumento(path){
   const {data, error} = await sb.storage.from('documentos').createSignedUrl(path, 600);
   if (error) { w?.close(); throw new Error(error.message); }
   if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+}
+
+/* ---------- Textos da casa vindos do banco (cultura, escala, áreas) ---------- */
+function aplicarTextos(cfg){
+  const v = k => cfg.find(c => c.chave === k)?.valor;
+  const c = v('cultura'), e = v('escala'), a = v('areas');
+  if (c) Object.assign(CULTURA, c);
+  if (e) Object.assign(ESCALA, e);
+  if (a) { Object.keys(AREAS).forEach(k => delete AREAS[k]); Object.assign(AREAS, a); }
 }
