@@ -290,4 +290,5 @@ document.addEventListener('submit', async e => {
       atualizado:dLabelISO(TODAY_ISO) + '/' + TODAY_ISO.slice(0, 4), aprovado_por:me().name, ordem:n})), `${id} publicado. A equipe vê o aviso para assinar.`); }
 });
 
-iniciar();
+// Começa só depois que todos os scripts (inclusive admin.js e ux.js) carregaram
+window.addEventListener('DOMContentLoaded', iniciar);
