@@ -49,8 +49,8 @@ const lerEmail = () => { try { return localStorage.getItem('hype-email') || sess
 function telaLogin(enviado){
   // Pediu o código há menos de 1 hora: volta direto para a tela do código (o app pode ter fechado no meio)
   try { if (enviado === undefined && lerEmail() && Date.now() - +(localStorage.getItem('hype-otp-em') || 0) < 3600e3) enviado = lerEmail(); } catch (x) {}
-  tela(enviado ? `<h1>Confira seu e-mail</h1><p class="muted">Enviamos um código de 6 números para <b>${esc(enviado)}</b>. Volte aqui e digite o código.</p>
-      <form class="stack gap8" data-form="otp"><label for="otp">Código do e-mail</label><input class="inp code-in" id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+  tela(enviado ? `<h1>Confira seu e-mail</h1><p class="muted">Enviamos um código de acesso para <b>${esc(enviado)}</b>. Volte aqui e digite o código.</p>
+      <form class="stack gap8" data-form="otp"><label for="otp">Código do e-mail</label><input class="inp code-in" id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="código do e-mail">
       ${lerEmail() ? '' : `<label for="otp-email">Seu e-mail</label><input class="inp" id="otp-email" type="email" autocomplete="email" placeholder="nome@hypebarbearia.com">`}
       <button class="btn primary big">Entrar</button></form><p class="small muted">Também dá para tocar no link do e-mail, se abrir neste aparelho.</p><button class="linkbtn" data-act="voltarLogin">Usar outro e-mail ou pedir outro código</button>`
     : `<p class="eyebrow">Hype POP</p><h1>Entrar</h1><p class="muted">Use o seu e-mail @hypebarbearia.com. Vamos mandar um código de acesso, sem senha.</p>
@@ -272,7 +272,7 @@ document.addEventListener('submit', async e => {
     guardarEmail(email); try { localStorage.setItem('hype-otp-em', Date.now()); } catch (x) {} telaLogin(email); return;
   }
   if (f === 'otp') {
-    const token = $('#otp').value.trim(), email = ($('#otp-email')?.value.trim().toLowerCase()) || lerEmail(); if (!token || !email) { toast('Digite o código e o seu e-mail.'); return; }
+    const token = $('#otp').value.replace(/\D/g, ''), email = ($('#otp-email')?.value.trim().toLowerCase()) || lerEmail(); if (!token || !email) { toast('Digite o código e o seu e-mail.'); return; }
     guardarEmail(email);
     const {error} = await sb.auth.verifyOtp({email, token, type:'email'});
     if (error) toast('Código inválido ou vencido. Peça um novo código.'); return;
