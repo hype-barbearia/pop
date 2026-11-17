@@ -15,8 +15,8 @@ A base dos POPs é o documento "HYPE Cultura e POP" v1.0 (outubro de 2026). A co
 | Parte | Onde |
 |---|---|
 | App (HTML, CSS e JavaScript, sem build) | `index.html`, `css/`, `js/` |
-| Banco, regras de acesso e funções | Supabase, projeto "Hype Barbearia" · `supabase/migrations/` |
-| Hospedagem | GitHub Pages, direto da branch `main` |
+| Banco, regras de acesso e funções | Supabase, projeto "Hype Barbearia" · `supabase/` (ver [supabase/README.md](supabase/README.md)) |
+| Hospedagem | GitHub Pages, publicado pelo GitHub Actions depois dos testes (`.github/workflows/publicar.yml`) |
 | Protótipo navegável com dados fictícios | `prototipo/` |
 
 - Login por **link mágico** no e-mail. Só entra quem tem o e-mail cadastrado em `pessoas` (tela Equipe, para os sócios).
@@ -40,17 +40,19 @@ A base dos POPs é o documento "HYPE Cultura e POP" v1.0 (outubro de 2026). A co
 
 - **Tudo editável pelo Victor:** nome, POP, tipo, dias, quem faz (fixo, revezamento, lista ou cargo), horários (incluir, remover, dias específicos), itens (texto, foto, crítico, ordem) e conferência de cada checklist; **agenda avulsa** para o que não tem horário fixo (como a reunião de técnicas); lembretes (hora, texto, dias, apagar); POPs (texto, área, quem assina, preços, indicações, arquivar); **Informações da casa** (cultura, horário, posições, reuniões, áreas); pessoas (cargo, função, turno, folga, parceiro, e-mail); regras e início da operação.
 
-Peças no Supabase: função `notificar` (Edge Function), agendamentos `hype_pop_gerar_dia`, `hype_pop_notificar` (a cada 2 min), `hype_pop_fiscal` (10:05) e `hype_pop_limpeza`, buckets privados `fotos` e `documentos`, chaves das notificações em `privado.config`.
+Peças no Supabase: função `notificar` (Edge Function), seis tarefas automáticas `hype_pop_*` (lista e horários em [supabase/README.md](supabase/README.md)), buckets privados `fotos` e `documentos`, chaves das notificações em `privado.config`.
 
 ## Publicar uma mudança
 
-Edite os arquivos e faça push para `main`. O GitHub Pages publica sozinho em cerca de um minuto.
+Edite os arquivos e faça push para `main`. O GitHub testa e publica sozinho em cerca de um minuto; se um teste falhar, a versão no ar continua a mesma. Registre a mudança em [CHANGELOG.md](CHANGELOG.md).
+
+Arquivo novo em `js/`: inclua nos três lugares (`index.html`, lista `ARQUIVOS` do `sw.js` e de `tests/ambiente.js`); `tests/coerencia.js` barra a publicação se faltar em algum. A versão da cópia offline (`CACHE` no `sw.js`) é trocada sozinha pelo commit a cada publicação.
 
 Mudança no banco: crie um arquivo novo em `supabase/migrations/` e aplique no Supabase (SQL Editor ou MCP).
 
 ## Configuração única
 
-1. **GitHub Pages**: já ativo, publicando a branch `main` na raiz.
+1. **GitHub Pages**: já ativo, com origem "GitHub Actions" (o workflow `publicar.yml`).
 2. **Supabase → Authentication → URL Configuration**: em Site URL e Redirect URLs, coloque o endereço do GitHub Pages (`https://pop.hypebarbearia.com/`).
 3. **Supabase → Authentication → Emails → SMTP**: configure um SMTP próprio (ex.: Resend). O e-mail padrão do Supabase só envia para membros da organização e tem limite baixo por hora.
 4. **Modelo do e-mail "Magic Link"**: inclua `{{ .Token }}` para a pessoa poder digitar o código de 6 números quando o link abrir fora do app instalado.
@@ -58,6 +60,7 @@ Mudança no banco: crie um arquivo novo em `supabase/migrations/` e aplique no S
 
 ## Testes e publicação
 
+- `node tests/coerencia.js` confere que a lista de scripts é a mesma no `index.html`, no `sw.js` e nos testes.
 - `node tests/smoke.js` abre todas as telas de todos os tipos de acesso (sócio, Robson, gerente, barbeiro, atendente) com dados de exemplo e falha se alguma quebrar.
 - `node tests/mock.js victor` gera `dist/mock-victor.html` para conferir o visual no navegador, sem internet (hora parada às 15:40).
 - No GitHub, `.github/workflows/publicar.yml` roda os testes a cada envio para a `main` e só publica em pop.hypebarbearia.com se passarem.
@@ -86,3 +89,10 @@ Mudança no banco: crie um arquivo novo em `supabase/migrations/` e aplique no S
 - Registro de acessos (migração 021): cada visão aberta pelo DEV e cada simulador ficam gravados; os sócios veem em Equipe e ausências.
 - Recursos (liga/desliga): Liberado, Só DEV ou Desligado, por recurso (`recurso('chave')` no app). Só o DEV altera.
 - Simulador (`js/simulador.js`): dia fictício com a rotina, as pessoas e os POPs reais; as ações funcionam, mas tudo fica na memória do aparelho.
+
+## Desempenho e manutenção (17/11/2026)
+
+- **Carregamento em duas partes** (`buscar()` em `js/data.js`): o que muda durante o dia (checklists, ocorrências, notas, reposição) é relido a cada atualização; a configuração (pessoas, POPs, rotinas, regras, textos) é relida no máximo a cada 60 s ou logo depois de uma ação do próprio usuário; o histórico de 4 semanas, uma vez por dia; a geração do dia, uma vez por dia por sessão. As atualizações em tempo real passaram de 33 para 18 consultas.
+- **Ações das ocorrências**: só as dos últimos 30 dias, como as próprias ocorrências (antes vinham todas, desde o início).
+- **Banco** (migração 023): índices para as buscas por dia, checklist e pessoa; regras de acesso calculadas uma vez por consulta; limpeza diária de registros técnicos.
+- **CSS**: 240 regras que não eram usadas por nenhuma tela foram retiradas (86 KB → 69 KB), conferido elemento por elemento em 184 telas.

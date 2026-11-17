@@ -39,43 +39,64 @@ function salvarCache(rows){ if (typeof SIM !== 'undefined' && SIM) return; try {
 function lerCache(){ try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) { return null; } }
 const limparCache = () => { try { localStorage.removeItem(CACHE_KEY); } catch (e) {} };
 
+/* Carregamento em duas partes, com o mesmo resultado:
+   - operação (checklists, ocorrências, notas...): relida sempre;
+   - configuração (pessoas, POPs, rotinas, regras, textos...): muda pouco, é relida no máximo a cada 60 s,
+     ou na hora depois de uma ação do próprio usuário (run → forcarFixos);
+   - histórico de 4 semanas: só muda de um dia para o outro, é relido uma vez por dia;
+   - geração do dia (garantir_dia): uma vez por dia por sessão.
+   Nas atualizações em tempo real isso corta mais da metade das consultas. */
+let FIXOS = null, HIST_DIA = null, DIA_GARANTIDO = null;
+const FIXOS_TTL = 60e3;
+const forcarFixos = () => { FIXOS = null; HIST_DIA = null; DIA_GARANTIDO = null; };
 async function buscar(d30){
-  await sb.rpc('garantir_dia');
-  const q = await Promise.all([
-    sb.from('pessoas').select('*').order('ordem'),
-    sb.from('pops').select('*').eq('ativo', true).order('ordem'),
-    sb.from('pop_leituras').select('pop_id,pessoa_id,versao'),
-    sb.from('rotinas').select('*').order('ordem'),
-    sb.from('rotina_janelas').select('*').order('inicio'),
-    sb.from('rotina_itens').select('*').order('ordem'),
-    sb.from('execucoes').select('*').eq('data', TODAY_ISO),
-    sb.from('execucao_itens').select('*, execucoes!inner(data)').eq('execucoes.data', TODAY_ISO),
-    sb.from('cobrancas').select('*, execucoes!inner(data)').eq('execucoes.data', TODAY_ISO).order('em'),
-    sb.from('ocorrencias').select('*').gte('data', d30).order('em', {ascending:false}),
-    sb.from('ocorrencia_acoes').select('*').order('em'),
-    sb.from('lembretes').select('*').order('hora'),
-    sb.from('lembretes_feitos').select('*').eq('data', TODAY_ISO),
-    sb.from('regras').select('*').maybeSingle(),
-    sb.rpc('historico', {dias:28}),
-    sb.from('ausencias').select('*').gte('fim', isoMinus(1)).order('inicio'),
-    sb.from('dias_fechados').select('*').gte('data', isoMinus(7)).order('data'),
-    sb.from('rodizio_escala').select('*'),
-    sb.from('pop_versoes').select('pop_id,versao,publicado_em,por,conteudo').order('versao', {ascending:false}),
-    sb.from('resumos').select('*').order('data', {ascending:false}).limit(7),
-    sb.from('documentos_fiscais').select('*').gte('competencia', compMenos(7)).order('enviado_em', {ascending:false}),
-    sb.from('nf_valores').select('*').gte('periodo', compMenos(4)),
-    sb.from('config_textos').select('*'),
-    sb.from('rotina_agendamentos').select('*').gte('data', isoMinus(1)).order('data').order('inicio'),
-    sb.from('definicoes').select('*').order('ordem'),
-    sb.from('reposicao').select('*').or(`resolvido_em.is.null,resolvido_em.gte.${isoMinus(2)}`).order('em', {ascending:false}),
-    sb.rpc('status_equipe'),
-    sb.rpc('falhas_itens', {dias:7}),
-    sb.rpc('falhas_itens', {dias:14}),
-    sb.from('privacidade_aceite').select('*'),
-    sb.from('recursos').select('*').order('chave'),
-    sb.from('dev_acessos').select('*').order('em', {ascending:false}).limit(40),
-  ]);
-  return q.map(check);
+  const real = typeof SIM === 'undefined' || !SIM;
+  if (!real || DIA_GARANTIDO !== TODAY_ISO) { await sb.rpc('garantir_dia'); if (real) DIA_GARANTIDO = TODAY_ISO; }
+  // [é configuração?, consulta] — a ordem é a mesma que montar() espera
+  const L = [
+    [1, () => sb.from('pessoas').select('*').order('ordem')],
+    [1, () => sb.from('pops').select('*').eq('ativo', true).order('ordem')],
+    [0, () => sb.from('pop_leituras').select('pop_id,pessoa_id,versao')],
+    [1, () => sb.from('rotinas').select('*').order('ordem')],
+    [1, () => sb.from('rotina_janelas').select('*').order('inicio')],
+    [1, () => sb.from('rotina_itens').select('*').order('ordem')],
+    [0, () => sb.from('execucoes').select('*').eq('data', TODAY_ISO)],
+    [0, () => sb.from('execucao_itens').select('*, execucoes!inner(data)').eq('execucoes.data', TODAY_ISO)],
+    [0, () => sb.from('cobrancas').select('*, execucoes!inner(data)').eq('execucoes.data', TODAY_ISO).order('em')],
+    [0, () => sb.from('ocorrencias').select('*').gte('data', d30).order('em', {ascending:false})],
+    [0, () => sb.from('ocorrencia_acoes').select('*').gte('em', d30).order('em')],
+    [1, () => sb.from('lembretes').select('*').order('hora')],
+    [0, () => sb.from('lembretes_feitos').select('*').eq('data', TODAY_ISO)],
+    [1, () => sb.from('regras').select('*').maybeSingle()],
+    ['dia', () => sb.rpc('historico', {dias:28})],
+    [0, () => sb.from('ausencias').select('*').gte('fim', isoMinus(1)).order('inicio')],
+    [0, () => sb.from('dias_fechados').select('*').gte('data', isoMinus(7)).order('data')],
+    [1, () => sb.from('rodizio_escala').select('*')],
+    [1, () => sb.from('pop_versoes').select('pop_id,versao,publicado_em,por,conteudo').order('versao', {ascending:false})],
+    [0, () => sb.from('resumos').select('*').order('data', {ascending:false}).limit(7)],
+    [0, () => sb.from('documentos_fiscais').select('*').gte('competencia', compMenos(7)).order('enviado_em', {ascending:false})],
+    [0, () => sb.from('nf_valores').select('*').gte('periodo', compMenos(4))],
+    [1, () => sb.from('config_textos').select('*')],
+    [0, () => sb.from('rotina_agendamentos').select('*').gte('data', isoMinus(1)).order('data').order('inicio')],
+    [1, () => sb.from('definicoes').select('*').order('ordem')],
+    [0, () => sb.from('reposicao').select('*').or(`resolvido_em.is.null,resolvido_em.gte.${isoMinus(2)}`).order('em', {ascending:false})],
+    [1, () => sb.rpc('status_equipe')],
+    [0, () => sb.rpc('falhas_itens', {dias:7})],
+    [0, () => sb.rpc('falhas_itens', {dias:14})],
+    [0, () => sb.from('privacidade_aceite').select('*')],
+    [1, () => sb.from('recursos').select('*').order('chave')],
+    [0, () => sb.from('dev_acessos').select('*').order('em', {ascending:false}).limit(40)],
+  ];
+  const fixosOk = real && FIXOS && FIXOS.dia === TODAY_ISO && Date.now() - FIXOS.em < FIXOS_TTL;
+  const histOk = real && HIST_DIA && HIST_DIA.dia === TODAY_ISO;
+  const res = await Promise.all(L.map(([tipo, consulta], k) =>
+    tipo === 1 && fixosOk ? {data:FIXOS.rows[k], error:null} : tipo === 'dia' && histOk ? {data:HIST_DIA.data, error:null} : consulta()));
+  const q = res.map(check);
+  if (real) {
+    if (!fixosOk) FIXOS = {em:Date.now(), dia:TODAY_ISO, rows:Object.fromEntries(L.map(([tipo], k) => [k, tipo === 1 ? q[k] : undefined]))};
+    const kh = L.findIndex(([tipo]) => tipo === 'dia'); if (!histOk) HIST_DIA = {dia:TODAY_ISO, data:q[kh]};
+  }
+  return q;
 }
 
 function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc){

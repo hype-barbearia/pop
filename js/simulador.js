@@ -140,6 +140,7 @@ async function simIniciar(hora){
   SIM_VAZIAS.forEach(t => db[t] = []);
   const n = simGerarDia(db, hora);
   SIM = {db, blobs:{}, orig:{from:Object.getOwnPropertyDescriptor(sb, 'from'), rpc:Object.getOwnPropertyDescriptor(sb, 'rpc'), storage:Object.getOwnPropertyDescriptor(sb, 'storage')}};
+  forcarFixos();
   Object.defineProperty(sb, 'from', {value:simFrom, configurable:true, writable:true});
   Object.defineProperty(sb, 'rpc', {value:simRpc, configurable:true, writable:true});
   Object.defineProperty(sb, 'storage', {value:simStorage, configurable:true, writable:true});
@@ -149,5 +150,5 @@ function simSair(){
   if (!SIM) return;
   for (const k of ['from', 'rpc', 'storage']) { delete sb[k]; if (SIM.orig[k]) Object.defineProperty(sb, k, SIM.orig[k]); }
   Object.values(SIM.blobs).forEach(u => URL.revokeObjectURL(u));
-  SIM = null;
+  SIM = null; forcarFixos();
 }

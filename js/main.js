@@ -110,7 +110,7 @@ sb.auth.onAuthStateChange(ev => setTimeout(() => {
 /* ---------- Ações ---------- */
 async function run(fn, msg){
   if (devVendo() && !SIM) { toast('Modo DEV: só visualização. Nada foi gravado.'); return; }
-  try { await fn(); await recarregar(true); if (msg) toast(msg); }
+  try { await fn(); forcarFixos(); await recarregar(true); if (msg) toast(msg); }
   catch (e) { if (e.silencioso) return; toast(esc(e.message)); if (!semRede(e)) registrarErro(e.message, 'acao'); }
 }
 const rpc = (f, a) => sb.rpc(f, a).then(check);
