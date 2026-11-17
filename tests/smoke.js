@@ -46,7 +46,16 @@ async function testar(who){
     ver('rotina-editor', `S.ui.view='rotina'; S.ui.rotEdit='AMB'`, 'foto de referência');
     ver('pop-editor', `S.ui.rotEdit=null; S.ui.view='pops'; S.ui.pop='POP-07'; S.ui.popEdit='POP-07'`);
     ver('conflitos', `S.ui.pop=null; S.ui.popEdit=null; S.ui.view='painel'; if (!Array.isArray(conflitos())) throw new Error('conflitos() não é lista')`);
-    if (r(`canEdit()`)) ver('copia', `S.ui.view='info'`, 'Baixar cópia dos dados');
+    if (r(`canEdit()`)) {
+      ver('copia', `S.ui.view='info'`, 'Baixar cópia dos dados');
+      ver('modo-tv', `S.ui.view='tv'`, 'Iniciar apresentação');
+      // Todos os slides ligados, com dados de uma semana de exemplo
+      ver('modo-tv-slides', `const c = tvCfg(); Object.keys(c.on).forEach(k => c.on[k] = true); c.nomes = true; c.recado = 'Boa semana!';
+        const p = tvPeriodo('passada'), linha = (pid, rot) => ({pessoa_id:pid, rotina_id:rot, previstos:5, no_prazo:4, atraso:1, nao_feito:0, itens_nao:1});
+        const tot = [linha('breno','BIN'), linha('magda','ABR'), linha('jessica','RON')];
+        const sl = tvSlides(c, {p, dias:[p.de, p.ate], tot, falhas:[{texto:'Copa organizada', rotina:'Banheiros', pop_id:'POP-04', falhas:3}], porDia:[tot, []]});
+        if (sl.length !== 11 || sl.some(x => !x.includes('tvs'))) throw new Error('slides: ' + sl.length);`);
+    }
   } else {
     const ger = r(`me().role === 'gerente'`);
     for (const t of (ger ? ['agora', 'equipe', 'ocorrencias', 'pops', 'perfil'] : ['hoje', 'pops', 'hist', 'perfil']))

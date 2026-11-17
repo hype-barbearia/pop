@@ -2228,6 +2228,100 @@
 "falhas": 3,
 "ultima": "2026-11-17"
 }
+],
+"relatorio": [
+{
+"pessoa_id": "magda",
+"rotina_id": "ABR",
+"previstos": 6,
+"no_prazo": 5,
+"atraso": 1,
+"nao_feito": 0,
+"itens_nao": 1
+},
+{
+"pessoa_id": "magda",
+"rotina_id": "AMB",
+"previstos": 12,
+"no_prazo": 10,
+"atraso": 1,
+"nao_feito": 1,
+"itens_nao": 2
+},
+{
+"pessoa_id": "suellen",
+"rotina_id": "FEC",
+"previstos": 6,
+"no_prazo": 6,
+"atraso": 0,
+"nao_feito": 0,
+"itens_nao": 0
+},
+{
+"pessoa_id": "breno",
+"rotina_id": "BIN",
+"previstos": 5,
+"no_prazo": 5,
+"atraso": 0,
+"nao_feito": 0,
+"itens_nao": 0
+},
+{
+"pessoa_id": "daniel",
+"rotina_id": "INF",
+"previstos": 5,
+"no_prazo": 3,
+"atraso": 1,
+"nao_feito": 1,
+"itens_nao": 1
+},
+{
+"pessoa_id": "jessica",
+"rotina_id": "RON",
+"previstos": 12,
+"no_prazo": 9,
+"atraso": 2,
+"nao_feito": 1,
+"itens_nao": 3
+},
+{
+"pessoa_id": "suellen",
+"rotina_id": "POR",
+"previstos": 3,
+"no_prazo": 2,
+"atraso": 1,
+"nao_feito": 0,
+"itens_nao": 0
+},
+{
+"pessoa_id": "durval",
+"rotina_id": "BFE",
+"previstos": 5,
+"no_prazo": 4,
+"atraso": 1,
+"nao_feito": 0,
+"itens_nao": 0
+}
+],
+"falhas_periodo": [
+{
+"item_id": "AMB.i2",
+"texto": "Sala de Spa limpa e organizada",
+"rotina_id": "AMB",
+"rotina": "Conferência de banheiros e Spa",
+"pop_id": "POP-04",
+"falhas": 3,
+"ultima": "2026-11-14"
+},
+{
+"item_id": "RON.i3",
+"texto": "Bancadas sem ferramenta fora da embalagem",
+"rotina_id": "RON",
+"rotina": "Ronda dos inegociáveis",
+"pop_id": "POP-00",
+"falhas": 2,
+"ultima": "2026-11-13"
+}
 ]
 }
 }

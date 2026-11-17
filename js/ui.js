@@ -26,6 +26,7 @@ function ring(v, size = 92, label, neutral){
 
 /* Ícones (traço simples) */
 const NI = {
+  tv:'M3 5h18v11H3zM8 20h8M12 16v4',
   painel:'M3 11l9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5', hoje:'M12 7v5l3.5 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
   alerta:'M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',
   equipe:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',

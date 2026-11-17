@@ -3,7 +3,7 @@
    Victor edita tudo. Robson vê tudo, sem alterar.
    ========================================================= */
 const SNAV = [
-  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','check'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
+  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','check'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist'], ['tv','Modo TV','tv']]],
   ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['notas','Notas fiscais','nota'], ['gerente','Gerente e lembretes','sino']]],
   ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina'], ['info','Informações da casa','nota']]],
 ];
@@ -27,14 +27,14 @@ function navBadge(k){
 
 function renderSocio(){
   const v = S.ui.view;
-  const side = `<nav class="side" aria-label="Menu">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.map(([k, l, ic]) =>
+  const side = `<nav class="side" aria-label="Menu">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.filter(([k]) => k !== 'tv' || canEdit()).map(([k, l, ic]) =>
     `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}
     <div class="side-foot">Tudo o que a equipe marca no app aparece aqui na hora, com horário e foto.</div></nav>`;
   const bn = [['painel','Painel','painel'], ['hoje','Dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['equipe','Equipe','equipe']];
   const bnav = `<nav class="bnav" aria-label="Menu">${bn.map(([k, l, ic]) => `<button class="${v === k ? 'on' : ''}" data-act="nav" data-v="${k}">${icon(ic)}${l}</button>`).join('')}<button class="${!bn.some(x => x[0] === v) ? 'on' : ''}" data-act="more">${icon('mais')}Mais</button></nav>`;
-  const sheet = S.ui.more ? `<div class="sheet" data-act="more"><div class="sheet-in" data-stop="1">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.map(([k, l, ic]) =>
+  const sheet = S.ui.more ? `<div class="sheet" data-act="more"><div class="sheet-in" data-stop="1">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.filter(([k]) => k !== 'tv' || canEdit()).map(([k, l, ic]) =>
     `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}</div></div>` : '';
-  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, definir:pgDefinir, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina, info:pgInfo}[v] || pgPainel)();
+  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, tv:pgTv, definir:pgDefinir, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina, info:pgInfo}[v] || pgPainel)();
   return side + `<main class="work">${page}</main>` + bnav + sheet;
 }
 

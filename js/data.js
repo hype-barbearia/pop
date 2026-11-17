@@ -98,7 +98,7 @@ function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, 
       sorteada:x.sorteada,
       redo:x.refazer_em ? {at:minOf(x.refazer_em), note:x.refazer_obs || ''} : null};
   });
-  const occ = oc.map(o => ({id:'OC-' + o.id, num:o.id, at:minOf(o.em), day:o.data !== TODAY_ISO ? dLabelISO(o.data) : null, who:o.pessoa_id, src:o.origem, inst:o.execucao_id,
+  const occ = oc.map(o => ({id:'OC-' + o.id, num:o.id, data:o.data, at:minOf(o.em), day:o.data !== TODAY_ISO ? dLabelISO(o.data) : null, who:o.pessoa_id, src:o.origem, inst:o.execucao_id,
     title:o.titulo, desc:o.descricao || '', status:o.status, pop:o.pop_id, resp:o.responsavel_id, prazo:o.prazo, foto:o.foto_path, by:o.criado_por,
     actions:oa.filter(a => a.ocorrencia_id === o.id).map(a => { const iso = recife(Date.parse(a.em)).toISOString().slice(0, 10); return {at:minOf(a.em), day:iso !== TODAY_ISO ? dLabelISO(iso) : null, by:a.por, t:a.texto}; })}));
   const reminders = lb.filter(l => l.dias.includes(TODAY_WD) || !l.ativo).map(l => ({id:l.id, at:hmT(l.hora), text:l.texto, on:l.ativo, days:l.dias}));
