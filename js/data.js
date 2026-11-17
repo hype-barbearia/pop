@@ -42,8 +42,9 @@ async function carregar(){
     sb.from('nf_valores').select('*').gte('periodo', compMenos(4)),
     sb.from('config_textos').select('*'),
     sb.from('rotina_agendamentos').select('*').gte('data', isoMinus(1)).order('data').order('inicio'),
+    sb.from('definicoes').select('*').order('ordem'),
   ]);
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags] = q.map(check);
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs] = q.map(check);
   aplicarTextos(cfg);
 
   const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem, fullName:p.nome_completo || p.nome, parceiro:p.parceiro}));
@@ -66,6 +67,7 @@ async function carregar(){
     return {id:x.id, avulso:!!x.agendamento_id, key:`${x.rotina_id}.${x.pessoa_id}.${x.janela_id ? hmT(janelas[x.janela_id]?.inicio).replace(':', '') : 'AVULSO'}`, tpl:x.rotina_id, who:x.pessoa_id,
       start:minOf(x.inicio), due:minOf(x.prazo), checks, doneAt:minOf(x.concluida_em),
       ver:x.conferido_em ? {at:minOf(x.conferido_em), res:x.conferido_resultado, note:x.conferido_obs || '', by:x.conferido_por} : null,
+      sorteada:x.sorteada,
       redo:x.refazer_em ? {at:minOf(x.refazer_em), note:x.refazer_obs || ''} : null};
   });
   const occ = oc.map(o => ({id:'OC-' + o.id, num:o.id, at:minOf(o.em), day:o.data !== TODAY_ISO ? dLabelISO(o.data) : null, who:o.pessoa_id, src:o.origem, inst:o.execucao_id,
@@ -77,11 +79,11 @@ async function carregar(){
   const nudges = co.map(c => ({inst:c.execucao_id, at:minOf(c.em), by:c.por}));
   const r = rg || {};
   const rules = {antes:r.antes ?? 10, escalar:r.escalar ?? 30, conferir:r.conferir ?? 30, meta:Number(r.meta ?? .9), rondas:r.rondas_surpresa ?? true, resumo:hmT(r.resumo) || '21:00', inicio:r.inicio_operacao || null, inicioHora:hmT(r.inicio_hora) || '',
-    nfDia:r.nf_dia_limite ?? 5, nfDas:r.nf_exigir_das ?? true, nfCnpj:r.nf_cnpj || '', nfRazao:r.nf_razao || '', nfDesc:r.nf_descricao || ''};
+    nfDia:r.nf_dia_limite ?? 5, nfDas:r.nf_exigir_das ?? true, nfCnpj:r.nf_cnpj || '', nfRazao:r.nf_razao || '', nfDesc:r.nf_descricao || '', amostra:Number(r.conferir_amostra ?? 1), escalarSocios:!!r.escalar_socios};
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
-    allReminders, docs:dfis, nfValores:nfv, agenda:ags, cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
+    allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = nowMin();
   await assinarFotos();
 }

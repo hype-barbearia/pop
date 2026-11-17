@@ -3,7 +3,7 @@
    Victor edita tudo. Robson vê tudo, sem alterar.
    ========================================================= */
 const SNAV = [
-  ['Operação', [['painel','Painel','painel'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
+  ['Operação', [['painel','Painel','painel'], ['definir','Para definir','alerta'], ['hoje','Linha do dia','hoje'], ['ocorrencias','Ocorrências','alerta'], ['relatorios','Relatórios','hist']]],
   ['Pessoas', [['equipe','Equipe e ausências','equipe'], ['notas','Notas fiscais','nota'], ['gerente','Gerente e lembretes','sino']]],
   ['Processos', [['pops','Biblioteca de POPs','livro'], ['rotina','Rotina e checklists','rotina'], ['info','Informações da casa','nota']]],
 ];
@@ -20,6 +20,7 @@ function navBadge(k){
   if (k === 'hoje') { const n = dayStats().atrasado; return n ? `<span class="count bad">${n}</span>` : ''; }
   if (k === 'ocorrencias') { const n = occOpen().length; return n ? `<span class="count">${n}</span>` : ''; }
   if (k === 'pops') { const n = pendingReads().length; return n ? `<span class="count">${n}</span>` : ''; }
+  if (k === 'definir') { const n = S.defs.filter(x => !x.resolvido_em).length + conflitos().length; return n ? `<span class="count bad">${n}</span>` : ''; }
   if (k === 'notas') { const n = S.docs.filter(d => d.status === 'enviada').length; return n ? `<span class="count">${n}</span>` : ''; }
   return '';
 }
@@ -33,7 +34,7 @@ function renderSocio(){
   const bnav = `<nav class="bnav" aria-label="Menu">${bn.map(([k, l, ic]) => `<button class="${v === k ? 'on' : ''}" data-act="nav" data-v="${k}">${icon(ic)}${l}</button>`).join('')}<button class="${!bn.some(x => x[0] === v) ? 'on' : ''}" data-act="more">${icon('mais')}Mais</button></nav>`;
   const sheet = S.ui.more ? `<div class="sheet" data-act="more"><div class="sheet-in" data-stop="1">${SNAV.map(([g, items]) => `<div class="side-group">${g}</div>${items.map(([k, l, ic]) =>
     `<button class="nav-item ${v === k ? 'on' : ''}" data-act="nav" data-v="${k}"><span class="row nowrap gap8">${icon(ic)}${l}</span>${navBadge(k)}</button>`).join('')}`).join('')}</div></div>` : '';
-  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina, info:pgInfo}[v] || pgPainel)();
+  const page = ({painel:pgPainel, hoje:pgHoje, ocorrencias:pgOcc, relatorios:pgRelatorios, definir:pgDefinir, equipe:pgEquipe, notas:pgNotas, gerente:pgGerente, pops:pgPops, rotina:pgRotina, info:pgInfo}[v] || pgPainel)();
   return side + `<main class="work">${page}</main>` + bnav + sheet;
 }
 
@@ -289,8 +290,10 @@ function pgGerente(){
             <div class="rule"><div><b>Aviso antes da ronda</b><p class="small muted">Minutos antes do horário sorteado</p></div><div class="affix w-num"><input type="number" id="r-antes" data-rule="antes" value="${r.antes}" min="0" ${d}><span>min</span></div></div>
             <div class="rule"><div><b>Escalar atraso aos sócios</b><p class="small muted">Se o checklist continuar atrasado depois de</p></div><div class="affix w-num"><input type="number" id="r-escalar" data-rule="escalar" value="${r.escalar}" min="5" ${d}><span>min</span></div></div>
             <div class="rule"><div><b>Prazo para conferir</b><p class="small muted">Depois que a pessoa conclui, a gerente confere em até</p></div><div class="affix w-num"><input type="number" id="r-conferir" data-rule="conferir" value="${r.conferir}" min="5" ${d}><span>min</span></div></div>
+            <div class="rule"><div><b>Conferência por amostra</b><p class="small muted">Parte dos checklists que a gerente confere, por sorteio. Com item não feito, sempre confere.</p></div><div class="affix w-num"><input type="number" id="r-amostra" data-rule="amostra" data-kind="amostra" value="${Math.round(r.amostra * 100)}" min="10" max="100" step="5" ${d}><span>%</span></div></div>
+            <label class="toggle"><input type="checkbox" id="r-escsoc" data-rule="escalarSocios" data-kind="bool" ${r.escalarSocios ? 'checked' : ''} ${d}><span><b>Avisar também o sócio técnico</b><span>Atraso escalado chega também ao Robson, além do Victor.</span></span></label>
             <div class="rule"><div><b>Meta de conformidade</b><p class="small muted">Abaixo disso o número fica âmbar ou vermelho</p></div><div class="affix w-num"><input type="number" id="r-meta" data-rule="meta" data-kind="pct" value="${Math.round(r.meta * 100)}" min="50" max="100" ${d}><span>%</span></div></div>
-            <label class="toggle"><input type="checkbox" id="r-rondas" data-rule="rondas" data-kind="bool" ${r.rondas ? 'checked' : ''} ${d}><span><b>Rondas surpresa</b><span>O horário da ronda é sorteado até 1 hora antes ou depois do previsto. A equipe não vê.</span></span></label>
+            <label class="toggle"><input type="checkbox" id="r-rondas" data-rule="rondas" data-kind="bool" ${r.rondas ? 'checked' : ''} ${d}><span><b>Rondas surpresa</b><span>O horário da ronda é sorteado até 30 min antes ou depois do previsto, sem cair em reunião da gerente. A equipe não vê.</span></span></label>
             <div class="rule"><div><b>Resumo do dia aos sócios</b><p class="small muted">Horário da notificação</p></div><input class="inp w-auto" type="time" id="r-resumo" data-rule="resumo" data-kind="str" value="${r.resumo}" ${d}></div>
           </div></section>
         <section class="panel"><div class="panel-h"><h2>Notas fiscais</h2><p>Salão-Parceiro</p></div>

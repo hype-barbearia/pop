@@ -34,9 +34,15 @@ const modal = (title, eb, body) => `<div class="modal" role="dialog" aria-modal=
 
 /* ---------- Telas de acesso ---------- */
 function tela(html){ $('#top-right').innerHTML = ''; $('#modal').innerHTML = ''; const a = $('#app'); a.className = 'gate'; a.innerHTML = `<div class="gate-in">${html}</div>`; }
+/* O e-mail do login fica guardado no aparelho: no iPhone o app pode fechar enquanto a pessoa copia o código */
+const guardarEmail = e => { try { localStorage.setItem('hype-email', e); } catch (x) {} };
+const lerEmail = () => { try { return localStorage.getItem('hype-email') || sessionStorage.getItem('hype-email') || ''; } catch (x) { return ''; } };
 function telaLogin(enviado){
+  // Pediu o código há menos de 1 hora: volta direto para a tela do código (o app pode ter fechado no meio)
+  try { if (enviado === undefined && lerEmail() && Date.now() - +(localStorage.getItem('hype-otp-em') || 0) < 3600e3) enviado = lerEmail(); } catch (x) {}
   tela(enviado ? `<h1>Confira seu e-mail</h1><p class="muted">Enviamos um link de acesso para <b>${esc(enviado)}</b>. Abra o e-mail neste aparelho e toque no link.</p>
       <form class="stack gap8" data-form="otp"><label for="otp">Ou digite o código de 6 números que veio no e-mail</label><input class="inp code-in" id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+      ${lerEmail() ? '' : `<label for="otp-email">Seu e-mail</label><input class="inp" id="otp-email" type="email" autocomplete="email" placeholder="nome@hypebarbearia.com">`}
       <button class="btn primary big">Entrar com o código</button></form><button class="linkbtn" data-act="voltarLogin">Usar outro e-mail</button>`
     : `<p class="eyebrow">Hype POP</p><h1>Entrar</h1><p class="muted">Use o e-mail que você passou para a gerência. Vamos mandar um link de acesso, sem senha.</p>
       <form class="stack gap8" data-form="login"><label for="email">Seu e-mail</label><input class="inp" id="email" type="email" autocomplete="email" required placeholder="nome@exemplo.com">
@@ -55,13 +61,14 @@ async function iniciar(){
 async function iniciar_(){
   const {data:{session}} = await sb.auth.getSession();
   if (!session) { telaLogin(); return; }
+  try { localStorage.removeItem('hype-otp-em'); } catch (x) {}
   tela('<p class="muted">Carregando a operação de hoje…</p>');
   try { await carregar(); } catch (e) { telaErro(e); return; }
   const email = (session.user.email || '').toLowerCase(), p = S.people.find(x => x.email.toLowerCase() === email);
   if (!p) { telaSemCadastro(session.user.email); return; }
   S.ui.user = p.id;
-  if (p.role === 'gerente' && !['agora','equipe','ocorrencias','pops'].includes(S.ui.tab)) S.ui.tab = 'agora';
-  if (p.role !== 'gerente' && !['hoje','pops','hist'].includes(S.ui.tab)) S.ui.tab = 'hoje';
+  if (p.role === 'gerente' && !['agora','equipe','ocorrencias','pops','perfil'].includes(S.ui.tab)) S.ui.tab = 'agora';
+  if (p.role !== 'gerente' && !['hoje','pops','hist','perfil'].includes(S.ui.tab)) S.ui.tab = 'hoje';
   S.ui.push = await pushAtivo().catch(() => false);
   esvaziarFila().then(n => { if (n) recarregar(true); });
   render(); tempoReal();
@@ -109,7 +116,7 @@ let FOTO = null;
 const A = {
   sair(){ sb.auth.signOut(); },
   tentar(){ iniciar(); },
-  voltarLogin(){ telaLogin(); },
+  voltarLogin(){ try { localStorage.removeItem('hype-otp-em'); } catch (x) {} telaLogin(null); },
   modo(){ S.ui.mode = S.ui.mode === 'socio' ? 'app' : 'socio'; S.ui.open = null; S.ui.pop = null; uiSave(); render(); window.scrollTo(0, 0); },
   nav(d){ S.ui.view = d.v; S.ui.more = false; S.ui.pop = null; S.ui.open = null; uiSave(); render(); window.scrollTo(0, 0); },
   more(){ S.ui.more = !S.ui.more; render(); },
@@ -157,6 +164,10 @@ const A = {
   async push(){ try { await ativarPush(); S.ui.push = true; render(); toast('Notificações ativadas neste aparelho.'); } catch (e) { toast(esc(e.message)); } },
   popEditar(d){ S.ui.popEdit = d.v || null; render(); window.scrollTo(0, 0); },
   ausDel(d){ run(() => rpc('remover_ausencia', {a:+d.id}), 'Ausência removida.'); },
+  defOk(d){ const r = ($('#def-r-' + d.id)?.value || '').trim();
+    run(async () => check(await sb.from('definicoes').update({resolvido_em:new Date().toISOString(), resolvido_por:S.ui.user, resposta:r || null}).eq('id', +d.id)), 'Ponto marcado como definido.'); },
+  defReabrir(d){ run(async () => check(await sb.from('definicoes').update({resolvido_em:null, resolvido_por:null}).eq('id', +d.id)), 'Ponto voltou para a lista.'); },
+  defIr(d){ S.ui.view = d.v; S.ui.more = false; uiSave(); render(); window.scrollTo(0, 0); },
   reabrir(d){ run(() => rpc('reabrir_dia', {d:d.v}), 'Dia reaberto.'); },
   desligar(d){ const p = person(d.id); if (!confirmar(el => el, `desligar-${d.id}`, `Desligar ${p.name}? A pessoa perde o acesso e sai das próximas rotinas. Toque de novo para confirmar.`)) return;
     S.ui.selP = null; upd('pessoas', {ativo:false}, 'id', d.id, `${p.name} foi desligado(a) da equipe.`); },
@@ -213,9 +224,9 @@ document.addEventListener('change', e => {
     run(() => rpc('ajustar_ocorrencia', {oc:n, responsavel:resp, prazo}), 'Ocorrência atualizada.'); return; }
   if (el.dataset.rule) {
     const k = el.dataset.rule, kind = el.dataset.kind; let v = kind === 'bool' ? el.checked : kind === 'str' ? el.value : +el.value;
-    if (kind === 'pct') v = clamp(v, 50, 100) / 100; if (kind !== 'bool' && kind !== 'str' && isNaN(v)) return;
+    if (kind === 'pct') v = clamp(v, 50, 100) / 100; if (kind === 'amostra') v = clamp(v, 10, 100) / 100; if (kind !== 'bool' && kind !== 'str' && isNaN(v)) return;
     const col = {antes:'antes', escalar:'escalar', conferir:'conferir', meta:'meta', rondas:'rondas_surpresa', resumo:'resumo', inicio:'inicio_operacao',
-      inicioHora:'inicio_hora', nfDia:'nf_dia_limite', nfDas:'nf_exigir_das', nfCnpj:'nf_cnpj', nfRazao:'nf_razao', nfDesc:'nf_descricao'}[k];
+      inicioHora:'inicio_hora', amostra:'conferir_amostra', escalarSocios:'escalar_socios', nfDia:'nf_dia_limite', nfDas:'nf_exigir_das', nfCnpj:'nf_cnpj', nfRazao:'nf_razao', nfDesc:'nf_descricao'}[k];
     if (kind === 'str' && !v) v = k === 'nfDesc' ? '' : null;
     upd('regras', {[col]:v}, 'id', 1, 'Regra atualizada.'); return;
   }
@@ -235,13 +246,16 @@ document.addEventListener('submit', async e => {
     const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Enviando…';
     const {error} = await sb.auth.signInWithOtp({email, options:{emailRedirectTo:location.origin + location.pathname}});
     if (error) { btn.disabled = false; btn.textContent = 'Receber o link de acesso'; toast(esc(error.message.includes('rate') ? 'Muitos pedidos seguidos. Espere alguns minutos e tente de novo.' : error.message)); return; }
-    sessionStorage.setItem('hype-email', email); telaLogin(email); return;
+    guardarEmail(email); try { localStorage.setItem('hype-otp-em', Date.now()); } catch (x) {} telaLogin(email); return;
   }
   if (f === 'otp') {
-    const token = $('#otp').value.trim(), email = sessionStorage.getItem('hype-email'); if (!token || !email) return;
+    const token = $('#otp').value.trim(), email = ($('#otp-email')?.value.trim().toLowerCase()) || lerEmail(); if (!token || !email) { toast('Digite o código e o seu e-mail.'); return; }
+    guardarEmail(email);
     const {error} = await sb.auth.verifyOtp({email, token, type:'email'});
     if (error) toast('Código inválido ou vencido. Peça um novo link.'); return;
   }
+  if (f === 'def') { const t = $('#nd-t').value.trim(); if (!t) return;
+    run(async () => check(await sb.from('definicoes').insert({titulo:t, detalhe:$('#nd-d').value.trim() || null, ordem:100})), 'Ponto incluído na lista.'); return; }
   if (f === 'rem') { const at = $('#nr-at').value, t = $('#nr-t').value.trim(); if (!at || !t) return;
     run(async () => check(await sb.from('lembretes').insert({hora:at, texto:t})), 'Lembrete adicionado para a gerente.'); }
   if (f === 'occ') { const t = $('#no-t').value.trim(); if (!t) return; const file = $('#no-f')?.files?.[0];

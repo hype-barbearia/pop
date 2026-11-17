@@ -146,6 +146,7 @@ function gAgora(p){
       ${mine_.length ? `<section class="tl"><h2 class="sec-h">Seus checklists</h2>${mine_.map(i => tlItem(i)).join('')}</section>` : ''}
       ${fixos.length ? `<section class="card soft"><h2 class="sec-h">Lembretes do dia</h2>${fixos.map(r => { const ok = vis(S.remDone[r.id]), due = toMin(r.at) <= NOW();
         return `<div class="rem"><span class="num"><b>${r.at}</b></span><span class="grow">${esc(r.text)}</span>${ok ? chip('feito ' + hm(S.remDone[r.id]), 'good') : due ? `<button class="btn sm primary" data-act="remDone" data-id="${r.id}">Feito</button>` : chip('mais tarde')}</div>`; }).join('')}</section>` : ''}
+      <section class="card soft def-banner"><span><b>Alguém faltou ou vai sair mais cedo?</b><span class="small muted block">Registre a ausência e escolha quem cobre. Os checklists passam para essa pessoa.</span></span><button class="btn sm" data-act="tab" data-v="equipe">Registrar ausência</button></section>
     </main>`;
 }
 feedCard = function(f){
@@ -166,7 +167,9 @@ pgPainel = function(){
       ${S.inst.length ? segs([...S.inst].sort((a, b) => a.start - b.start)) : ''}</div>
     <div class="pulse-n"><div><b class="num">${rateTxt(d.rate)}</b><span>no prazo</span></div><div><b class="num">${d.done}<small>/${d.total}</small></b><span>feitos</span></div>
       <div><b class="num">${oo}</b><span>ocorrências</span></div><div><b class="num">${pv}</b><span>a conferir</span></div></div></section>`;
-  return _pgPainel().replace(/^\s*<header class="ph">[\s\S]*?<\/header>/, hero);
+  const nDef = S.defs.filter(x => !x.resolvido_em).length, nCf = conflitos().length;
+  const defs = nDef + nCf ? `<div class="callout def-banner"><span><b>${nDef + nCf} ${nDef + nCf === 1 ? 'ponto para definir' : 'pontos para definir'}</b>: ${[nDef ? `${nDef} em aberto` : '', nCf ? `${nCf} ${nCf === 1 ? 'conflito' : 'conflitos'} de horário` : ''].filter(Boolean).join(' e ')}.</span><button class="btn sm primary" data-act="nav" data-v="definir">Ver a lista</button></div>` : '';
+  return _pgPainel().replace(/^\s*<header class="ph">[\s\S]*?<\/header>/, hero + defs);
 };
 
 /* ---------- Detalhes de comportamento ---------- */

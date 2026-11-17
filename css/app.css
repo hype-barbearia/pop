@@ -808,3 +808,10 @@ details > summary.sec-h{cursor:pointer;list-style:none} details > summary.sec-h:
 }
 @media (prefers-reduced-motion:reduce){ .segs .s-acc,.tli.s-acc .tli-dot{animation:none} }
 .app.focus{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))} .app.focus .ck-foot{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+
+/* Para definir */
+.def{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;background:var(--surface)}
+.def.bad{border-left-color:var(--bad)} .def.warn{border-left-color:var(--warn)} .def.good{border-left-color:var(--good);opacity:.85}
+.def .grow{min-width:220px;flex:1}
+.deflist{list-style:none;padding:0;margin:0}
+.def-banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}

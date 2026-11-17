@@ -33,7 +33,9 @@ const ST = {
 const isDone = i => vis(i.doneAt);
 const verVis = i => i.ver && vis(i.ver.at) ? i.ver : null;
 const nudgesOf = id => S.nudges.filter(x => x.inst === id && vis(x.at));
-const needsVer = i => tpl(i.tpl).verify && isDone(i) && !verVis(i);
+/* Conferência por amostra: sorteada = false quer dizer que não caiu no sorteio */
+const pedeConf = i => tpl(i.tpl).verify && i.sorteada !== false;
+const needsVer = i => pedeConf(i) && isDone(i) && !verVis(i);
 const occVis = o => o.day || vis(o.at);
 const occOpen = () => S.occ.filter(o => occVis(o) && o.status !== 'resolvida');
 const lateMin = i => NOW() - i.due;
@@ -111,7 +113,7 @@ function gerenteFeed(){
 /* Como a gerente está respondendo aos lembretes hoje */
 function gerenteStats(){
   const n = NOW();
-  const verList = S.inst.filter(i => tpl(i.tpl).verify && isDone(i));
+  const verList = S.inst.filter(i => pedeConf(i) && isDone(i));
   const ver = verList.filter(verVis);
   const verAvg = ver.length ? sum(ver, i => i.ver.at - i.doneAt) / ver.length : 0;
   const late = S.inst.filter(i => i.who !== GER() && i.due < n && (!isDone(i) || i.doneAt > i.due));

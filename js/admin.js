@@ -175,3 +175,86 @@ document.addEventListener('submit', e => {
     if (usados.length) { toast(`Não dá para tirar áreas em uso: ${usados.join(', ')}.`); return; }
     salvarTexto('areas', o, 'Áreas salvas.'); }
 }, true);
+
+/* =========================================================
+   Para definir: pontos em aberto e conflitos de horário
+   ========================================================= */
+const hmM = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const diasTxt = ds => { ds = [...new Set(ds)].sort(); const cap = d => WEEK[d].replace(/^./, c => c.toUpperCase());
+  if (ds.length > 2 && ds.every((d, k) => !k || d === ds[k - 1] + 1)) return `${cap(ds[0])} a ${WEEK[ds[ds.length - 1]]}`;
+  return ds.length > 1 ? ds.slice(0, -1).map(cap).join(', ') + ' e ' + WEEK[ds[ds.length - 1]] : cap(ds[0]); };
+const fechaAs = dow => dow === 6 ? 18 * 60 : 20 * 60;
+
+/* Quem faz cada janela em cada dia da semana, pela regra da rotina (folga e escala incluídas) */
+function agendaSemana(){
+  const out = [];
+  [1,2,3,4,5,6].forEach(dow => S.allTpls.filter(t => t.active && (t.days || []).includes(dow)).forEach(t => t.slots.forEach(([ini, fim, resp, , dias]) => {
+    if (dias && !dias.includes(dow)) return;
+    let base = Array.isArray(t.each) ? t.each : typeof t.each === 'string' ? S.people.filter(p => p.role === t.each && p.active !== false).map(p => p.id) : [t.escala[dow] || resp];
+    base.filter(Boolean).forEach(pid => {
+      const p = person(pid); if (!p || p.active === false) return;
+      const folga = p.folga === dow && !t.ignoraFolga;
+      out.push({dow, pid, t, ini:toMin(ini), fim:toMin(fim), folga, fixo:!t.each, reuniao:t.ignoraFolga});
+    });
+  })));
+  return out;
+}
+
+function conflitos(){
+  if (!S.allTpls) return [];
+  const ag = agendaSemana(), out = [], ger = GER();
+  const add = (dow, k, onde, t, s) => out.push({dow, k, onde, t, s});
+  // 1. Mesma pessoa com duas coisas ao mesmo tempo (reunião envolvida, ou duas tarefas curtas com 15 min ou mais de sobreposição;
+  //    tarefa de janela longa, como regar as plantas entre 10h e 12h, encaixa entre as outras)
+  const vistos = new Set();
+  ag.filter(a => !a.folga).forEach(a => ag.filter(b => !b.folga && b !== a && b.dow === a.dow && b.pid === a.pid && b.t.id !== a.t.id).forEach(b => {
+    const sob = Math.min(a.fim, b.fim) - Math.max(a.ini, b.ini);
+    if (sob <= 0 || (!a.reuniao && !b.reuniao && (sob < 15 || a.fim - a.ini > 60 || b.fim - b.ini > 60))) return;
+    const k = [a.dow, a.pid, a.t.id, b.t.id].sort().join('|'); if (vistos.has(k)) return; vistos.add(k);
+    add(a.dow, a.reuniao || b.reuniao ? 'bad' : 'warn', 'rotina', `${first(person(a.pid))} tem duas tarefas ao mesmo tempo`,
+      `${a.t.title} (${hmM(a.ini)} às ${hmM(a.fim)}) e ${b.t.title} (${hmM(b.ini)} às ${hmM(b.fim)}).`);
+  }));
+  // 2. Lembrete da gerente durante reunião ou ronda dela
+  S.allReminders.filter(r => r.on).forEach(r => r.days.forEach(dow => {
+    const m = toMin(r.at), x = ag.find(a => a.dow === dow && a.pid === ger && !a.folga && (a.reuniao || a.t.kind === 'ronda') && a.ini <= m && m < a.fim);
+    if (x) add(dow, x.reuniao ? 'bad' : 'warn', 'gerente', `${r.at} · lembrete da gerente durante ${x.reuniao ? 'reunião' : 'ronda'}`,
+      `"${r.text}" cai durante ${x.t.title} (${hmM(x.ini)} às ${hmM(x.fim)}).`);
+  }));
+  // 3. Tarefa de responsável fixo que cai na folga e fica sem ninguém
+  ag.filter(a => a.folga && a.fixo).forEach(a => add(a.dow, 'bad', 'rotina', `${a.t.title} fica sem responsável`,
+    `${first(person(a.pid))} está de folga neste dia. Mude a escala do dia ou o responsável.`));
+  // 4. Equipe sem folga cadastrada
+  const semFolga = team().filter(p => p.folga == null && !p.socio);
+  if (semFolga.length) add(null, 'warn', 'equipe', `Sem folga cadastrada: ${semFolga.map(first).join(', ')}`,
+    'No dia de folga, os checklists dessas pessoas aparecem como atrasados e escalam aos sócios.');
+  // 5. Mais de 3 horas sem ronda com a casa aberta
+  [1,2,3,4,5,6].forEach(dow => {
+    const r = ag.filter(a => a.dow === dow && a.t.kind === 'ronda' && !a.folga).map(a => a.ini).sort((a, b) => a - b);
+    const marcos = [9 * 60, ...r, fechaAs(dow)];
+    for (let k = 1; k < marcos.length; k++) if (marcos[k] - marcos[k - 1] > 180) {
+      add(dow, 'warn', 'rotina', `${mins(marcos[k] - marcos[k - 1])} sem ronda`, `Das ${hmM(marcos[k - 1])} às ${hmM(marcos[k])}${k === 1 ? ' (desde a abertura)' : k === marcos.length - 1 ? ' (até o fechamento)' : ''}.`); }
+  });
+  // O mesmo conflito em vários dias vira um item só: "Seg a sex · ..."
+  const grupos = new Map();
+  out.forEach(c => { const key = c.k + c.t + c.s; const g = grupos.get(key) || {...c, dias:[]}; if (c.dow != null) g.dias.push(c.dow); grupos.set(key, g); });
+  return [...grupos.values()].map(g => ({k:g.k, onde:g.onde, s:g.s, t:(g.dias.length ? diasTxt(g.dias) + ' · ' : '') + g.t}))
+    .sort((a, b) => (a.k === 'bad' ? 0 : 1) - (b.k === 'bad' ? 0 : 1));
+}
+
+const ONDE = {equipe:'Equipe e ausências', rotina:'Rotina e checklists', gerente:'Gerente e lembretes', info:'Informações da casa'};
+function pgDefinir(){
+  const abertos = S.defs.filter(x => !x.resolvido_em), feitos = S.defs.filter(x => x.resolvido_em), cf = conflitos(), ed = canEdit();
+  const ir = o => o && ONDE[o] ? `<button class="btn sm" data-act="defIr" data-v="${o}">Abrir ${ONDE[o]} →</button>` : '';
+  return `${ph(eyebrow(), 'Para definir', 'O que ainda depende de uma decisão dos sócios. Os conflitos de horário são conferidos sozinhos e somem quando a rotina é ajustada.')}
+    <section class="panel"><div class="panel-h"><h2>Conflitos de horário</h2><p>${cf.length ? `${cf.length} encontrados na semana` : 'nenhum'}</p></div>
+      ${cf.length ? `<div class="stack gap8">${cf.map(c => `<div class="def ${c.k}"><div class="grow"><b>${esc(c.t)}</b><p class="small muted">${esc(c.s)}</p></div>${ir(c.onde)}</div>`).join('')}</div>` : '<p class="muted">A rotina da semana não tem conflitos de horário.</p>'}</section>
+    <section class="panel"><div class="panel-h"><h2>Pontos em aberto</h2><p>${abertos.length} para decidir</p></div>
+      ${abertos.length ? `<ol class="stack gap10 deflist">${abertos.map(x => `<li class="def"><div class="grow stack gap6">
+          <b>${esc(x.titulo)}</b>${x.detalhe ? `<p class="small">${esc(x.detalhe)}</p>` : ''}${x.sugestao ? `<p class="small muted"><b>Sugestão:</b> ${esc(x.sugestao)}</p>` : ''}
+          ${ed ? `<div class="row gap6"><label class="sr" for="def-r-${x.id}">Decisão</label><input class="inp grow" id="def-r-${x.id}" placeholder="Decisão tomada (opcional)"><button class="btn sm primary" data-act="defOk" data-id="${x.id}">Definido</button>${ir(x.onde)}</div>` : ir(x.onde)}
+        </div></li>`).join('')}</ol>` : '<p class="muted">Nada pendente. Tudo definido.</p>'}
+      ${ed ? `<details class="mini-form"><summary class="sum">Incluir ponto</summary><form class="stack gap8" data-form="def">
+        <div class="field"><label for="nd-t">O que precisa ser definido</label><input class="inp" id="nd-t" required></div>
+        <div class="field"><label for="nd-d">Detalhe</label><input class="inp" id="nd-d"></div><div><button class="btn sm primary">Incluir</button></div></form></details>` : ''}</section>
+    ${feitos.length ? `<details class="panel"><summary class="sum">Já definidos (${feitos.length})</summary><div class="stack gap8">${feitos.map(x => `<div class="def good"><div class="grow"><b>${esc(x.titulo)}</b><p class="small muted">${x.resposta ? esc(x.resposta) + ' · ' : ''}definido em ${dLabelISO(x.resolvido_em.slice(0, 10))}${x.resolvido_por ? ` por ${esc(first(person(x.resolvido_por)))}` : ''}</p></div>${ed ? `<button class="linkbtn small" data-act="defReabrir" data-id="${x.id}">Reabrir</button>` : ''}</div>`).join('')}</div></details>` : ''}`;
+}
