@@ -12,7 +12,7 @@ const first = p => p ? firstName(p.name) : 'Equipe';
 const NOW = () => S.ui.now;
 const vis = at => at != null && at <= NOW();
 const GER = () => S.people.find(p => p.role === 'gerente')?.id;
-const team = () => S.people.filter(p => p.role !== 'socio' && p.active !== false);
+const team = () => S.people.filter(p => p.role !== 'socio' && p.role !== 'dev' && p.active !== false);
 const mine = (i, pid) => i.who === pid || (tpl(i.tpl).also || []).includes(pid);
 const whoTxt = i => [i.who, ...(tpl(i.tpl).also || [])].map(id => first(person(id))).join(' e ');
 

@@ -946,3 +946,19 @@ button.alert::after{content:"›";position:absolute;right:16px;top:50%;transform
 .tvp-prog{height:5px;background:#1C1712} .tvp-prog i{display:block;height:100%;background:#A67C52;transition:width .3s}
 @media (max-width:760px){ .tvs-nums{grid-template-columns:repeat(2,1fr)} .tvs-row{grid-template-columns:1fr auto} .tvs-row .b,.tvs-row small{display:none} }
 @media (prefers-reduced-motion:reduce){ .tvs{animation:none} }
+/* Acesso DEV */
+#devbar{position:fixed;top:0;left:0;right:0;z-index:3000;height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#1E3A5F;color:#EAF1FA;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.25);overflow-x:auto;white-space:nowrap}
+#devbar .dv-tag{background:#F2C14E;color:#1A1510;font-weight:800;border-radius:6px;padding:2px 8px;letter-spacing:.08em}
+#devbar select,#devbar input{background:#284B78;color:#fff;border:1px solid #3E6597;border-radius:8px;padding:5px 8px;font:inherit}
+#devbar button{background:transparent;color:#EAF1FA;border:1px solid #3E6597;border-radius:8px;padding:5px 10px;font:inherit;cursor:pointer}
+#devbar .dv-info b{color:#fff}
+#devbar .dv-hora{display:flex;align-items:center;gap:6px;margin-left:auto} #devbar .dv-hora.on input{background:#F2C14E;color:#1A1510;border-color:#F2C14E}
+body.devon{padding-top:44px} body.devon .topbar{top:44px} body.devon .tabbar2{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+body.devon .tvp{top:0}
+.devhome{display:block;max-width:1180px;margin:0 auto;padding:28px 16px 90px}
+.devhome > * + *{margin-top:18px}
+.dv-g + .dv-g{margin-top:18px}
+.dv-p{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.dv-p .grow{min-width:220px;flex:1}
+.devhome code{font-size:12px}
+@media (max-width:600px){ #devbar .dv-info{display:none} }

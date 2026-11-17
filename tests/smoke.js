@@ -4,7 +4,7 @@
 const vm = require('vm');
 const {dados, SUPABASE_FALSO, codigoApp} = require('./ambiente');
 
-const PERFIS = ['victor', 'robson', 'jessica', 'breno', 'magda'];
+const PERFIS = ['victor', 'robson', 'jessica', 'breno', 'magda', 'sistemas'];
 let falhas = 0;
 const ok = (cond, msg) => { if (!cond) { falhas++; console.log('  ✗ ' + msg); } };
 
@@ -16,11 +16,11 @@ async function testar(who){
   const ls = {};
   const ctx = {
     console, setTimeout:(f) => 0, clearTimeout(){}, setInterval:() => 0, clearInterval(){}, Promise, Date, Math, JSON, Object, Array, String, Number, Boolean, RegExp, Error, Map, Set, Intl, URL, Blob:function(){},
-    navigator:{onLine:true, userAgent:'node', vibrate(){}}, matchMedia:() => ({matches:false}),
+    navigator:{onLine:true, userAgent:'node', vibrate(){}}, fetch:async () => ({headers:{get:() => 'teste'}}), caches:{keys:async () => []}, matchMedia:() => ({matches:false}),
     localStorage:{getItem:k => ls[k] ?? null, setItem:(k, v) => { ls[k] = String(v); }, removeItem:k => { delete ls[k]; }},
     location:{origin:'https://exemplo.invalid', pathname:'/', href:'https://exemplo.invalid/'},
     document:{querySelectorAll:() => [], getElementById:() => null, querySelector:s => (s.startsWith('.') || s.startsWith('details') || s.startsWith('input[')) ? null : (els[s] ??= el()),
-      addEventListener(){}, createElement:el, activeElement:null, body:{appendChild(){}, classList:{toggle(){}}}},
+      addEventListener(){}, createElement:el, activeElement:null, body:{appendChild(){}, prepend(){}, classList:{toggle(){}, add(){}, remove(){}}}},
     window:{scrollTo(){}, addEventListener(){}},
   };
   ctx.sessionStorage = ctx.localStorage; ctx.globalThis = ctx; ctx.self = ctx;
@@ -37,7 +37,19 @@ async function testar(who){
       if (espera) ok(h.includes(espera), `${who}/${nome}: faltou "${espera}"`); }
     catch (e) { falhas++; console.log(`  ✗ ${who}/${nome}: ${e.message}`); }
   };
-  if (r('socioView()')) {
+  if (r('S.ui.dev')) {
+    // Acesso DEV: painel, diagnóstico, hora simulada e "ver como" cada pessoa, sem gravar nada
+    ver('dev-painel', ``, 'Painel de desenvolvimento');
+    await r('A.devDiag()'); ver('dev-diagnostico', ``, 'Tarefas automáticas');
+    ver('dev-hora', `A.devHora({v:'08:30'})`, 'simulando 08:30');
+    for (const [id, mode, espera] of [['victor', null, 'Para definir'], ['robson', 'app', 'Robson'], ['robson', 'socio', 'Painel'], ['jessica', null, 'Jessica'], ['breno', null, 'Breno'], ['magda', null, 'Magda']])
+      ver(`dev-ver-${id}${mode ? '-' + mode : ''}`, `A.devHoraReal(); A.devVer({id:'${id}', mode:${JSON.stringify(mode)}})`, espera);
+    let gravou = false; ctx.__gravou = () => { gravou = true; };
+    await r(`run(async () => { __gravou(); })`); ok(!gravou, 'sistemas: o DEV conseguiu gravar vendo como outra pessoa');
+    ver('dev-treino', `A.devVer({id:'breno'}); A.treino(); A.check({id:'TREINO', it:'T1'})`, 'Feito às');
+    ver('dev-volta', `A.devVer({id:''})`, 'Ver o app como');
+    ok(!r(`team().some(p => p.role === 'dev')`), 'sistemas: o DEV apareceu na lista da equipe');
+  } else if (r('socioView()')) {
     for (const v of ['painel', 'definir', 'hoje', 'ocorrencias', 'relatorios', 'equipe', 'notas', 'gerente', 'pops', 'rotina', 'info'])
       ver(v, `S.ui.view='${v}'; S.ui.open=null; S.ui.pop=null; S.ui.rotEdit=null;`);
     ver('definir-conteudo', `S.ui.view='definir'`, 'POPs para revisar');

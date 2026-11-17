@@ -4,8 +4,10 @@
 const sb = supabase.createClient(HYPE_CONFIG.url, HYPE_CONFIG.key, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true}});
 const UI_KEY = 'hype-pop-ui';
 const uiLoad = () => { try { return JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch (e) { return {}; } };
-const uiSave = () => { try { const {view, tab, f, mode} = S.ui; localStorage.setItem(UI_KEY, JSON.stringify({view, tab, f, mode})); } catch (e) {} };
+const uiSave = () => { try { const {view, tab, f, mode, verComo} = S.ui; localStorage.setItem(UI_KEY, JSON.stringify({view, tab, f, mode, verComo})); } catch (e) {} };
 const save = uiSave;
+/* Hora usada pelas telas: a real, ou a hora simulada do acesso DEV */
+const horaAgora = () => (typeof S !== 'undefined' && S?.ui?.devHora != null) ? S.ui.devHora : nowMin();
 
 const PHOTO_URL = {};
 const hmT = t => t ? t.slice(0, 5) : '';
@@ -112,7 +114,7 @@ function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
     allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], repo:repo || [], statusEq:Object.fromEntries((steq || []).map(x => [x.pessoa_id, x])), falhas7:f7 || [], falhas14:f14 || [], priv:priv || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
-  S.ui.now = nowMin();
+  S.ui.now = horaAgora();
 }
 
 /* Fotos: links temporários para exibir */

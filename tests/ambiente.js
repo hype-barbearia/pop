@@ -3,7 +3,7 @@
    Usado pelos testes automáticos (tests/smoke.js) e pelas telas de conferência visual (tests/mock.js). */
 const fs = require('fs'), path = require('path');
 const RAIZ = path.join(__dirname, '..');
-const ARQUIVOS = ['config', 'core', 'consts', 'engine', 'data', 'ui', 'socio', 'app', 'main', 'admin', 'ux', 'recursos', 'tv'];
+const ARQUIVOS = ['config', 'core', 'consts', 'engine', 'data', 'ui', 'socio', 'app', 'main', 'admin', 'ux', 'recursos', 'tv', 'dev'];
 const HORA_FIXA = 15 * 60 + 40; // as telas de teste ficam paradas às 15:40
 
 function hojeRecife(){ return new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10); }

@@ -77,3 +77,9 @@ Mudança no banco: crie um arquivo novo em `supabase/migrations/` e aplique no S
 - Aviso de privacidade (LGPD) com registro de ciência, também no Perfil.
 - Cópia de segurança dos dados em arquivo (Informações da casa, só o Victor).
 - Alerta de saúde do sistema aos sócios (09:10, 15:10 e 20:10): dia sem checklists, tarefas automáticas com falha, avisos presos e erros do app.
+
+## Acesso DEV
+
+- `sistemas@hypebarbearia.com` entra como perfil `dev` (migração 020): lê tudo, como os sócios, e não altera nada de gestão.
+- Painel DEV: "ver como" qualquer pessoa (o app exatamente como ela vê, com os dados reais, só leitura), hora simulada, diagnóstico do sistema (tarefas automáticas, avisos, acessos e erros), aviso de teste no aparelho e limpeza do app no aparelho.
+- O DEV não entra em rotinas, listas da equipe, status nem números.

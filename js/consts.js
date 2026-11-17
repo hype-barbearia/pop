@@ -4,7 +4,7 @@
    "HYPE Cultura e POP" v1.0 (outubro de 2026).
    Os registros da operação ficam no Supabase.
    ========================================================= */
-const ROLE = {socio:'Sócio', gerente:'Gerente', barbeiro:'Barbeiro', atendente:'Atendente'};
+const ROLE = {socio:'Sócio', gerente:'Gerente', barbeiro:'Barbeiro', atendente:'Atendente', dev:'Desenvolvedor'};
 const AREAS = {
   cultura:'Inegociáveis', abertura:'Abertura', recepcao:'Recepção', agenda:'Agenda', atendimento:'Atendimento',
   barbeiros:'Barbeiros', vendas:'Preços e indicações', jornada:'Jornada do cliente', fechamento:'Fechamento', gestao:'Reuniões',

@@ -19,6 +19,8 @@ function render(){
   const rolagem = ['.modal-in', '#tl-wrap'].map(q => [q, $(q)?.scrollTop || 0, $(q)?.scrollLeft || 0]);
   $('#top-right').innerHTML = topRight();
   const app = $('#app'), p = me();
+  barraDev();
+  if (S.ui.dev && S.ui.user === S.ui.dev) { app.className = 'admin devhome'; app.innerHTML = renderDev(); $('#modal').innerHTML = ''; document.body.classList.remove('phone-ui'); return; }
   if (socioView()) { app.className = 'admin'; app.innerHTML = renderSocio(); }
   else { app.className = 'phoneview'; app.innerHTML = renderPhone(p); }
   app.classList.toggle('ro', socioView() && !canEdit());
@@ -74,8 +76,10 @@ async function iniciar_(){
   const email = (session.user.email || '').toLowerCase(), p = S.people.find(x => x.email.toLowerCase() === email);
   if (!p) { telaSemCadastro(session.user.email); return; }
   S.ui.user = p.id;
-  if (p.role === 'gerente' && !['agora','equipe','ocorrencias','pops','perfil'].includes(S.ui.tab)) S.ui.tab = 'agora';
-  if (p.role !== 'gerente' && !['hoje','pops','hist','perfil'].includes(S.ui.tab)) S.ui.tab = 'hoje';
+  if (p.role === 'dev') { S.ui.dev = p.id; const alvo = S.ui.verComo && person(S.ui.verComo); if (alvo && alvo.id !== p.id) S.ui.user = alvo.id; }
+  if (p.role === 'dev' && S.ui.user === p.id) { S.ui.push = await pushAtivo().catch(() => false); render(); tempoReal(); clearInterval(TICK); TICK = setInterval(tick, 30000); return; }
+  if (me().role === 'gerente' && !['agora','equipe','ocorrencias','pops','perfil'].includes(S.ui.tab)) S.ui.tab = 'agora';
+  if (me().role !== 'gerente' && !['hoje','pops','hist','perfil'].includes(S.ui.tab)) S.ui.tab = 'hoje';
   S.ui.push = await pushAtivo().catch(() => false);
   esvaziarFila().then(n => { if (n) recarregar(true); });
   render(); tempoReal();
@@ -91,7 +95,7 @@ async function recarregar(force){
 function tick(){
   const d = recife().toISOString().slice(0, 10);
   if (d !== TODAY_ISO) { recarregar(); return; }
-  S.ui.now = nowMin();
+  S.ui.now = horaAgora();
   if (algoAberto()) { PENDING = true; return; }
   render();
 }
@@ -105,6 +109,7 @@ sb.auth.onAuthStateChange(ev => setTimeout(() => {
 
 /* ---------- Ações ---------- */
 async function run(fn, msg){
+  if (devVendo()) { toast('Modo DEV: só visualização. Nada foi gravado.'); return; }
   try { await fn(); await recarregar(true); if (msg) toast(msg); }
   catch (e) { if (e.silencioso) return; toast(esc(e.message)); if (!semRede(e)) registrarErro(e.message, 'acao'); }
 }

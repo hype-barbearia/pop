@@ -143,6 +143,21 @@
 "criado_em": "2026-11-13T22:32:37.007519+00:00",
 "parceiro": false,
 "nome_completo": "Suellen Teste"
+},
+{
+"id": "sistemas",
+"nome": "Sistemas",
+"nome_completo": "Sistemas (DEV)",
+"papel": "dev",
+"email": "t.sistemas@exemplo.invalid",
+"ativo": true,
+"ordem": 99,
+"rotulo": "Acesso de desenvolvimento",
+"cor": 200,
+"socio": false,
+"parceiro": false,
+"turno": null,
+"folga": null
 }
 ],
 "pops": [
@@ -2743,6 +2758,71 @@
 "falhas": 2,
 "ultima": "2026-11-13"
 }
+],
+"dev_diagnostico": {
+"agora": "2026-11-17T18:40:00Z",
+"hoje": "2026-11-17",
+"checklists_hoje": 15,
+"concluidos_hoje": 6,
+"tarefas": [
+{
+"job": "hype_pop_gerar_dia",
+"quando": "5 3 * * *",
+"ativo": true,
+"ultima": "2026-11-17T03:05:00Z",
+"ultimo_status": "succeeded",
+"falhas_24h": 0
+},
+{
+"job": "hype_pop_notificar",
+"quando": "*/2 * * * *",
+"ativo": true,
+"ultima": "2026-11-17T18:38:00Z",
+"ultimo_status": "succeeded",
+"falhas_24h": 0
+}
+],
+"avisos": {
+"enviados_24h": 42,
+"pendentes": 1,
+"presos": 0,
+"ultimos": [
+{
+"pessoa_id": "breno",
+"titulo": "Hora do checklist: Bancada infantil",
+"criado_em": "2026-11-17T18:30:00Z",
+"enviado_em": "2026-11-17T18:30:05Z"
+}
 ]
+},
+"envio_http_24h": [
+{
+"status_code": 200,
+"c": 360
+}
+],
+"erros": [],
+"aparelhos": [
+{
+"pessoa_id": "victor",
+"n": 1,
+"ultimo": "2026-11-16T15:30:00Z"
+}
+],
+"acessos": [
+{
+"pessoa_id": "victor",
+"nome": "Victor",
+"papel": "socio",
+"ultimo_acesso": "2026-11-17T10:00:00Z"
+},
+{
+"pessoa_id": "breno",
+"nome": "Breno",
+"papel": "barbeiro",
+"ultimo_acesso": null
+}
+]
+}
 }
 }
