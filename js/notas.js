@@ -112,3 +112,43 @@ document.addEventListener('submit', e => {
   S.ui.nfEdit = null;
   run(() => rpc('definir_valor_nf', {pessoa:pid, periodo:per, valor:+raw}), `Valor salvo. ${first(person(pid))} recebe o aviso para emitir.`);
 });
+
+/* =========================================================
+   Visão do barbeiro parceiro (Perfil): a nota da quinzena em três passos
+   ========================================================= */
+function perfilNotas(p){
+  const opts = periodos(4), per = opts.includes(S.ui.f.perP) ? S.ui.f.perP : opts[0], comp = compAtual();
+  const e = nfEtapa(p.id, per), nf = docDe(p.id, per, 'nfse'), das = docDe(p.id, comp, 'das'), valor = valorNF(p.id, per), passo = NF_PASSO[e];
+  const desc = (S.rules.nfDesc || '').replace('{periodo}', perLabel(per)).replace('{mes}', perLabel(per));
+  const enviadoEm = d => dLabelISO(recife(Date.parse(d.enviado_em)).toISOString().slice(0, 10));
+  const copiar = (rot, txt) => `<div class="nf-dado"><div class="grow"><span>${rot}</span><b>${esc(txt || 'a definir pelos sócios')}</b></div>${txt ? `<button class="btn sm" data-act="copiarTexto" data-v="${esc(txt)}">Copiar</button>` : ''}</div>`;
+  const arquivo = tipo => `<label class="nf-file" for="df-${tipo}"><input type="file" id="df-${tipo}" accept="application/pdf,.pdf,.xml,text/xml,image/*" required data-arq="${tipo}"><span class="nf-file-t" id="dft-${tipo}">Escolher o arquivo (PDF, XML ou foto)</span></label>`;
+  const forma = `<form class="stack gap8" data-form="doc" data-tipo="nfse" data-comp="${per}">
+      <div class="form-grid"><div class="field"><label for="dn-nfse">Número da nota</label><input class="inp" id="dn-nfse" inputmode="numeric" required placeholder="Ex.: 118"></div>
+        <div class="field"><label for="dv-nfse">Valor da nota</label><div class="affix"><span>R$</span><input id="dv-nfse" inputmode="decimal" value="${valor != null ? nf2(valor) : ''}"></div></div></div>
+      ${arquivo('nfse')}<button class="btn primary big">Enviar a nota para a gestão</button></form>`;
+  const titulo = {valor:'A gestão ainda vai informar o valor', emitir:'Hora de emitir a sua nota', atrasada:'Sua nota está atrasada', conferir:'Nota enviada, aguardando a conferência', recusada:'A nota voltou: corrija e envie de novo', ok:'Nota conferida. Tudo certo nesta quinzena.'}[e];
+  const corpo = e === 'valor' ? '<p class="small muted">Você recebe um aviso no celular assim que o valor estiver aqui.</p>'
+    : e === 'conferir' ? `<p class="small muted">Enviada em ${enviadoEm(nf)}${nf.numero ? ` · nº ${esc(nf.numero)}` : ''}. Você é avisado se precisar corrigir.</p><div><button class="btn sm" data-act="verDoc" data-v="${esc(nf.arquivo_path)}">Ver o arquivo enviado</button></div>`
+    : e === 'ok' ? `<p class="small muted">Enviada em ${enviadoEm(nf)}${nf.numero ? ` · nº ${esc(nf.numero)}` : ''}.</p><div><button class="btn sm" data-act="verDoc" data-v="${esc(nf.arquivo_path)}">Ver o arquivo enviado</button></div>`
+    : `${e === 'recusada' && nf?.obs ? `<p class="nf-motivo"><b>Motivo:</b> ${esc(nf.obs)}</p>` : ''}
+      <ol class="nf-como"><li><strong class="t">Copie os dados da HYPE</strong>${copiar('Tomador (razão social)', S.rules.nfRazao)}${copiar('CNPJ', fmtCnpj(S.rules.nfCnpj))}${copiar('Descrição do serviço', desc)}</li>
+        <li><strong class="t">Emita a NFS-e</strong><span class="small">No emissor que você já usa como MEI, com o valor de <b>${brlTxt(valor)}</b>.</span></li>
+        <li><strong class="t">Envie aqui o número, o valor e o arquivo</strong>${forma}</li></ol>`;
+  return `<section class="card nf-me st-${e}"><div class="row between"><h3>Nota fiscal · Salão-Parceiro</h3></div>
+    <div class="nf-pers" role="tablist" aria-label="Quinzena">${opts.map(c => `<button role="tab" aria-selected="${c === per}" class="${c === per ? 'on' : ''}" data-act="f" data-k="perP" data-v="${c}"><i class="dot ${({ok:'good', conferir:'warn', emitir:'warn', atrasada:'bad', recusada:'bad', valor:''})[nfEtapa(p.id, c)]}"></i>${dLabelISO(c)}<small>a ${dLabelISO(perFim(c))}</small></button>`).join('')}</div>
+    <div class="nf-me-top"><div><p class="eyebrow">Quinzena de ${perLabel(per)}</p><h3 class="h-sm">${titulo}</h3>${e !== 'ok' && e !== 'conferir' ? `<p class="small ${e === 'atrasada' ? 'bad-t' : 'muted'}">Prazo: ${prazoTxt(perPrazo(per))}</p>` : ''}</div>
+      <div class="nf-v"><span>valor a emitir</span><b class="num">${valor != null ? brlTxt(valor) : '—'}</b></div></div>
+    <ol class="nf-steps">${['Valor informado', 'Nota enviada', 'Conferida'].map((t, k) => `<li class="${k < passo ? 'feito' : k === passo ? (e === 'atrasada' || e === 'recusada' ? 'agora bad' : 'agora') : ''}"><i>${k < passo ? '✓' : k + 1}</i><span>${t}</span></li>`).join('')}</ol>
+    <div class="nf-acao">${corpo}</div>
+    ${S.rules.nfDas ? `<div class="nf-das-me ${docOk(das) ? 'ok' : ''}"><div class="grow"><b>DAS do MEI de ${compLabel(comp)}</b><span class="small muted">${das ? `${das.status === 'recusada' ? 'Recusado' : 'Enviado'} em ${enviadoEm(das)}` : `Vence dia ${dLabelISO(prazoDAS(comp))}. Pague e envie o comprovante.`}</span>
+        ${das?.status === 'recusada' && das.obs ? `<span class="nf-motivo">${esc(das.obs)}</span>` : ''}</div>${docChip(das)}
+      ${!docOk(das) ? `<form class="stack gap8 nf-das-f" data-form="doc" data-tipo="das" data-comp="${comp}">${arquivo('das')}<button class="btn primary">Enviar comprovante</button></form>` : ''}</div>` : ''}
+    <details class="prev"><summary class="small"><b>Suas últimas quinzenas</b></summary><div class="feed">${periodos(6).map(c => `<div class="feed-i"><div><b>${perLabel(c)}</b><span>${valorNF(p.id, c) != null ? brlTxt(valorNF(p.id, c)) : 'valor não informado'}</span></div><div class="r">${chip(...NF_ROT[nfEtapa(p.id, c)])}</div></div>`).join('')}</div></details></section>`;
+}
+Object.assign(A, {copiarTexto(d){ navigator.clipboard?.writeText(d.v).then(() => toast('Copiado.'), () => toast('Selecione o texto e copie.')); }});
+document.addEventListener('change', e => {
+  const el = e.target; if (!el.dataset.arq) return;
+  const t = document.getElementById('dft-' + el.dataset.arq); if (t) t.textContent = el.files?.[0] ? `✓ ${el.files[0].name}` : 'Escolher o arquivo (PDF, XML ou foto)';
+  el.closest('.nf-file')?.classList.toggle('on', !!el.files?.[0]);
+});

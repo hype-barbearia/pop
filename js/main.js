@@ -288,7 +288,7 @@ document.addEventListener('submit', async e => {
         responsavel:$('#no-r')?.value || null, prazo:$('#no-p')?.value || null, foto}); $('#det-occ') && ($('#det-occ').open = false); }, 'Ocorrência registrada. A gerência foi avisada.'); }
   if (f === 'doc') { const tipo = e.target.dataset.tipo, comp = e.target.dataset.comp, file = $('#df-' + tipo).files[0]; if (!file) return;
     if (file.size > 10 * 1024 * 1024) { toast('O arquivo passa de 10 MB. Envie o PDF da nota ou uma foto menor.'); return; }
-    const valor = null;
+    const vtxt = ($('#dv-' + tipo)?.value || '').replace(/\s|R\$/g, '').replace(/\./g, '').replace(',', '.'), valor = vtxt === '' || isNaN(+vtxt) ? null : +vtxt;
     const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Enviando…';
     run(() => enviarDocumento(comp, tipo, tipo === 'nfse' ? $('#dn-' + tipo).value.trim() : null, valor, file), tipo === 'nfse' ? 'Nota fiscal enviada. A gestão foi avisada.' : 'Comprovante do DAS enviado.'); }
   if (f === 'aus') { const de = $('#au-i').value, ate = $('#au-f').value; if (ate < de) { toast('A data final precisa ser igual ou depois da inicial.'); return; }
