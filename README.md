@@ -83,3 +83,6 @@ Mudança no banco: crie um arquivo novo em `supabase/migrations/` e aplique no S
 - `sistemas@hypebarbearia.com` entra como perfil `dev` (migração 020): lê tudo, como os sócios, e não altera nada de gestão.
 - Painel DEV: "ver como" qualquer pessoa (o app exatamente como ela vê, com os dados reais, só leitura), hora simulada, diagnóstico do sistema (tarefas automáticas, avisos, acessos e erros), aviso de teste no aparelho e limpeza do app no aparelho.
 - O DEV não entra em rotinas, listas da equipe, status nem números.
+- Registro de acessos (migração 021): cada visão aberta pelo DEV e cada simulador ficam gravados; os sócios veem em Equipe e ausências.
+- Recursos (liga/desliga): Liberado, Só DEV ou Desligado, por recurso (`recurso('chave')` no app). Só o DEV altera.
+- Simulador (`js/simulador.js`): dia fictício com a rotina, as pessoas e os POPs reais; as ações funcionam, mas tudo fica na memória do aparelho.

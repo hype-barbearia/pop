@@ -54,7 +54,7 @@ const TREINO_TPL = {id:'TREINO', title:'Checklist de treino', kind:'check', veri
   {id:'T2', t:'Este pede foto: toque e fotografe qualquer coisa do ambiente', photo:true},
   {id:'T3', t:'Neste, toque em "Não deu" e escreva um motivo de teste'}]};
 const treinoFeito = () => { try { return localStorage.getItem('hype-treino-' + S.ui.user) === '1'; } catch (e) { return true; } };
-const cardTreino = p => treinoFeito() || p.role === 'socio' ? '' : `<button class="alert" data-act="treino"><b>Primeira vez no app? Faça um checklist de treino</b><span>Dois minutos para aprender a marcar, fotografar e usar o "Não deu". Não conta em nenhum número.</span></button>`;
+const cardTreino = p => !recurso('treino') || treinoFeito() || p.role === 'socio' ? '' : `<button class="alert" data-act="treino"><b>Primeira vez no app? Faça um checklist de treino</b><span>Dois minutos para aprender a marcar, fotografar e usar o "Não deu". Não conta em nenhum número.</span></button>`;
 function treinoMarcar(it, extra = {}){ TREINO.checks[it] = {at:NOW(), ok:true, ...extra}; render(); }
 
 /* ---------- Registrar: problema, falta de material, cliente ---------- */
@@ -62,23 +62,23 @@ function blocoRegistrar(gestor){
   const pessoas = pessoaOpts('', 'Ninguém em especial');
   return `<section class="card soft reg"><h2 class="sec-h">Registrar</h2>
     ${formOcorrencia(gestor).replace('class="panel" id="det-occ"', 'class="reg-d" id="det-occ"').replace('Registrar ocorrência', 'Um problema na casa')}
-    <details class="reg-d" id="det-rep"><summary class="sum">Falta material ou produto</summary>
+    ${recurso('reposicao') ? `<details class="reg-d" id="det-rep"><summary class="sum">Falta material ou produto</summary>
       <form class="stack gap8" data-form="rep"><div class="field"><label for="rp-i">O que está faltando</label><input class="inp" id="rp-i" required placeholder="Ex.: Álcool 70%"></div>
         <div class="field"><label for="rp-o">Detalhe (opcional)</label><input class="inp" id="rp-o" placeholder="Ex.: acaba amanhã"></div>
-        <div><button class="btn primary">Pedir reposição</button></div></form></details>
-    <details class="reg-d" id="det-cli"><summary class="sum">Cliente elogiou ou reclamou</summary>
+        <div><button class="btn primary">Pedir reposição</button></div></form></details>` : ''}
+    ${recurso('cliente') ? `<details class="reg-d" id="det-cli"><summary class="sum">Cliente elogiou ou reclamou</summary>
       <form class="stack gap8" data-form="cli"><div class="seg2" role="radiogroup" aria-label="Tipo">
           <label><input type="radio" name="cl-t" value="elogio" checked><span>Elogio</span></label><label><input type="radio" name="cl-t" value="reclamacao"><span>Reclamação</span></label></div>
         <div class="field"><label for="cl-x">O que o cliente disse</label><textarea class="inp" id="cl-x" rows="2" required></textarea></div>
         <div class="field"><label for="cl-p">Sobre quem</label><select class="inp" id="cl-p">${pessoas}</select></div>
         <p class="small muted">Não escreva nome, telefone ou dados do cliente.</p>
-        <div><button class="btn primary">Registrar</button></div></form></details></section>`;
+        <div><button class="btn primary">Registrar</button></div></form></details>` : ''}</section>`;
 }
 
 /* ---------- Lista de reposição ---------- */
 function blocoReposicao(gestor, titulo = 'Reposição de material'){
   const abertos = S.repo.filter(r => !r.resolvido_em), feitos = S.repo.filter(r => r.resolvido_em);
-  if (!abertos.length && !feitos.length) return '';
+  if (!recurso('reposicao') || (!abertos.length && !feitos.length)) return '';
   return `<section class="${socioView() ? 'panel' : 'card'} stack gap8"><h2 class="sec-h">${titulo} ${abertos.length ? `<span class="cnt">${abertos.length}</span>` : ''}</h2>
     ${abertos.map(r => `<div class="rem"><span class="grow"><b>${esc(r.item)}</b><span class="small muted block">${r.obs ? esc(r.obs) + ' · ' : ''}${esc(first(person(r.pedido_por)))} · ${dLabelISO(String(r.em).slice(0, 10))} ${hm(minOf(r.em))}</span></span>
       ${gestor ? `<button class="btn sm primary" data-act="repOk" data-id="${r.id}">Comprado</button>` : chip('pedido')}</div>`).join('') || '<p class="small muted">Nada faltando agora.</p>'}
@@ -114,6 +114,7 @@ function pautaTexto(){
   return L.join('\n');
 }
 function blocoPauta(aberta = false){
+  if (!recurso('pauta')) return '';
   const d = dadosPauta();
   const li = (t, s) => `<li><b>${t}</b><span>${s}</span></li>`;
   return `<details class="${socioView() ? 'panel' : 'card'} pauta" id="det-pauta" ${aberta ? 'open' : ''}><summary class="sum">Pauta do alinhamento de segunda</summary>

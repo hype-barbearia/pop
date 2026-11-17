@@ -48,6 +48,26 @@ async function testar(who){
     await r(`run(async () => { __gravou(); })`); ok(!gravou, 'sistemas: o DEV conseguiu gravar vendo como outra pessoa');
     ver('dev-treino', `A.devVer({id:'breno'}); A.treino(); A.check({id:'TREINO', it:'T1'})`, 'Feito às');
     ver('dev-volta', `A.devVer({id:''})`, 'Ver o app como');
+    ver('dev-recursos', ``, 'Recursos');
+    ver('dev-registro', ``, 'Registro de acessos');
+    // Simulador: um barbeiro marca de verdade, a gerente confere de verdade, nada sai do aparelho
+    await r(`A.simIniciar({v:'15:40'})`);
+    ok(r('!!SIM && S.inst.length > 0 && S.inst.every(i => String(i.id).startsWith("sim-"))'), 'sistemas: o simulador não montou o dia fictício');
+    ver('sim-painel', `A.devVer({id:''})`, 'Sair do simulador');
+    const alvo = r(`(() => { const i = S.inst.find(x => !isDone(x) && NOW() >= x.start - 30 && tpl(x.tpl).items.some(it => !it.photo && !x.checks[it.id]));
+      if (!i) return null; A.devVer({id:i.who}); return [i.id, tpl(i.tpl).items.find(it => !it.photo && !i.checks[it.id]).id]; })()`);
+    ok(alvo, 'sistemas: nenhum checklist aberto no simulador');
+    if (alvo) { await r(`run(() => rpc('marcar_item', {e:'${alvo[0]}', item:'${alvo[1]}', feito:true}))`);
+      ok(r(`!!inst('${alvo[0]}').checks['${alvo[1]}']`), 'sistemas: no simulador, marcar um item não funcionou'); }
+    const conf = r(`(() => { A.devVer({id:'jessica'}); return S.inst.find(i => needsVer(i))?.id || null; })()`);
+    if (conf) { await r(`run(() => rpc('conferir', {e:'${conf}', resultado:'ok', nota:null}))`); ok(r(`!!inst('${conf}').ver`), 'sistemas: no simulador, conferir não funcionou'); }
+    ver('sim-gerente', `A.devVer({id:'jessica'})`, 'Jessica');
+    await r(`A.simSair()`); ok(r('SIM === null && S.inst.every(i => !String(i.id).startsWith("sim-"))'), 'sistemas: sair do simulador não voltou aos dados reais');
+    // Recurso desligado some da tela
+    ver('recurso-desligado', `S.recursos.find(x => x.chave === 'treino').estado = 'desligado'; A.devVer({id:'breno'}); localStorage.removeItem('hype-treino-breno')`);
+    ok(!r(`document.querySelector('#app').innerHTML.includes('checklist de treino')`), 'sistemas: recurso desligado continuou aparecendo');
+    r(`S.recursos.find(x => x.chave === 'treino').estado = 'dev'`); r(`render()`);
+    ok(r(`document.querySelector('#app').innerHTML.includes('checklist de treino')`), 'sistemas: recurso "só DEV" não apareceu para o DEV');
     ok(!r(`team().some(p => p.role === 'dev')`), 'sistemas: o DEV apareceu na lista da equipe');
   } else if (r('socioView()')) {
     for (const v of ['painel', 'definir', 'hoje', 'ocorrencias', 'relatorios', 'equipe', 'notas', 'gerente', 'pops', 'rotina', 'info'])

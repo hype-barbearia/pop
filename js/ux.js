@@ -106,7 +106,7 @@ function instBody(i, mode){
     if (canAct && S.ui.nao === i.id + '|' + it.id) return `<div class="it open"><span class="it-ck" aria-hidden="true"></span><span class="it-tx stack gap8"><b>${esc(it.t)}</b>
         <label class="small muted" for="nao-note">${ronda ? 'O que está fora do padrão?' : 'Por que não deu?'} A gerência recebe como ocorrência.</label>
         <textarea class="inp" id="nao-note" rows="2" placeholder="${ronda ? 'Ex.: Bancada 3 com ferramenta fora da embalagem' : 'Ex.: Acabou o álcool 70%'}"></textarea>
-        ${ronda ? '' : `<label class="toggle sm"><input type="checkbox" id="nao-rep"><span>É falta de material: pedir reposição</span></label>`}
+        ${ronda || !recurso('reposicao') ? '' : `<label class="toggle sm"><input type="checkbox" id="nao-rep"><span>É falta de material: pedir reposição</span></label>`}
         <span class="row gap6"><button class="btn primary" data-act="naoSave" data-id="${i.id}" data-it="${it.id}">Registrar</button><button class="btn" data-act="naoCancel">Cancelar</button></span></span></div>`;
     if (canAct) return `<div class="it todo"><button class="it-main" data-act="check" data-id="${i.id}" data-it="${it.id}"><span class="it-ck" aria-hidden="true">${it.photo ? icon('camera', 'ni xs') : ''}</span>
         <span class="it-tx"><b>${esc(it.t)}</b>${tags(it)}<small>${ronda ? 'Toque se está conforme' : it.photo ? 'Toque para tirar a foto (só do ambiente, sem clientes)' : 'Toque quando terminar'}</small></span></button>
@@ -146,7 +146,7 @@ function gAgora(p){
     <main class="sheet-c">${cardPrivacidade(p)}${avisoPush()}${avisoInicio()}${avisoFechado()}${cardTreino(p)}
       ${TODAY_WD === 1 ? blocoPauta(false) : ''}
       ${!urg.length && !conf.length ? `<div class="now done"><span class="now-l">Fila vazia</span><b class="now-t">Casa no padrão agora.</b><span class="now-m">Nenhum atraso e nada para conferir.</span></div>` : ''}
-      ${grupo('Resolver agora', urg)}${conf.length > 1 ? `<button class="btn big lote-b" data-act="lote">Conferir em lote (${conf.length}) · fotos lado a lado</button>` : ''}${grupo('Conferir', conf)}${grupo('Lembretes e avisos', resto)}
+      ${grupo('Resolver agora', urg)}${conf.length > 1 && recurso('lote') ? `<button class="btn big lote-b" data-act="lote">Conferir em lote (${conf.length}) · fotos lado a lado</button>` : ''}${grupo('Conferir', conf)}${grupo('Lembretes e avisos', resto)}
       ${blocoReposicao(true)}
       ${mine_.length ? `<section class="tl"><h2 class="sec-h">Seus checklists</h2>${mine_.map(i => tlItem(i)).join('')}</section>` : ''}
       ${fixos.length ? `<section class="card soft"><h2 class="sec-h">Lembretes do dia</h2>${fixos.map(r => { const ok = vis(S.remDone[r.id]), due = toMin(r.at) <= NOW();

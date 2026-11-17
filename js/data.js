@@ -6,6 +6,8 @@ const UI_KEY = 'hype-pop-ui';
 const uiLoad = () => { try { return JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch (e) { return {}; } };
 const uiSave = () => { try { const {view, tab, f, mode, verComo} = S.ui; localStorage.setItem(UI_KEY, JSON.stringify({view, tab, f, mode, verComo})); } catch (e) {} };
 const save = uiSave;
+/* Liga/desliga de recursos: 'todos', 'dev' (só o acesso DEV vê) ou 'desligado' */
+const recurso = k => { const r = (typeof S !== 'undefined' && S?.recursos || []).find(x => x.chave === k); const e = r ? r.estado : 'todos'; return e === 'todos' || (e === 'dev' && !!S?.ui?.dev); };
 /* Hora usada pelas telas: a real, ou a hora simulada do acesso DEV */
 const horaAgora = () => (typeof S !== 'undefined' && S?.ui?.devHora != null) ? S.ui.devHora : nowMin();
 
@@ -25,15 +27,15 @@ async function carregar(){
     const c = lerCache();
     if (semRede(e) && c && c.dia === TODAY_ISO) { rows = c.rows; OFFLINE = c.em; } else throw e;
   }
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv] = rows;
-  montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv);
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc] = rows;
+  montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc);
   await assinarFotos().catch(() => {});
 }
 
 /* Cópia local do último carregamento do dia (para abrir sem internet) */
 let OFFLINE = null;
 const CACHE_KEY = 'hype-pop-cache';
-function salvarCache(rows){ try { const j = JSON.stringify({dia:TODAY_ISO, em:nowMin(), rows}); if (j.length < 2.5e6) localStorage.setItem(CACHE_KEY, j); } catch (e) {} }
+function salvarCache(rows){ if (typeof SIM !== 'undefined' && SIM) return; try { const j = JSON.stringify({dia:TODAY_ISO, em:nowMin(), rows}); if (j.length < 2.5e6) localStorage.setItem(CACHE_KEY, j); } catch (e) {} }
 function lerCache(){ try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) { return null; } }
 const limparCache = () => { try { localStorage.removeItem(CACHE_KEY); } catch (e) {} };
 
@@ -70,11 +72,13 @@ async function buscar(d30){
     sb.rpc('falhas_itens', {dias:7}),
     sb.rpc('falhas_itens', {dias:14}),
     sb.from('privacidade_aceite').select('*'),
+    sb.from('recursos').select('*').order('chave'),
+    sb.from('dev_acessos').select('*').order('em', {ascending:false}).limit(40),
   ]);
   return q.map(check);
 }
 
-function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv){
+function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc){
   aplicarTextos(cfg);
 
   const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem, fullName:p.nome_completo || p.nome, parceiro:p.parceiro}));
@@ -113,7 +117,7 @@ function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, 
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
-    allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], repo:repo || [], statusEq:Object.fromEntries((steq || []).map(x => [x.pessoa_id, x])), falhas7:f7 || [], falhas14:f14 || [], priv:priv || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
+    allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], repo:repo || [], statusEq:Object.fromEntries((steq || []).map(x => [x.pessoa_id, x])), falhas7:f7 || [], falhas14:f14 || [], priv:priv || [], recursos:rec || [], devAcessos:dacc || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = horaAgora();
 }
 

@@ -109,7 +109,7 @@ sb.auth.onAuthStateChange(ev => setTimeout(() => {
 
 /* ---------- Ações ---------- */
 async function run(fn, msg){
-  if (devVendo()) { toast('Modo DEV: só visualização. Nada foi gravado.'); return; }
+  if (devVendo() && !SIM) { toast('Modo DEV: só visualização. Nada foi gravado.'); return; }
   try { await fn(); await recarregar(true); if (msg) toast(msg); }
   catch (e) { if (e.silencioso) return; toast(esc(e.message)); if (!semRede(e)) registrarErro(e.message, 'acao'); }
 }

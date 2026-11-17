@@ -962,3 +962,5 @@ body.devon .tvp{top:0}
 .dv-p .grow{min-width:220px;flex:1}
 .devhome code{font-size:12px}
 @media (max-width:600px){ #devbar .dv-info{display:none} }
+#devbar.sim{background:#5B3A0E} #devbar.sim .dv-tag{background:#F2C14E} #devbar.sim select,#devbar.sim input{background:#7A5218;border-color:#9C6B26}
+.sim-p{border:2px dashed var(--accent)}

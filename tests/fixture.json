@@ -2824,5 +2824,53 @@
 }
 ]
 }
+},
+"recursos": [
+{
+"chave": "treino",
+"nome": "Checklist de treino",
+"descricao": "Cartão e checklist de treino.",
+"estado": "todos"
+},
+{
+"chave": "lote",
+"nome": "Conferência em lote",
+"descricao": "Botão da gerente.",
+"estado": "todos"
+},
+{
+"chave": "reposicao",
+"nome": "Reposição de material",
+"descricao": "Pedido de material.",
+"estado": "todos"
+},
+{
+"chave": "cliente",
+"nome": "Elogio e reclamação de cliente",
+"descricao": "Registrar cliente.",
+"estado": "todos"
+},
+{
+"chave": "pauta",
+"nome": "Pauta do alinhamento",
+"descricao": "Pauta automática.",
+"estado": "todos"
+},
+{
+"chave": "modo_tv",
+"nome": "Modo TV",
+"descricao": "Apresentação da semana.",
+"estado": "todos"
 }
+],
+"dev_acessos": [
+{
+"id": 1,
+"dev_id": "sistemas",
+"alvo_id": "breno",
+"modo": "ver",
+"detalhe": null,
+"em": "2026-11-17T18:00:00Z"
+}
+]
 }

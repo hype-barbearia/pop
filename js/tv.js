@@ -149,7 +149,7 @@ document.addEventListener('fullscreenchange', () => { if (TV && !document.fullsc
 
 /* ---------- Tela de preparação (Sócios → Modo TV) ---------- */
 function pgTv(){
-  if (!canEdit()) return `${ph(eyebrow(), 'Modo TV', 'A apresentação da semana é montada pelo Victor.')}`;
+  if (!canEdit() || !recurso('modo_tv')) return `${ph(eyebrow(), 'Modo TV', !recurso('modo_tv') ? 'O Modo TV está desligado no momento.' : 'A apresentação da semana é montada pelo Victor.')}`;
   const c = tvCfg(), p = tvPeriodo(c.periodo), n = TV_SLIDES.filter(s => c.on[s[0]] && (s[0] !== 'recado' || c.recado.trim())).length;
   const opt = (v, l, cur) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${l}</option>`;
   return `${ph(eyebrow(), 'Modo TV', 'Os números e os destaques da semana em tela cheia, para a reunião. Só entra o que estiver ligado aqui. Ligue o computador na TV e toque em Iniciar.',
