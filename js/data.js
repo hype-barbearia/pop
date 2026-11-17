@@ -16,6 +16,26 @@ function check(res){ if (res.error) throw new Error(res.error.message || 'Erro a
 async function carregar(){
   setToday();
   const d30 = isoMinus(30);
+  let rows;
+  try { rows = await buscar(d30); salvarCache(rows); OFFLINE = null; }
+  catch (e) {
+    // Sem internet: abre com a última cópia do dia guardada no aparelho (as marcações vão para a fila)
+    const c = lerCache();
+    if (semRede(e) && c && c.dia === TODAY_ISO) { rows = c.rows; OFFLINE = c.em; } else throw e;
+  }
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv] = rows;
+  montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv);
+  await assinarFotos().catch(() => {});
+}
+
+/* Cópia local do último carregamento do dia (para abrir sem internet) */
+let OFFLINE = null;
+const CACHE_KEY = 'hype-pop-cache';
+function salvarCache(rows){ try { const j = JSON.stringify({dia:TODAY_ISO, em:nowMin(), rows}); if (j.length < 2.5e6) localStorage.setItem(CACHE_KEY, j); } catch (e) {} }
+function lerCache(){ try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) { return null; } }
+const limparCache = () => { try { localStorage.removeItem(CACHE_KEY); } catch (e) {} };
+
+async function buscar(d30){
   await sb.rpc('garantir_dia');
   const q = await Promise.all([
     sb.from('pessoas').select('*').order('ordem'),
@@ -43,8 +63,16 @@ async function carregar(){
     sb.from('config_textos').select('*'),
     sb.from('rotina_agendamentos').select('*').gte('data', isoMinus(1)).order('data').order('inicio'),
     sb.from('definicoes').select('*').order('ordem'),
+    sb.from('reposicao').select('*').or(`resolvido_em.is.null,resolvido_em.gte.${isoMinus(2)}`).order('em', {ascending:false}),
+    sb.rpc('status_equipe'),
+    sb.rpc('falhas_itens', {dias:7}),
+    sb.rpc('falhas_itens', {dias:14}),
+    sb.from('privacidade_aceite').select('*'),
   ]);
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs] = q.map(check);
+  return q.map(check);
+}
+
+function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv){
   aplicarTextos(cfg);
 
   const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem, fullName:p.nome_completo || p.nome, parceiro:p.parceiro}));
@@ -56,7 +84,7 @@ async function carregar(){
   const janelas = Object.fromEntries(ja.map(j => [j.id, j]));
   const allTpls = ro.map(r => ({id:r.id, title:r.titulo, pop:r.pop_id, kind:r.tipo, verify:r.conferir, days:r.dias, each:r.cada || r.cada_papel || null, also:r.junto, every2:r.quinzenal,
     active:r.ativo, rodizio:r.rodizio, ignoraFolga:r.ignora_folga,
-    items:it.filter(i => i.rotina_id === r.id && i.ativo).map(i => ({id:i.id, t:i.texto, photo:i.foto, crit:i.critico, ordem:i.ordem})),
+    items:it.filter(i => i.rotina_id === r.id && i.ativo).map(i => ({id:i.id, t:i.texto, photo:i.foto, crit:i.critico, ordem:i.ordem, ref:i.foto_ref || null})),
     allItems:it.filter(i => i.rotina_id === r.id),
     escala:Object.fromEntries(re.filter(e => e.rotina_id === r.id).map(e => [e.dow, e.pessoa_id])),
     slots:ja.filter(j => j.rotina_id === r.id && j.ativo !== false).map(j => [hmT(j.inicio), hmT(j.prazo), j.responsavel, j.id, j.dias])}));
@@ -79,18 +107,18 @@ async function carregar(){
   const nudges = co.map(c => ({inst:c.execucao_id, at:minOf(c.em), by:c.por}));
   const r = rg || {};
   const rules = {antes:r.antes ?? 10, escalar:r.escalar ?? 30, conferir:r.conferir ?? 30, meta:Number(r.meta ?? .9), rondas:r.rondas_surpresa ?? true, resumo:hmT(r.resumo) || '21:00', inicio:r.inicio_operacao || null, inicioHora:hmT(r.inicio_hora) || '',
-    nfDia:r.nf_dia_limite ?? 5, nfDas:r.nf_exigir_das ?? true, nfCnpj:r.nf_cnpj || '', nfRazao:r.nf_razao || '', nfDesc:r.nf_descricao || '', amostra:Number(r.conferir_amostra ?? 1), escalarSocios:!!r.escalar_socios};
+    nfDia:r.nf_dia_limite ?? 5, nfDas:r.nf_exigir_das ?? true, nfCnpj:r.nf_cnpj || '', nfRazao:r.nf_razao || '', nfDesc:r.nf_descricao || '', amostra:Number(r.conferir_amostra ?? 1), escalarSocios:!!r.escalar_socios, aprendizadoAte:r.aprendizado_ate || null};
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
-    allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
+    allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], repo:repo || [], statusEq:Object.fromEntries((steq || []).map(x => [x.pessoa_id, x])), falhas7:f7 || [], falhas14:f14 || [], priv:priv || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = nowMin();
-  await assinarFotos();
 }
 
 /* Fotos: links temporários para exibir */
 async function assinarFotos(){
-  const paths = [...S.inst.flatMap(i => Object.values(i.checks).map(c => c.photo)), ...S.occ.map(o => o.foto)].filter(Boolean).filter(p => !PHOTO_URL[p]);
+  const refs = S.tpls.flatMap(t => t.items.map(x => x.ref));
+  const paths = [...S.inst.flatMap(i => Object.values(i.checks).map(c => c.photo)), ...S.occ.map(o => o.foto), ...refs].filter(Boolean).filter(p => !PHOTO_URL[p] && p !== 'treino');
   if (!paths.length) return;
   const {data} = await sb.storage.from('fotos').createSignedUrls(paths, 6 * 3600);
   (data || []).forEach(d => { if (d.signedUrl) PHOTO_URL[d.path] = d.signedUrl; });

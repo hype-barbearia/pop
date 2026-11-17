@@ -1,6 +1,39 @@
-/* Hype POP · service worker só para notificações (sem cache, para nunca prender uma versão antiga) */
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+/* Hype POP · service worker
+   - Notificações (push)
+   - App abre sem internet: guarda uma cópia dos arquivos do app. Sempre tenta a rede primeiro,
+     então com internet a pessoa recebe a versão nova na hora; a cópia só é usada quando a rede falha.
+   Os dados (Supabase) não passam por aqui: o app guarda a última leitura do dia por conta própria. */
+const CACHE = 'hype-pop-app-v1';
+const ARQUIVOS = ['./', './index.html', './css/app.css', './manifest.webmanifest', './icon.svg', './icon-180.png',
+  ...['config','core','consts','engine','data','ui','socio','app','main','admin','ux','recursos'].map(f => `./js/${f}.js`),
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(ARQUIVOS.map(u => c.add(u)))).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => e.waitUntil((async () => {
+  for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
+  await self.clients.claim();
+})()));
+
+const doApp = u => u.origin === self.location.origin || u.hostname === 'cdn.jsdelivr.net' || u.hostname === 'fonts.googleapis.com' || u.hostname === 'fonts.gstatic.com';
+self.addEventListener('fetch', e => {
+  const r = e.request; if (r.method !== 'GET') return;
+  const u = new URL(r.url); if (!doApp(u)) return;
+  e.respondWith((async () => {
+    try {
+      const res = await fetch(r);
+      if (res.ok || res.type === 'opaque') { const c = res.clone(); caches.open(CACHE).then(k => k.put(r, c)).catch(() => {}); }
+      return res;
+    } catch (err) {
+      const m = await caches.match(r, {ignoreSearch:true});
+      if (m) return m;
+      if (r.mode === 'navigate') return (await caches.match('./index.html')) || (await caches.match('./')) || Response.error();
+      return Response.error();
+    }
+  })());
+});
+
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data.json(); } catch (x) { d = {title:'Hype POP', body:e.data && e.data.text()}; }
   e.waitUntil(self.registration.showNotification(d.title || 'Hype POP', {body:d.body || '', tag:d.tag, icon:'icon-180.png', badge:'icon-180.png', data:{url:d.url || './'}}));

@@ -13,7 +13,7 @@ const ph = (eyebrow, title, lead = '', actions = '') => `<header class="ph"><div
 const segUi = (key, items, cur) => `<div class="seg" role="group">${items.map(([k, l]) => `<button class="${cur === k ? 'on' : ''}" aria-pressed="${cur === k}" data-act="f" data-k="${key}" data-v="${k}">${l}</button>`).join('')}</div>`;
 /* Aviso enquanto a operação não começou */
 const preInicio = () => !S.rules.inicio || TODAY_ISO < S.rules.inicio;
-const avisoInicio = () => !preInicio() ? '' : `<div class="callout"><b>${S.rules.inicio ? `A operação começa em ${dLabelISO(S.rules.inicio)}.` : 'A data de início da operação ainda não foi definida.'}</b> Até lá o app não cria checklists. Use este tempo para ler e assinar os POPs.${S.rules.inicio ? '' : ' Os sócios definem a data em Gerente e lembretes.'}</div>`;
+const avisoInicio = () => avisoOffline() + avisoAprendizado() + (!preInicio() ? '' : `<div class="callout"><b>${S.rules.inicio ? `A operação começa em ${dLabelISO(S.rules.inicio)}.` : 'A data de início da operação ainda não foi definida.'}</b> Até lá o app não cria checklists. Use este tempo para ler e assinar os POPs.${S.rules.inicio ? '' : ' Os sócios definem a data em Gerente e lembretes.'}</div>`);
 const areaChip = a => `<span class="chip area">${AREAS[a]}</span>`;
 
 function ring(v, size = 92, label, neutral){
@@ -44,51 +44,7 @@ const icon = (k, cls = 'ni') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hi
 /* Foto registrada (link temporário do Storage) */
 const photo = (label, at, path) => PHOTO_URL[path] ? `<a class="photo img" href="${esc(PHOTO_URL[path])}" target="_blank" rel="noopener"><img src="${esc(PHOTO_URL[path])}" alt="Foto: ${esc(label)}, ${hm(at)}" loading="lazy"><span>${hm(at)}</span></a>` : `<div class="photo" role="img" aria-label="Foto: ${esc(label)}, ${hm(at)}">${icon('camera')}<span>${hm(at)}</span></div>`;
 
-/* Cartão de uma execução */
-function instCard(i, {who = true} = {}){
-  const t = tpl(i.tpl), p = person(i.who), s = status(i), g = prog(i), k = ST[s].k;
-  const sub = isDone(i) ? `Concluído às ${hm(i.doneAt)}${i.doneAt > i.due ? `, ${mins(i.doneAt - i.due)} de atraso` : ''}` : s === 'agendado' ? `Janela ${hm(i.start)} às ${hm(i.due)}` : `${g.d} de ${g.n} itens · prazo ${hm(i.due)}`;
-  const extra = [g.nc ? `${g.nc} ${t.kind === 'ronda' ? 'não conforme' : 'não feito'}` : '', needsVer(i) ? 'aguardando conferência' : '', verVis(i)?.res === 'ressalva' ? 'conferido com ressalva' : ''].filter(Boolean).join(' · ');
-  return `<button class="inst ${k}" data-act="open" data-id="${i.id}"><span class="time num">${hm(i.start)}</span>
-    <span class="grow"><b>${t.title}</b><span class="sub">${who ? esc(whoTxt(i)) + ' · ' : tpl(i.tpl).also ? esc(whoTxt(i)) + ' · ' : ''}${sub}</span>${extra ? `<span class="sub ${g.nc ? 'bad-t' : ''}">${extra}</span>` : ''}</span>${chip(ST[s].l, k)}</button>`;
-}
 
-/* Corpo de uma execução: itens, fotos, conferência. mode = exec | verify | view */
-function instBody(i, mode){
-  const t = tpl(i.tpl), p = person(i.who), c = checks(i), s = status(i), done = isDone(i), ronda = t.kind === 'ronda';
-  const canAct = mode === 'exec' && !done && NOW() >= i.start - 30;
-  const items = t.items.map(it => {
-    const k = c[it.id], tag = `${it.photo ? `<span class="tag">${icon('camera', 'ni xs')}foto</span>` : ''}${it.crit ? '<span class="tag crit">crítico</span>' : ''}`;
-    if (k) return `<div class="ci ${k.ok ? 'ok' : 'nc'}"><span class="cbox" aria-hidden="true">${k.ok ? '✓' : '✕'}</span><div class="grow"><b>${esc(it.t)}</b>${tag}
-      <p class="small ${k.ok ? 'muted' : 'bad-t'}">${k.ok ? (ronda ? 'Conforme' : 'Feito') : (ronda ? 'Não conforme' : 'Não feito')} às ${hm(k.at)}${k.note ? `: ${esc(k.note)}` : ''}</p>${k.photo ? photo(it.t, k.at, k.photo) : ''}</div>
-      ${canAct ? `<button class="linkbtn small" data-act="uncheck" data-id="${i.id}" data-it="${it.id}">Desfazer</button>` : ''}</div>`;
-    if (canAct && S.ui.nao === i.id + '|' + it.id) return `<div class="ci"><span class="cbox" aria-hidden="true"></span><div class="grow stack gap8"><b>${esc(it.t)}</b>
-      <label class="small muted" for="nao-note">${ronda ? 'O que está fora do padrão?' : 'Por que não deu para fazer?'} Isso abre uma ocorrência para a gerente.</label>
-      <textarea class="inp" id="nao-note" rows="2" placeholder="${ronda ? 'Ex.: Bancada 3 com ferramenta fora da embalagem' : 'Ex.: Acabou o álcool 70%'}"></textarea>
-      <div class="row gap6"><button class="btn sm primary" data-act="naoSave" data-id="${i.id}" data-it="${it.id}">Registrar</button><button class="btn sm" data-act="naoCancel">Cancelar</button></div></div></div>`;
-    const acts = canAct ? `<div class="ci-acts">${ronda ? `<button class="btn sm ok" data-act="check" data-id="${i.id}" data-it="${it.id}">Conforme</button><button class="btn sm no" data-act="nao" data-id="${i.id}" data-it="${it.id}">Não conforme</button>`
-      : `${it.photo ? `<button class="btn sm primary" data-act="check" data-id="${i.id}" data-it="${it.id}">${icon('camera', 'ni xs')}Tirar foto</button>` : `<button class="btn sm primary" data-act="check" data-id="${i.id}" data-it="${it.id}">Feito</button>`}<button class="btn sm" data-act="nao" data-id="${i.id}" data-it="${it.id}">Não deu</button>`}</div>` : '';
-    return `<div class="ci"><span class="cbox" aria-hidden="true"></span><div class="grow"><b>${esc(it.t)}</b>${tag}${!canAct && !done && s !== 'agendado' ? '<p class="small muted">Ainda não marcado</p>' : ''}</div>${acts}</div>`;
-  }).join('');
-  const g = prog(i), left = g.n - g.d;
-  const finish = canAct ? `<div class="submit-in">${left ? `<button class="btn primary big" disabled>Faltam ${left} ${left === 1 ? 'item' : 'itens'}</button>` : `<button class="btn primary big" data-act="finish" data-id="${i.id}">Concluir checklist</button>`}</div>` : '';
-  const early = mode === 'exec' && !done && NOW() < i.start - 30 ? `<p class="callout">Este checklist libera às ${hm(i.start - 30)}, meia hora antes da janela.</p>` : '';
-  const v = verVis(i), nd = nudgesOf(i.id);
-  const verBox = v ? `<div class="callout ${v.res === 'ok' ? 'good' : v.res === 'refazer' ? 'bad' : ''}"><b>${v.res === 'ok' ? 'Conferido' : v.res === 'refazer' ? 'Refazer pedido' : 'Conferido com ressalva'}</b> por ${esc(first(person(v.by)))} às ${hm(v.at)}${v.note ? `. ${esc(v.note)}` : '.'}</div>`
-    : mode === 'verify' && done && t.verify ? `<div class="panel stack gap8 verify"><b>Conferência da gerente</b><p class="small muted">Olhe as fotos e os horários. Se algo estiver fora do padrão, registre a ressalva ou peça para refazer.</p>
-      <label class="sr" for="ver-note">Observação</label><textarea class="inp" id="ver-note" rows="2" placeholder="Observação (obrigatória para ressalva ou refazer)"></textarea>
-      <div class="row gap6"><button class="btn sm primary" data-act="verify" data-id="${i.id}" data-v="ok">Conferido</button><button class="btn sm" data-act="verify" data-id="${i.id}" data-v="ressalva">Com ressalva</button><button class="btn sm no" data-act="verify" data-id="${i.id}" data-v="refazer">Pedir para refazer</button></div></div>`
-    : t.verify && done ? `<p class="small muted">Aguardando conferência da gerente.</p>` : '';
-  const redo = i.redo && vis(i.redo.at) && !done ? `<div class="callout bad"><b>A gerência pediu para refazer</b> às ${hm(i.redo.at)}: ${esc(i.redo.note)}</div>` : '';
-  const nudge = nd.length && (!done || i.doneAt > nd[0].at) ? `<p class="small muted">Cobrado por ${nd.map(x => `${esc(first(person(x.by)))} às ${hm(x.at)}`).join(', ')}.</p>` : '';
-  const nudgeBtn = mode === 'verify' && s === 'atrasado' ? `<button class="btn sm no" data-act="nudge" data-id="${i.id}">Cobrar ${esc(first(p))}</button>` : '';
-  return `<div class="stack gap14">
-    <div class="row between nowrap"><div class="row nowrap gap8">${av(p)}<div><b>${esc(whoTxt(i))}</b><p class="small muted">Janela ${hm(i.start)} às ${hm(i.due)}${done ? ` · concluído às ${hm(i.doneAt)}` : ''}</p></div></div>${stChip(i)}</div>
-    <div class="row gap6">${bar(g.d / g.n, s === 'atrasado' ? 'bad' : done ? 'good' : '')}<span class="small muted num">${g.d} de ${g.n}</span>${nudgeBtn}</div>
-    ${redo}${nudge}${early}
-    <button class="linkbtn small" data-act="pop" data-id="${t.pop}">Ver o procedimento: ${t.pop} ${esc(pop(t.pop).title)}</button>
-    <div class="ci-list">${items}</div>${finish}${verBox}</div>`;
-}
 
 /* Um POP completo */
 function popBody(p, viewer){

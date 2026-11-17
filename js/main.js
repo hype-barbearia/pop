@@ -4,7 +4,7 @@
 const me = () => person(S.ui.user);
 const socioView = () => { const p = me(); return p && (p.role === 'socio' || (p.socio && S.ui.mode === 'socio')); };
 const typing = () => document.activeElement?.matches?.('input:not([type=checkbox]),textarea,select');
-let PENDING = false, TICK;
+let PENDING = false, TICK, TELA = '';
 
 function topRight(){
   const p = me(); if (!p) return '';
@@ -27,6 +27,13 @@ function render(){
     : sp && S.ui.pop && S.ui.view !== 'pops' && pop(S.ui.pop) ? modal(`${pop(S.ui.pop).id} · ${esc(pop(S.ui.pop).title)}`, 'Procedimento', popBody(pop(S.ui.pop), p)) : '';
   abertos.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; });
   rolagem.forEach(([q, t, l]) => { const el = $(q); if (el) { el.scrollTop = t; el.scrollLeft = l; } });
+  document.body.classList.toggle('phone-ui', !!S?.ui?.user && !socioView());
+  // Rótulos das colunas para as tabelas empilhadas no celular
+  document.querySelectorAll('table.t').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    if (hs.length) t.querySelectorAll('tbody tr, tfoot tr').forEach(tr => [...tr.children].forEach((td, k) => { if (hs[k] && !td.dataset.label) td.dataset.label = hs[k]; })); });
+  // Animação de entrada só quando muda de tela (não a cada atualização automática)
+  const k = S?.ui ? [S.ui.user, S.ui.view, S.ui.tab, S.ui.open, S.ui.pop, S.ui.rotEdit, S.ui.lote].join('|') : '';
+  if (k !== TELA) { TELA = k; const a = document.getElementById('app'); if (a) { a.classList.remove('entra'); void a.offsetWidth; a.classList.add('entra'); setTimeout(() => a.classList.remove('entra'), 600); } }
 }
 const algoAberto = () => typing() || !!document.querySelector('details[open] form, .modal');
 const modal = (title, eb, body) => `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t" data-act="close"><div class="modal-in" data-stop="1">
@@ -73,6 +80,7 @@ async function iniciar_(){
   esvaziarFila().then(n => { if (n) recarregar(true); });
   render(); tempoReal();
   clearInterval(TICK); TICK = setInterval(tick, 30000);
+  if ('serviceWorker' in navigator) swRegistro().catch(() => {});
 }
 async function recarregar(force){
   if (!S?.ui?.user) return;
@@ -114,7 +122,7 @@ async function rpcOffline(f, a, aplicarLocal){
 let FOTO = null;
 
 const A = {
-  sair(){ sb.auth.signOut(); },
+  sair(){ limparCache(); sb.auth.signOut(); },
   tentar(){ iniciar(); },
   voltarLogin(){ try { localStorage.removeItem('hype-otp-em'); } catch (x) {} telaLogin(null); },
   modo(){ S.ui.mode = S.ui.mode === 'socio' ? 'app' : 'socio'; S.ui.open = null; S.ui.pop = null; uiSave(); render(); window.scrollTo(0, 0); },
@@ -128,19 +136,28 @@ const A = {
   pop(d){ S.ui.open = null; S.ui.pop = d.id; render(); if (!socioView()) window.scrollTo(0, 0); },
   popClose(){ S.ui.pop = null; render(); },
   check(d){
+    vibra();
     const it = tpl(inst(d.id).tpl).items.find(x => x.id === d.it);
     if (it.photo) { FOTO = {id:d.id, it:d.it}; const c = $('#cam'); c.value = ''; c.click(); return; }
+    if (d.id === 'TREINO') { treinoMarcar(d.it); return; }
     run(() => rpcOffline('marcar_item', {e:d.id, item:d.it, feito:true}, () => { inst(d.id).checks[d.it] = {at:NOW(), ok:true}; }));
   },
-  uncheck(d){ run(() => rpc('desmarcar_item', {e:d.id, item:d.it})); },
+  uncheck(d){ if (d.id === 'TREINO') { delete TREINO.checks[d.it]; render(); return; } run(() => rpc('desmarcar_item', {e:d.id, item:d.it})); },
   nao(d){ S.ui.nao = d.id + '|' + d.it; render(); setTimeout(() => $('#nao-note')?.focus(), 0); },
   naoCancel(){ S.ui.nao = null; render(); },
   naoSave(d){
     const note = $('#nao-note').value.trim();
     if (!note) { toast('Escreva o motivo. A gerente precisa dele para tratar a ocorrência.'); $('#nao-note').focus(); return; }
-    S.ui.nao = null; run(() => rpc('marcar_item', {e:d.id, item:d.it, feito:false, nota:note}), 'Registrado. A ocorrência foi aberta para a gerente.');
+    const repor = $('#nao-rep')?.checked; S.ui.nao = null;
+    if (d.id === 'TREINO') { treinoMarcar(d.it, {ok:false, note}); return; }
+    run(async () => { await rpc('marcar_item', {e:d.id, item:d.it, feito:false, nota:note});
+      if (repor) await rpc('pedir_reposicao', {item:note, obs:tpl(inst(d.id).tpl).title, execucao:d.id}); },
+      repor ? 'Registrado e pedido de reposição enviado à gerência.' : 'Registrado. A ocorrência foi aberta para a gerente.');
   },
   finish(d){
+    vibra();
+    if (d.id === 'TREINO') { TREINO = null; S.ui.open = null; try { localStorage.setItem('hype-treino-' + S.ui.user, '1'); } catch (e) {} render(); window.scrollTo(0, 0);
+      toast('Treino concluído! Nos checklists de verdade é igual.'); return; }
     const i = inst(d.id), late = NOW() > i.due; S.ui.open = null;
     run(() => rpcOffline('concluir', {e:d.id}, () => { inst(d.id).doneAt = NOW(); }), late ? `Checklist concluído com ${mins(NOW() - i.due)} de atraso.` : `Checklist concluído no prazo.${tpl(i.tpl).verify ? ' A gerente vai conferir.' : ''}`);
   },
@@ -208,6 +225,7 @@ document.addEventListener('change', e => {
   const el = e.target;
   if (el.id === 'cam') {
     const file = el.files?.[0], f = FOTO; FOTO = null; if (!file || !f) return;
+    if (f.id === 'TREINO') { PHOTO_URL.treino = URL.createObjectURL(file); treinoMarcar(f.it, {photo:'treino'}); return; }
     toast('Enviando a foto…');
     run(async () => { const path = await enviarFoto(f.id, f.it, file); await rpc('marcar_item', {e:f.id, item:f.it, feito:true, foto:path}); }, 'Foto registrada com a hora.');
     return;
@@ -226,7 +244,7 @@ document.addEventListener('change', e => {
     const k = el.dataset.rule, kind = el.dataset.kind; let v = kind === 'bool' ? el.checked : kind === 'str' ? el.value : +el.value;
     if (kind === 'pct') v = clamp(v, 50, 100) / 100; if (kind === 'amostra') v = clamp(v, 10, 100) / 100; if (kind !== 'bool' && kind !== 'str' && isNaN(v)) return;
     const col = {antes:'antes', escalar:'escalar', conferir:'conferir', meta:'meta', rondas:'rondas_surpresa', resumo:'resumo', inicio:'inicio_operacao',
-      inicioHora:'inicio_hora', amostra:'conferir_amostra', escalarSocios:'escalar_socios', nfDia:'nf_dia_limite', nfDas:'nf_exigir_das', nfCnpj:'nf_cnpj', nfRazao:'nf_razao', nfDesc:'nf_descricao'}[k];
+      inicioHora:'inicio_hora', aprendizadoAte:'aprendizado_ate', amostra:'conferir_amostra', escalarSocios:'escalar_socios', nfDia:'nf_dia_limite', nfDas:'nf_exigir_das', nfCnpj:'nf_cnpj', nfRazao:'nf_razao', nfDesc:'nf_descricao'}[k];
     if (kind === 'str' && !v) v = k === 'nfDesc' ? '' : null;
     upd('regras', {[col]:v}, 'id', 1, 'Regra atualizada.'); return;
   }

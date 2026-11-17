@@ -1,0 +1,2233 @@
+{
+"pessoas": [
+{
+"id": "victor",
+"nome": "Victor",
+"email": "t.victor@exemplo.invalid",
+"papel": "socio",
+"rotulo": "Sócio majoritário · liderança estratégica",
+"turno": null,
+"folga": null,
+"socio": false,
+"cor": 30,
+"ativo": true,
+"ordem": 0,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": false,
+"nome_completo": "Victor Teste"
+},
+{
+"id": "jessica",
+"nome": "Jessica",
+"email": "t.jessica@exemplo.invalid",
+"papel": "gerente",
+"rotulo": "Gerente · líder da gerência",
+"turno": "agenda, recepção e rotina",
+"folga": null,
+"socio": false,
+"cor": 40,
+"ativo": true,
+"ordem": 1,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": false,
+"nome_completo": "Jessica Teste"
+},
+{
+"id": "robson",
+"nome": "Robson",
+"email": "t.robson@exemplo.invalid",
+"papel": "barbeiro",
+"rotulo": "Sócio técnico · barbeiro",
+"turno": "sem horário fixo",
+"folga": 1,
+"socio": true,
+"cor": 28,
+"ativo": true,
+"ordem": 2,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": false,
+"nome_completo": "Robson Teste"
+},
+{
+"id": "breno",
+"nome": "Breno",
+"email": "t.breno@exemplo.invalid",
+"papel": "barbeiro",
+"rotulo": "Barbeiro de abertura",
+"turno": "abertura, 08:50",
+"folga": 3,
+"socio": false,
+"cor": 345,
+"ativo": true,
+"ordem": 3,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": true,
+"nome_completo": "Breno Teste"
+},
+{
+"id": "daniel",
+"nome": "Daniel",
+"email": "t.daniel@exemplo.invalid",
+"papel": "barbeiro",
+"rotulo": "Barbeiro de abertura",
+"turno": "abertura, 08:50",
+"folga": 3,
+"socio": false,
+"cor": 145,
+"ativo": true,
+"ordem": 4,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": true,
+"nome_completo": "Daniel Teste"
+},
+{
+"id": "durval",
+"nome": "Durval",
+"email": "t.durval@exemplo.invalid",
+"papel": "barbeiro",
+"rotulo": "Barbeiro de fechamento",
+"turno": "fechamento, 10:50",
+"folga": 2,
+"socio": false,
+"cor": 205,
+"ativo": true,
+"ordem": 5,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": true,
+"nome_completo": "Durval Teste"
+},
+{
+"id": "heberth",
+"nome": "Heberth",
+"email": "t.heberth@exemplo.invalid",
+"papel": "barbeiro",
+"rotulo": "Barbeiro de fechamento",
+"turno": "fechamento, 10:50",
+"folga": 2,
+"socio": false,
+"cor": 262,
+"ativo": true,
+"ordem": 6,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": true,
+"nome_completo": "Heberth Teste"
+},
+{
+"id": "magda",
+"nome": "Magda",
+"email": "t.magda@exemplo.invalid",
+"papel": "atendente",
+"rotulo": "Atendente de abertura",
+"turno": "abertura, 08:30",
+"folga": null,
+"socio": false,
+"cor": 320,
+"ativo": true,
+"ordem": 7,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": false,
+"nome_completo": "Magda Teste"
+},
+{
+"id": "suellen",
+"nome": "Suellen",
+"email": "t.suellen@exemplo.invalid",
+"papel": "atendente",
+"rotulo": "Atendente de fechamento",
+"turno": "fechamento, até 20:00",
+"folga": null,
+"socio": false,
+"cor": 180,
+"ativo": true,
+"ordem": 8,
+"criado_em": "2026-11-13T22:32:37.007519+00:00",
+"parceiro": false,
+"nome_completo": "Suellen Teste"
+}
+],
+"pops": [
+{
+"id": "POP-00",
+"titulo": "Os 10 inegociáveis HYPE",
+"area": "cultura",
+"cargos": [
+"todos"
+],
+"quem": "Todos, todos os dias",
+"dono": "Jessica",
+"frequencia": "Sempre",
+"objetivo": "Se você lembrar de apenas uma página do POP, que seja esta. É o que a gerência acompanha de perto.",
+"materiais": [],
+"passos": [
+{
+"t": "O cliente vem primeiro: ao chegar um cliente, qualquer outra tarefa para.",
+"crit": true
+},
+{
+"t": "Sorriso e gentileza em todo contato: balcão, cadeira, lavatório e WhatsApp.",
+"crit": true
+},
+{
+"t": "Benefícios sempre oferecidos: café coado, expresso, cappuccino, água e água com gás, servidos na bandeja.",
+"crit": true
+},
+{
+"t": "Todo corte termina no lavatório: o barbeiro direciona e a atendente lava o cabelo.",
+"crit": true
+},
+{
+"t": "Head Spa para 100%: oferecido a todo cliente que vai ao lavatório e realizado sempre que aceito.",
+"crit": true
+},
+{
+"t": "Confirmou, agendou: horário confirmado entra na agenda na hora, com preferência de barbeiro perguntada.",
+"crit": true
+},
+{
+"t": "Regra dos 15 minutos: encaixe só se o próximo esperar até 15 min. Atraso acima de 15 min perde o horário.",
+"crit": true
+},
+{
+"t": "Comanda fechada na saída: nenhum cliente sai com comanda aberta.",
+"crit": true
+},
+{
+"t": "Pontualidade e casa pronta: barbeiros de abertura às 08:50, barbeiros de fechamento às 10:50, sábado todos às 08:50. Bancada limpa antes de sair.",
+"crit": true
+},
+{
+"t": "Postura profissional: foco total no cliente da cadeira, sem conversas paralelas, sem temas polêmicos ou promíscuos, sem falar mal da equipe. Nunca gritar.",
+"crit": true
+}
+],
+"qualidade": [],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 0,
+"ativo": true
+},
+{
+"id": "POP-01",
+"titulo": "Abertura",
+"area": "abertura",
+"cargos": [
+"atendente",
+"barbeiro"
+],
+"quem": "Atendente de abertura (Magda) e barbeiros de abertura",
+"dono": "Jessica",
+"frequencia": "Diário, 08:30 às 09:00",
+"objetivo": "A primeira impressão do dia é construída antes do primeiro cliente entrar.",
+"materiais": [],
+"passos": [
+{
+"t": "08:30: conferir o funcionamento dos ar-condicionados da recepção, da área de corte e do VIX do lavatório."
+},
+{
+"t": "Conferir se todas as luzes estão ligadas, incluindo as luzes amarelas do lavatório."
+},
+{
+"t": "Fazer a limpeza da barbearia: área interna e banheiros."
+},
+{
+"t": "Passar o café coado."
+},
+{
+"t": "Garantir que as playlists da recepção e do lavatório estejam tocando."
+},
+{
+"t": "08:50: barbeiros de abertura chegam e todos os barbeiros presentes retiram as grades."
+},
+{
+"t": "Os barbeiros de abertura ajudam a atendente na organização e conferência da abertura, exceto se já houver cliente para atender."
+},
+{
+"t": "10:50: chegada dos barbeiros de fechamento. Aos sábados, todos chegam às 08:50."
+},
+{
+"t": "11:30: ligar e conferir o VIX da área gourmet."
+}
+],
+"qualidade": [],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 1,
+"ativo": true
+},
+{
+"id": "POP-02",
+"titulo": "Recepção",
+"area": "recepcao",
+"cargos": [
+"gerente",
+"atendente"
+],
+"quem": "Gerente e atendentes",
+"dono": "Jessica",
+"frequencia": "Todo o expediente",
+"objetivo": "Gerente e atendentes são a voz da HYPE no WhatsApp, no Direct e no balcão.",
+"materiais": [],
+"passos": [
+{
+"t": "Sempre fechar a comanda na saída do cliente. Comanda aberta é atendimento inacabado e erro de caixa no fim do dia.",
+"crit": true
+},
+{
+"t": "Começar a responder todos os clientes às 09:00 (atendente de abertura)."
+},
+{
+"t": "Sempre responder o primeiro contato se identificando."
+},
+{
+"t": "Atenção focal ao WhatsApp e ao Direct durante a recepção."
+},
+{
+"t": "Fazer o plano dos clientes."
+},
+{
+"t": "Confirmar o agendamento com o cliente pelo WhatsApp 1 hora antes do atendimento."
+}
+],
+"qualidade": [
+"Exemplo de primeiro contato: \"Olá! Aqui é a Jessica, da HYPE Barbearia. Como posso te ajudar hoje?\""
+],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 2,
+"ativo": true
+},
+{
+"id": "POP-03",
+"titulo": "Agenda",
+"area": "agenda",
+"cargos": [
+"gerente",
+"atendente"
+],
+"quem": "Gerente e atendentes",
+"dono": "Jessica",
+"frequencia": "Todo o expediente",
+"objetivo": "A agenda é o coração da operação. Cada minuto mal controlado vira espera para alguém.",
+"materiais": [],
+"passos": [
+{
+"t": "Manter a lista de horário de chegada dos barbeiros: ela define a fila de atendimentos."
+},
+{
+"t": "Horário pedido e confirmado entra na agenda imediatamente. Tem prioridade sobre qualquer outra tarefa.",
+"crit": true
+},
+{
+"t": "Sempre perguntar se o cliente tem preferência de barbeiro."
+},
+{
+"t": "Encaixe só se o próximo cliente esperar no máximo 15 minutos. Avaliar o cliente em atendimento, o próximo agendado e a capacidade técnica do barbeiro.",
+"crit": true
+},
+{
+"t": "Cliente com mais de 15 minutos de atraso perde o horário: aguarda o próximo encaixe disponível ou reagenda.",
+"crit": true
+},
+{
+"t": "Todo encaixe é comunicado obrigatoriamente ao barbeiro e à recepção."
+},
+{
+"t": "Se a resposta for não em qualquer etapa do encaixe, oferecer o próximo horário livre ou outro barbeiro disponível."
+}
+],
+"qualidade": [
+"Comunique o atraso com gentileza: a regra existe para respeitar quem chegou no horário."
+],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 3,
+"ativo": true
+},
+{
+"id": "POP-04",
+"titulo": "Atendimento: atendentes",
+"area": "atendimento",
+"cargos": [
+"atendente"
+],
+"quem": "Magda e Suellen",
+"dono": "Jessica",
+"frequencia": "A cada cliente e durante o expediente",
+"objetivo": "O cliente sente a HYPE nos detalhes: o sorriso, a bandeja, o café no ponto, o Head Spa oferecido no momento certo.",
+"materiais": [],
+"passos": [
+{
+"t": "O cliente vem antes de tudo. Ao chegar um cliente, pare qualquer outra tarefa para atendê-lo.",
+"crit": true
+},
+{
+"t": "Atender sempre com sorriso no rosto e gentileza."
+},
+{
+"t": "Oferecer todos os benefícios: café coado, expresso, cappuccino, água e água com gás. Servir sempre com a bandeja."
+},
+{
+"t": "Lavar o cabelo do cliente após todo serviço de corte e acabamento."
+},
+{
+"t": "Oferecer o Head Spa a todos os clientes que forem ao lavatório: 15 min (R$ 39,90) ou 30 min (R$ 66,90).",
+"crit": true
+},
+{
+"t": "Dominar a tabela de preços dos produtos e serviços."
+},
+{
+"t": "Conferir com regularidade a sala de Spa (organização e limpeza) e os banheiros."
+},
+{
+"t": "Aguar as plantas às segundas e quintas, em revezamento."
+},
+{
+"t": "Limpar gradis e produtos às segundas, quartas e sextas, alternando."
+},
+{
+"t": "TV do Lounge, por padrão, nos jogos da ESPN pelo Disney+."
+},
+{
+"t": "Posição padrão: Magda no balcão do Lounge, Suellen no sofá da recepção."
+},
+{
+"t": "Cumprir o horário de almoço: abertura 12h às 13h, fechamento 14h às 15h."
+}
+],
+"qualidade": [
+"Como oferecer o Head Spa: \"Já que você está aqui, gostaria de aproveitar e fazer o nosso Head Spa? É um momento de relaxamento para fechar o atendimento.\""
+],
+"erros": [
+"Pressionar o cliente para aceitar o Head Spa."
+],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 4,
+"ativo": true
+},
+{
+"id": "POP-05",
+"titulo": "Barbeiros: posturas gerais",
+"area": "barbeiros",
+"cargos": [
+"barbeiro"
+],
+"quem": "Breno, Daniel, Durval, Heberth e Robson",
+"dono": "Robson (técnica) e Jessica (rotina)",
+"frequencia": "Todo o expediente",
+"objetivo": "O barbeiro HYPE é um artista técnico: entrega estética com estratégia e cuida do espaço como cuida do corte.",
+"materiais": [],
+"passos": [
+{
+"t": "Manter a bancada organizada ao longo do dia."
+},
+{
+"t": "Limpar e organizar a bancada antes de sair da barbearia.",
+"crit": true
+},
+{
+"t": "Limpar a bancada infantil diariamente, em revezamento."
+},
+{
+"t": "Atenção constante ao cumprimento dos horários dos clientes."
+},
+{
+"t": "Dominar a tabela de preços dos produtos e serviços."
+},
+{
+"t": "Cliente chegou? Barbeiros sentados no sofá cedem o lugar imediatamente."
+},
+{
+"t": "Sem atendimento e com atendentes sobrecarregadas: se prontificar a servir água, água com gás e café coado."
+},
+{
+"t": "Videogame: seu cliente chegou, encerre na hora. Mais de um cliente no Lounge sem jogar, encerre na hora."
+},
+{
+"t": "Participar da reunião de técnicas com o Robson, a cada duas semanas, na segunda às 19h30."
+}
+],
+"qualidade": [
+"O cliente recebe o mesmo resultado com qualquer barbeiro da casa."
+],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 5,
+"ativo": true
+},
+{
+"id": "POP-06",
+"titulo": "Barbeiros: padrão de atendimento",
+"area": "barbeiros",
+"cargos": [
+"barbeiro"
+],
+"quem": "Breno, Daniel, Durval, Heberth e Robson",
+"dono": "Robson",
+"frequencia": "A cada cliente",
+"objetivo": "Da cadeira ao lavatório, cada atendimento deixa no cliente a sensação de cuidado, relaxamento e renovação.",
+"materiais": [],
+"passos": [
+{
+"t": "Atender com sorriso no rosto e gentileza."
+},
+{
+"t": "Assim que o cliente sentar, perguntar se aceita um benefício: café, expresso, cappuccino, água ou água com gás."
+},
+{
+"t": "Manter um diálogo amistoso e interativo, sempre que o cliente estiver disposto."
+},
+{
+"t": "Ao finalizar todo corte e acabamento, direcionar o cliente ao lavatório.",
+"crit": true
+},
+{
+"t": "Conduzir a conversa, de forma intencional, para entender alguma dor ou necessidade e apresentar a solução com produtos e serviços extras."
+},
+{
+"t": "1:1, foco total no cliente da cadeira. Conversa só com quem está sendo atendido, exceto quando o próprio cliente puxa conversa com outra pessoa.",
+"crit": true
+}
+],
+"qualidade": [],
+"erros": [
+"Puxar ou alimentar temas polêmicos.",
+"Estimular temas promíscuos, mesmo que o cliente puxe o assunto.",
+"Conversas paralelas durante o atendimento.",
+"Falar mal da equipe para os clientes.",
+"Discutir problemas operacionais na frente dos clientes.",
+"Gritar na barbearia."
+],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 6,
+"ativo": true
+},
+{
+"id": "POP-07",
+"titulo": "Preços, Linha HYPE Premium e indicações",
+"area": "vendas",
+"cargos": [
+"todos"
+],
+"quem": "Gerente, atendentes e barbeiros",
+"dono": "Robson (produtos) e Jessica",
+"frequencia": "Sempre",
+"objetivo": "Saber o preço na ponta da língua e o que cada ativo faz transmite segurança e autoridade. Vender na HYPE é resolver um problema do cliente.",
+"materiais": [],
+"passos": [
+{
+"t": "Perceba: observe pele, couro cabeludo, cabelo, barba, nariz, orelha e sobrancelha."
+},
+{
+"t": "Pergunte: descubra o que o cliente usa hoje e o que o incomoda."
+},
+{
+"t": "Explique: conte o que o ativo faz. Ex.: \"a niacinamida do Balm equilibra a pele e reduz a vermelhidão\"."
+},
+{
+"t": "Mostre: use o produto na finalização e deixe o cliente sentir o resultado."
+},
+{
+"t": "Ofereça: indique o produto ou o combo, sem insistir depois de um \"não\".",
+"crit": true
+}
+],
+"qualidade": [],
+"erros": [
+"Empurrar produto ou serviço.",
+"Indicar sem ter percebido uma necessidade."
+],
+"tabelas": [
+[
+"Cabelo",
+[
+[
+"Corte",
+"R$ 75,00"
+],
+[
+"Acabamento",
+"R$ 30,00"
+],
+[
+"Penteado",
+"R$ 29,90"
+],
+[
+"Hidratação capilar",
+"R$ 30,00"
+],
+[
+"Botox capilar",
+"a partir de R$ 129,90"
+],
+[
+"Camuflagem dos fios brancos",
+"R$ 50,00"
+],
+[
+"Reflexo (luzes)",
+"a partir de R$ 129,90"
+],
+[
+"Platinado (Nevou)",
+"a partir de R$ 199,90"
+]
+]
+],
+[
+"Barba",
+[
+[
+"Barba",
+"R$ 55,00"
+],
+[
+"Barboterapia",
+"R$ 79,90"
+],
+[
+"Hidratação de barba",
+"R$ 30,00"
+],
+[
+"Pigmentação de barba",
+"R$ 35,00"
+]
+]
+],
+[
+"Detalhes e combos",
+[
+[
+"Sobrancelha",
+"R$ 29,90"
+],
+[
+"Depilação nariz",
+"R$ 29,90"
+],
+[
+"Depilação orelha",
+"R$ 34,90"
+],
+[
+"Cabelo e barba",
+"R$ 110,00"
+],
+[
+"Depilação nariz e orelha",
+"R$ 50,00"
+]
+]
+],
+[
+"Head Spa",
+[
+[
+"Head Spa 15 min",
+"R$ 39,90"
+],
+[
+"Head Spa 30 min",
+"R$ 66,90"
+]
+]
+],
+[
+"Linha HYPE Premium",
+[
+[
+"Shampoo Ice Cold · 290 ml",
+"R$ 89,00"
+],
+[
+"Condicionador Ice Cold · 290 ml",
+"R$ 89,90"
+],
+[
+"Leave-in · 140 ml",
+"R$ 99,90"
+],
+[
+"Cera Matte · 100 g",
+"R$ 110,00"
+],
+[
+"Cera Brilho · 100 g",
+"R$ 110,00"
+],
+[
+"Cera em Pó · 5 g",
+"R$ 110,00"
+],
+[
+"Balm para barba · 140 ml",
+"R$ 99,90"
+],
+[
+"Óleo para barba · 30 ml",
+"R$ 89,90"
+],
+[
+"Combo Shampoo + Condicionador Ice",
+"R$ 160,00"
+],
+[
+"Combo Balm + Óleo",
+"R$ 169,00"
+]
+]
+]
+],
+"guia": [
+[
+"Fios aparentes no nariz ou na orelha",
+"Depilação nariz / orelha · combo (R$ 50,00)",
+""
+],
+[
+"Sobrancelha sem forma ou com fios longos",
+"Sobrancelha",
+""
+],
+[
+"Fios brancos que incomodam",
+"Camuflagem dos fios brancos",
+""
+],
+[
+"Barba ressecada, áspera ou rebelde",
+"Hidratação de barba · Barboterapia",
+"Combo Balm + Óleo"
+],
+[
+"Barba opaca, sem brilho ou com frizz",
+"Hidratação de barba",
+"Óleo para barba"
+],
+[
+"Falhas ou pouca densidade na barba",
+"Pigmentação de barba",
+"Balm para barba"
+],
+[
+"Couro cabeludo oleoso ou com caspa",
+"Head Spa",
+"Shampoo Ice Cold"
+],
+[
+"Fios fracos ou com queda",
+"Hidratação capilar · Head Spa",
+"Shampoo Ice Cold"
+],
+[
+"Cabelo ressecado, opaco ou com frizz",
+"Hidratação capilar · Botox capilar",
+"Leave-in · Combo Shampoo + Condicionador"
+],
+[
+"Cliente tenso, cansado ou estressado",
+"Head Spa 15 ou 30 min",
+"Shampoo + Condicionador Ice"
+],
+[
+"Corte e barba no mesmo dia",
+"Combo cabelo e barba (economia de R$ 20,00)",
+"Cera do estilo do corte"
+],
+[
+"Evento, foto ou ocasião especial",
+"Penteado",
+"Cera Brilho · Matte · Pó"
+],
+[
+"Vontade de mudar o visual",
+"Reflexo (luzes) · Platinado (Nevou)",
+"Leave-in · Condicionador Ice"
+]
+],
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 7,
+"ativo": true
+},
+{
+"id": "POP-08",
+"titulo": "A jornada do cliente",
+"area": "jornada",
+"cargos": [
+"todos"
+],
+"quem": "Toda a equipe, cada etapa com um responsável",
+"dono": "Jessica",
+"frequencia": "A cada cliente",
+"objetivo": "O cliente sai sentindo cuidado, relaxamento e renovação, e com vontade de voltar.",
+"materiais": [],
+"passos": [
+{
+"t": "Primeiro contato (recepção): responder se identificando, perguntar preferência de barbeiro, colocar na agenda na hora."
+},
+{
+"t": "Chegada (atendentes e barbeiros): sorriso e boas-vindas, barbeiros cedem o sofá, videogame encerrado se necessário."
+},
+{
+"t": "Espera no Lounge (atendentes): oferecer todos os benefícios, servidos na bandeja, TV na ESPN."
+},
+{
+"t": "Na cadeira (barbeiro): perguntar se aceita um benefício, diálogo amistoso, entender necessidades."
+},
+{
+"t": "Fim do corte (barbeiro): direcionar ao lavatório após todo corte e acabamento."
+},
+{
+"t": "Lavatório (atendentes): lavar o cabelo, oferecer o Head Spa a 100%, realizar se aceito."
+},
+{
+"t": "Produtos e extras (barbeiro e recepção): indicar o serviço extra ou o produto HYPE Premium para a necessidade identificada."
+},
+{
+"t": "Saída (recepção): fechar a comanda e despedida cordial.",
+"crit": true
+}
+],
+"qualidade": [],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 8,
+"ativo": true
+},
+{
+"id": "POP-09",
+"titulo": "Fechamento",
+"area": "fechamento",
+"cargos": [
+"atendente",
+"barbeiro"
+],
+"quem": "Atendente de fechamento (Suellen) e barbeiros",
+"dono": "Jessica",
+"frequencia": "Diário, 20:00 (sábado 18:00)",
+"objetivo": "Fechar bem é abrir bem no dia seguinte. A casa fica pronta para a equipe da manhã.",
+"materiais": [],
+"passos": [
+{
+"t": "Deixar copa, lavatório e salão limpos e organizados."
+},
+{
+"t": "Deixar a cafeteira limpa e pronta para passar o café pela manhã."
+},
+{
+"t": "Emitir o relatório da maquineta e grampear as vias de pagamento do dia."
+},
+{
+"t": "Barbeiros: limpar e organizar a própria bancada antes de sair."
+},
+{
+"t": "Fechar as grades conforme a escala: seg, qua e sex Durval e Heberth; ter, qui e sáb Breno e Daniel."
+},
+{
+"t": "Antes de apagar as luzes, todas as comandas do dia fechadas e conferidas com o relatório da maquineta.",
+"crit": true
+}
+],
+"qualidade": [],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 9,
+"ativo": true
+},
+{
+"id": "POP-10",
+"titulo": "Rotina de reuniões",
+"area": "gestao",
+"cargos": [
+"todos"
+],
+"quem": "Toda a equipe",
+"dono": "Jessica e Robson",
+"frequencia": "Semanal e quinzenal",
+"objetivo": "Encontros fixos para alinhar a equipe, padronizar a técnica e acompanhar cada profissional de perto.",
+"materiais": [],
+"passos": [
+{
+"t": "Segunda, 14:00 às 15:00: reunião de gestão (semanal)."
+},
+{
+"t": "Segunda, 19:00 às 19:30: alinhamento semanal."
+},
+{
+"t": "Segunda, 19:30 às 20:30: técnicas com Robson, a cada duas semanas, logo após o alinhamento."
+},
+{
+"t": "Terça: one-on-ones de 30 min com Breno 09:00, Magda 09:30, Daniel 10:00, Heberth 10:30 e Suellen 11:00."
+},
+{
+"t": "Quarta: one-on-ones com Durval 09:00 e Jessica 09:30."
+},
+{
+"t": "Pontualidade como em qualquer atendimento.",
+"crit": true
+}
+],
+"qualidade": [
+"Próximas reuniões de técnicas: 16/11, 30/11 e 14/12."
+],
+"erros": [],
+"tabelas": null,
+"guia": null,
+"versao": 1,
+"atualizado": "out/2026",
+"aprovado_por": "Jessica e Victor",
+"ordem": 10,
+"ativo": true
+}
+],
+"rotinas": [
+{
+"id": "ABR",
+"titulo": "Abertura da barbearia",
+"pop_id": "POP-01",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 0
+},
+{
+"id": "BIN",
+"titulo": "Chegada e grades",
+"pop_id": "POP-01",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": [
+"breno",
+"daniel"
+],
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 1
+},
+{
+"id": "REC",
+"titulo": "Recepção aberta",
+"pop_id": "POP-02",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 2
+},
+{
+"id": "PLA",
+"titulo": "Plantas aguadas",
+"pop_id": "POP-04",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+4
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 3
+},
+{
+"id": "GRD",
+"titulo": "Gradis e produtos limpos",
+"pop_id": "POP-04",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+3,
+5
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 4
+},
+{
+"id": "BIF",
+"titulo": "Chegada do fechamento",
+"pop_id": "POP-01",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": [
+"durval",
+"heberth"
+],
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 5
+},
+{
+"id": "AMB",
+"titulo": "Conferência de banheiros e Spa",
+"pop_id": "POP-04",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 6
+},
+{
+"id": "GOU",
+"titulo": "VIX da área gourmet",
+"pop_id": "POP-01",
+"tipo": "check",
+"conferir": false,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 7
+},
+{
+"id": "RON",
+"titulo": "Ronda dos inegociáveis",
+"pop_id": "POP-00",
+"tipo": "ronda",
+"conferir": false,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 8
+},
+{
+"id": "INF",
+"titulo": "Bancada infantil",
+"pop_id": "POP-05",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 9
+},
+{
+"id": "FEC",
+"titulo": "Fechamento da barbearia",
+"pop_id": "POP-09",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 10
+},
+{
+"id": "BFE",
+"titulo": "Bancada limpa antes de sair",
+"pop_id": "POP-05",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": "barbeiro",
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 11
+},
+{
+"id": "GRA",
+"titulo": "Grades fechadas",
+"pop_id": "POP-09",
+"tipo": "check",
+"conferir": true,
+"dias": [
+2,
+4,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": [
+"daniel"
+],
+"quinzenal": false,
+"ativo": true,
+"ordem": 12
+},
+{
+"id": "GRB",
+"titulo": "Grades fechadas",
+"pop_id": "POP-09",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+3,
+5
+],
+"cada": null,
+"cada_papel": null,
+"junto": [
+"heberth"
+],
+"quinzenal": false,
+"ativo": true,
+"ordem": 13
+},
+{
+"id": "GES",
+"titulo": "Reunião de gestão",
+"pop_id": "POP-10",
+"tipo": "check",
+"conferir": false,
+"dias": [
+1
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 14
+},
+{
+"id": "ALI",
+"titulo": "Alinhamento semanal",
+"pop_id": "POP-10",
+"tipo": "check",
+"conferir": false,
+"dias": [
+1
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 15
+},
+{
+"id": "TEC",
+"titulo": "Reunião de técnicas",
+"pop_id": "POP-10",
+"tipo": "check",
+"conferir": false,
+"dias": [
+1
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": true,
+"ativo": true,
+"ordem": 16
+},
+{
+"id": "O1T",
+"titulo": "One-on-ones de terça",
+"pop_id": "POP-10",
+"tipo": "check",
+"conferir": false,
+"dias": [
+2
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 17
+},
+{
+"id": "O1Q",
+"titulo": "One-on-ones de quarta",
+"pop_id": "POP-10",
+"tipo": "check",
+"conferir": false,
+"dias": [
+3
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 18
+}
+],
+"rotina_janelas": [
+{
+"id": 1,
+"rotina_id": "BIF",
+"inicio": "10:50:00",
+"prazo": "11:00:00",
+"responsavel": null
+},
+{
+"id": 2,
+"rotina_id": "O1Q",
+"inicio": "09:00:00",
+"prazo": "10:00:00",
+"responsavel": "jessica"
+},
+{
+"id": 3,
+"rotina_id": "AMB",
+"inicio": "17:00:00",
+"prazo": "17:30:00",
+"responsavel": "suellen"
+},
+{
+"id": 4,
+"rotina_id": "GOU",
+"inicio": "11:30:00",
+"prazo": "11:45:00",
+"responsavel": "magda"
+},
+{
+"id": 5,
+"rotina_id": "RON",
+"inicio": "12:00:00",
+"prazo": "12:30:00",
+"responsavel": "jessica"
+},
+{
+"id": 6,
+"rotina_id": "REC",
+"inicio": "09:00:00",
+"prazo": "09:15:00",
+"responsavel": "magda"
+},
+{
+"id": 7,
+"rotina_id": "TEC",
+"inicio": "19:30:00",
+"prazo": "20:30:00",
+"responsavel": "robson"
+},
+{
+"id": 8,
+"rotina_id": "GRA",
+"inicio": "20:20:00",
+"prazo": "20:40:00",
+"responsavel": "breno"
+},
+{
+"id": 9,
+"rotina_id": "GRB",
+"inicio": "20:20:00",
+"prazo": "20:40:00",
+"responsavel": "durval"
+},
+{
+"id": 10,
+"rotina_id": "RON",
+"inicio": "16:30:00",
+"prazo": "17:00:00",
+"responsavel": "jessica"
+},
+{
+"id": 11,
+"rotina_id": "GES",
+"inicio": "14:00:00",
+"prazo": "15:00:00",
+"responsavel": "jessica"
+},
+{
+"id": 12,
+"rotina_id": "BFE",
+"inicio": "20:00:00",
+"prazo": "20:20:00",
+"responsavel": null
+},
+{
+"id": 13,
+"rotina_id": "FEC",
+"inicio": "20:00:00",
+"prazo": "20:30:00",
+"responsavel": "suellen"
+},
+{
+"id": 14,
+"rotina_id": "O1T",
+"inicio": "09:00:00",
+"prazo": "11:30:00",
+"responsavel": "jessica"
+},
+{
+"id": 15,
+"rotina_id": "INF",
+"inicio": "19:40:00",
+"prazo": "20:10:00",
+"responsavel": "daniel"
+},
+{
+"id": 16,
+"rotina_id": "GRD",
+"inicio": "10:00:00",
+"prazo": "12:00:00",
+"responsavel": "suellen"
+},
+{
+"id": 17,
+"rotina_id": "AMB",
+"inicio": "11:00:00",
+"prazo": "11:30:00",
+"responsavel": "magda"
+},
+{
+"id": 18,
+"rotina_id": "AMB",
+"inicio": "14:00:00",
+"prazo": "14:30:00",
+"responsavel": "magda"
+},
+{
+"id": 19,
+"rotina_id": "ALI",
+"inicio": "19:00:00",
+"prazo": "19:30:00",
+"responsavel": "jessica"
+},
+{
+"id": 20,
+"rotina_id": "ABR",
+"inicio": "08:30:00",
+"prazo": "09:00:00",
+"responsavel": "magda"
+},
+{
+"id": 21,
+"rotina_id": "PLA",
+"inicio": "10:00:00",
+"prazo": "12:00:00",
+"responsavel": "magda"
+},
+{
+"id": 22,
+"rotina_id": "BIN",
+"inicio": "08:50:00",
+"prazo": "09:00:00",
+"responsavel": null
+}
+],
+"rotina_itens": [
+{
+"id": "ABR.i1",
+"rotina_id": "ABR",
+"ordem": 1,
+"texto": "Ar-condicionados da recepção, área de corte e VIX do lavatório funcionando",
+"foto": false,
+"critico": true,
+"ativo": true
+},
+{
+"id": "ABR.i2",
+"rotina_id": "ABR",
+"ordem": 2,
+"texto": "Todas as luzes ligadas, incluindo as amarelas do lavatório",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ABR.i3",
+"rotina_id": "ABR",
+"ordem": 3,
+"texto": "Limpeza da área interna",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ABR.i4",
+"rotina_id": "ABR",
+"ordem": 4,
+"texto": "Limpeza dos banheiros",
+"foto": true,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ABR.i5",
+"rotina_id": "ABR",
+"ordem": 5,
+"texto": "Sala de Spa organizada",
+"foto": true,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ABR.i6",
+"rotina_id": "ABR",
+"ordem": 6,
+"texto": "Café coado passado",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ABR.i7",
+"rotina_id": "ABR",
+"ordem": 7,
+"texto": "Playlists da recepção e do lavatório tocando",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ABR.i8",
+"rotina_id": "ABR",
+"ordem": 8,
+"texto": "TV do Lounge na ESPN (Disney+)",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "BIN.i1",
+"rotina_id": "BIN",
+"ordem": 1,
+"texto": "Chegada às 08:50",
+"foto": false,
+"critico": true,
+"ativo": true
+},
+{
+"id": "BIN.i2",
+"rotina_id": "BIN",
+"ordem": 2,
+"texto": "Grades retiradas",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "BIN.i3",
+"rotina_id": "BIN",
+"ordem": 3,
+"texto": "Bancada organizada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "BIN.i4",
+"rotina_id": "BIN",
+"ordem": 4,
+"texto": "Ajuda à atendente na conferência da abertura (se não houver cliente)",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "REC.i1",
+"rotina_id": "REC",
+"ordem": 1,
+"texto": "Respostas do WhatsApp e Direct iniciadas às 09:00",
+"foto": false,
+"critico": true,
+"ativo": true
+},
+{
+"id": "REC.i2",
+"rotina_id": "REC",
+"ordem": 2,
+"texto": "Lista de chegada dos barbeiros atualizada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "REC.i3",
+"rotina_id": "REC",
+"ordem": 3,
+"texto": "Confirmações de 1 hora antes programadas para a manhã",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "PLA.i1",
+"rotina_id": "PLA",
+"ordem": 1,
+"texto": "Plantas aguadas",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "GRD.i1",
+"rotina_id": "GRD",
+"ordem": 1,
+"texto": "Gradis limpos",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "GRD.i2",
+"rotina_id": "GRD",
+"ordem": 2,
+"texto": "Produtos da vitrine limpos e alinhados",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "BIF.i1",
+"rotina_id": "BIF",
+"ordem": 1,
+"texto": "Chegada às 10:50",
+"foto": false,
+"critico": true,
+"ativo": true
+},
+{
+"id": "BIF.i2",
+"rotina_id": "BIF",
+"ordem": 2,
+"texto": "Bancada organizada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "BIF.i3",
+"rotina_id": "BIF",
+"ordem": 3,
+"texto": "Chegada avisada à recepção para a lista de chegada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "AMB.i1",
+"rotina_id": "AMB",
+"ordem": 1,
+"texto": "Banheiros conferidos: papel, sabonete, lixo e piso",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "AMB.i2",
+"rotina_id": "AMB",
+"ordem": 2,
+"texto": "Sala de Spa limpa e organizada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "AMB.i3",
+"rotina_id": "AMB",
+"ordem": 3,
+"texto": "Lounge organizado e bandejas limpas",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "AMB.i4",
+"rotina_id": "AMB",
+"ordem": 4,
+"texto": "Copa organizada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "GOU.i1",
+"rotina_id": "GOU",
+"ordem": 1,
+"texto": "VIX da área gourmet ligado e conferido",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i1",
+"rotina_id": "RON",
+"ordem": 1,
+"texto": "Cliente vem primeiro: ninguém esperando sem atendimento",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i2",
+"rotina_id": "RON",
+"ordem": 2,
+"texto": "Sorriso e gentileza no balcão, na cadeira e no lavatório",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i3",
+"rotina_id": "RON",
+"ordem": 3,
+"texto": "Benefícios oferecidos e servidos na bandeja",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i4",
+"rotina_id": "RON",
+"ordem": 4,
+"texto": "Todo corte terminando no lavatório",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i5",
+"rotina_id": "RON",
+"ordem": 5,
+"texto": "Head Spa oferecido no lavatório",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i6",
+"rotina_id": "RON",
+"ordem": 6,
+"texto": "Agenda em dia, com preferência de barbeiro perguntada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i7",
+"rotina_id": "RON",
+"ordem": 7,
+"texto": "Regra dos 15 minutos respeitada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i8",
+"rotina_id": "RON",
+"ordem": 8,
+"texto": "Nenhuma comanda aberta de cliente que já saiu",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i9",
+"rotina_id": "RON",
+"ordem": 9,
+"texto": "Bancadas organizadas",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "RON.i10",
+"rotina_id": "RON",
+"ordem": 10,
+"texto": "Postura: foco no cliente, sem conversa paralela, sem gritar",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "INF.i1",
+"rotina_id": "INF",
+"ordem": 1,
+"texto": "Bancada infantil limpa e organizada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "FEC.i1",
+"rotina_id": "FEC",
+"ordem": 1,
+"texto": "Todas as comandas fechadas",
+"foto": false,
+"critico": true,
+"ativo": true
+},
+{
+"id": "FEC.i2",
+"rotina_id": "FEC",
+"ordem": 2,
+"texto": "Relatório da maquineta emitido",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "FEC.i3",
+"rotina_id": "FEC",
+"ordem": 3,
+"texto": "Vias de pagamento grampeadas",
+"foto": true,
+"critico": false,
+"ativo": true
+},
+{
+"id": "FEC.i4",
+"rotina_id": "FEC",
+"ordem": 4,
+"texto": "Comandas conferidas com o relatório da maquineta",
+"foto": false,
+"critico": true,
+"ativo": true
+},
+{
+"id": "FEC.i5",
+"rotina_id": "FEC",
+"ordem": 5,
+"texto": "Copa limpa e organizada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "FEC.i6",
+"rotina_id": "FEC",
+"ordem": 6,
+"texto": "Lavatório limpo e organizado",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "FEC.i7",
+"rotina_id": "FEC",
+"ordem": 7,
+"texto": "Salão limpo e organizado",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "FEC.i8",
+"rotina_id": "FEC",
+"ordem": 8,
+"texto": "Cafeteira limpa e pronta para a manhã",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "FEC.i9",
+"rotina_id": "FEC",
+"ordem": 9,
+"texto": "Banheiros conferidos",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "BFE.i1",
+"rotina_id": "BFE",
+"ordem": 1,
+"texto": "Bancada limpa e organizada",
+"foto": true,
+"critico": false,
+"ativo": true
+},
+{
+"id": "GRA.i1",
+"rotina_id": "GRA",
+"ordem": 1,
+"texto": "Grades fechadas",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "GRB.i1",
+"rotina_id": "GRB",
+"ordem": 1,
+"texto": "Grades fechadas",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "GES.i1",
+"rotina_id": "GES",
+"ordem": 1,
+"texto": "Reunião feita com Victor e Robson",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "GES.i2",
+"rotina_id": "GES",
+"ordem": 2,
+"texto": "Combinados registrados",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ALI.i1",
+"rotina_id": "ALI",
+"ordem": 1,
+"texto": "Reunião feita no horário",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ALI.i2",
+"rotina_id": "ALI",
+"ordem": 2,
+"texto": "Presença registrada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "ALI.i3",
+"rotina_id": "ALI",
+"ordem": 3,
+"texto": "Combinados registrados",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "TEC.i1",
+"rotina_id": "TEC",
+"ordem": 1,
+"texto": "Reunião feita",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "TEC.i2",
+"rotina_id": "TEC",
+"ordem": 2,
+"texto": "Presença dos barbeiros registrada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "TEC.i3",
+"rotina_id": "TEC",
+"ordem": 3,
+"texto": "Técnica do dia registrada",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "O1T.i1",
+"rotina_id": "O1T",
+"ordem": 1,
+"texto": "Breno",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "O1T.i2",
+"rotina_id": "O1T",
+"ordem": 2,
+"texto": "Magda",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "O1T.i3",
+"rotina_id": "O1T",
+"ordem": 3,
+"texto": "Daniel",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "O1T.i4",
+"rotina_id": "O1T",
+"ordem": 4,
+"texto": "Heberth",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "O1T.i5",
+"rotina_id": "O1T",
+"ordem": 5,
+"texto": "Suellen",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "O1Q.i1",
+"rotina_id": "O1Q",
+"ordem": 1,
+"texto": "Durval",
+"foto": false,
+"critico": false,
+"ativo": true
+},
+{
+"id": "O1Q.i2",
+"rotina_id": "O1Q",
+"ordem": 2,
+"texto": "Jessica, com a sociedade",
+"foto": false,
+"critico": false,
+"ativo": true
+}
+],
+"execucoes": [],
+"lembretes": [
+{
+"id": 1,
+"hora": "09:00:00",
+"texto": "Conferir se as respostas do WhatsApp e do Direct começaram",
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"ativo": true
+},
+{
+"id": 2,
+"hora": "19:30:00",
+"texto": "Conferir comandas abertas antes do fechamento",
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"ativo": true
+},
+{
+"id": 3,
+"hora": "12:00:00",
+"texto": "Almoço da Magda: cobrir o balcão do Lounge até 13h",
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"ativo": true
+},
+{
+"id": 4,
+"hora": "14:00:00",
+"texto": "Almoço da Suellen: cobrir o sofá da recepção até 15h",
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"ativo": true
+}
+],
+"regras": {
+"id": 1,
+"antes": 10,
+"escalar": 30,
+"conferir": 30,
+"meta": 0.9,
+"rondas_surpresa": true,
+"resumo": "21:00:00",
+"inicio_operacao": "2026-11-01",
+"nf_dia_limite": 5,
+"nf_exigir_das": true,
+"nf_cnpj": "00000000000000",
+"nf_razao": "",
+"nf_descricao": "Serviços ... {mes}."
+},
+"documentos_fiscais": [],
+"nf_valores": [],
+"definicoes": [
+{
+"id": 1,
+"ordem": 1,
+"titulo": "Quantas rondas por dia",
+"detalhe": "Exemplo de ponto em aberto.",
+"sugestao": "4 rondas.",
+"onde": "rotina",
+"resolvido_em": null
+},
+{
+"id": 2,
+"ordem": 2,
+"titulo": "Ponto já definido",
+"detalhe": null,
+"sugestao": null,
+"onde": null,
+"resolvido_em": "2026-11-17T10:00:00Z",
+"resolvido_por": "victor",
+"resposta": "Ok"
+}
+],
+"cobrancas": [],
+"ocorrencias": [],
+"ocorrencia_acoes": [],
+"lembretes_feitos": [],
+"pop_leituras": [],
+"dias_fechados": [],
+"rodizio_escala": [],
+"pop_versoes": [],
+"resumos": [],
+"config_textos": [],
+"execucao_itens": [],
+"reposicao": [
+{
+"id": 1,
+"item": "Álcool 70%",
+"obs": "acaba amanhã",
+"pedido_por": "magda",
+"em": "2026-11-17T13:00:00+00:00",
+"resolvido_em": null
+},
+{
+"id": 2,
+"item": "Papel toalha",
+"obs": null,
+"pedido_por": "suellen",
+"em": "2026-11-17T12:00:00+00:00",
+"resolvido_em": "2026-11-17T14:00:00+00:00"
+}
+],
+"privacidade_aceite": [
+{
+"pessoa_id": "breno",
+"versao": 1,
+"em": "2026-11-17T12:00:00+00:00"
+}
+],
+"_rpc": {
+"status_equipe": [
+{
+"pessoa_id": "victor",
+"avisos": 1,
+"ultimo_acesso": "2026-11-17T12:00:00+00:00",
+"privacidade": null
+},
+{
+"pessoa_id": "jessica",
+"avisos": 0,
+"ultimo_acesso": "2026-11-17T12:00:00+00:00",
+"privacidade": null
+},
+{
+"pessoa_id": "robson",
+"avisos": 0,
+"ultimo_acesso": null,
+"privacidade": null
+},
+{
+"pessoa_id": "breno",
+"avisos": 1,
+"ultimo_acesso": "2026-11-17T12:00:00+00:00",
+"privacidade": null
+},
+{
+"pessoa_id": "daniel",
+"avisos": 0,
+"ultimo_acesso": null,
+"privacidade": null
+},
+{
+"pessoa_id": "durval",
+"avisos": 0,
+"ultimo_acesso": null,
+"privacidade": null
+},
+{
+"pessoa_id": "heberth",
+"avisos": 0,
+"ultimo_acesso": null,
+"privacidade": null
+},
+{
+"pessoa_id": "magda",
+"avisos": 0,
+"ultimo_acesso": null,
+"privacidade": null
+},
+{
+"pessoa_id": "suellen",
+"avisos": 0,
+"ultimo_acesso": null,
+"privacidade": null
+}
+],
+"falhas_itens": [
+{
+"item_id": "AMB.i2",
+"texto": "Sala de Spa limpa e organizada",
+"rotina_id": "AMB",
+"rotina": "Conferência de banheiros e Spa",
+"pop_id": "POP-04",
+"falhas": 3,
+"ultima": "2026-11-17"
+}
+]
+}
+}

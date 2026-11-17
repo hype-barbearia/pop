@@ -55,3 +55,25 @@ Mudança no banco: crie um arquivo novo em `supabase/migrations/` e aplique no S
 3. **Supabase → Authentication → Emails → SMTP**: configure um SMTP próprio (ex.: Resend). O e-mail padrão do Supabase só envia para membros da organização e tem limite baixo por hora.
 4. **Modelo do e-mail "Magic Link"**: inclua `{{ .Token }}` para a pessoa poder digitar o código de 6 números quando o link abrir fora do app instalado.
 5. **E-mails da equipe**: o primeiro sócio é cadastrado direto no banco; depois ele cadastra os outros na tela Equipe.
+
+## Testes e publicação
+
+- `node tests/smoke.js` abre todas as telas de todos os tipos de acesso (sócio, Robson, gerente, barbeiro, atendente) com dados de exemplo e falha se alguma quebrar.
+- `node tests/mock.js victor` gera `dist/mock-victor.html` para conferir o visual no navegador, sem internet (hora parada às 15:40).
+- No GitHub, `.github/workflows/publicar.yml` roda os testes a cada envio para a `main` e só publica em pop.hypebarbearia.com se passarem.
+- `supabase/migrations/018_funcoes_completas.sql` guarda a versão final, inteira, das funções que foram ajustadas por troca de texto.
+
+## Recursos de 17/11/2026
+
+- Semana de aprendizado (Gerente e lembretes): até a data definida, atraso não escala aos sócios e não entra na média.
+- Pauta automática do alinhamento de segunda (Relatórios e app da gerente), com o que mais falhou, atrasos, clientes, reposição e POPs pendentes.
+- POPs para revisar (Para definir): item com 3 ou mais "não feito" em 14 dias.
+- Registrar: problema, falta de material (lista de reposição da gerente) e elogio ou reclamação de cliente.
+- Status da equipe: quem já entrou, quem ativou as notificações e quem leu o aviso de privacidade.
+- Foto de referência por item ("como deve ficar"), editada em Rotina e checklists; não é apagada pela limpeza de 90 dias.
+- Checklist de treino no primeiro acesso, só no aparelho, sem entrar nos números.
+- Conferência em lote para a gerente, com as fotos lado a lado.
+- O app abre sem internet com os dados do dia guardados no aparelho; o cache é apagado ao sair.
+- Aviso de privacidade (LGPD) com registro de ciência, também no Perfil.
+- Cópia de segurança dos dados em arquivo (Informações da casa, só o Victor).
+- Alerta de saúde do sistema aos sócios (09:10, 15:10 e 20:10): dia sem checklists, tarefas automáticas com falha, avisos presos e erros do app.

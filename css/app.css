@@ -868,3 +868,35 @@ details > summary.sec-h{cursor:pointer;list-style:none} details > summary.sec-h:
 /* Avisos tocáveis mostram que levam a algum lugar */
 button.alert{position:relative;padding-right:40px;width:100%;text-align:left;cursor:pointer}
 button.alert::after{content:"›";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:24px;line-height:1;opacity:.55}
+/* Recursos 17/11: aprendizado, status, privacidade, registrar, pauta, referência, lote */
+.callout.learn{background:var(--accent-soft);border-left:4px solid var(--accent)}
+.st-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px} .st-chips .chip{font-size:10.5px;padding:2px 7px}
+.card.priv{border:2px solid var(--accent);display:flex;flex-direction:column;gap:10px}
+.h-sm{font-size:20px;font-stretch:115%;font-weight:800;margin:0}
+.priv-tx p{margin:0;font-size:13.5px;line-height:1.5}
+.reg{display:flex;flex-direction:column;gap:2px;padding:14px 16px}
+.reg-d{border-top:1px solid var(--line);padding:12px 0 4px} .reg-d:first-of-type{border-top:0}
+.reg-d > summary{cursor:pointer;font-weight:700;color:var(--accent-strong);list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:32px}
+.reg-d > summary::-webkit-details-marker{display:none} .reg-d > summary::after{content:"›";font-size:20px;transition:transform .2s} .reg-d[open] > summary::after{transform:rotate(90deg)}
+.reg-d[open] > summary{margin-bottom:10px}
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg2 label{position:relative} .seg2 input{position:absolute;opacity:0}
+.seg2 span{display:block;text-align:center;padding:11px;border:1.5px solid var(--line);border-radius:12px;font-weight:700;background:var(--surface)}
+.seg2 input:checked + span{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong)}
+.seg2 input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.pauta > summary{font-size:15px}
+.pauta-l{margin:12px 0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.pauta-l li b{display:block;font-size:13px} .pauta-l li span{font-size:13px;color:var(--muted);line-height:1.45}
+.ref{display:inline-flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:700}
+.ref img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:2px dashed var(--accent)}
+.it-ref{flex:none;padding:12px 10px 12px 0;display:flex;align-items:center}
+.ph-pair{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.ph-pair .ref img{width:150px;height:auto;aspect-ratio:4/3}
+.ref-ed{display:inline-flex;align-items:center;gap:6px;margin-top:6px} .ref-ed img{width:34px;height:34px;object-fit:cover;border-radius:6px} .ref-ed .ph-toggle{cursor:pointer}
+.lote-b{width:100%;background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.lote-c{background:var(--surface);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;border-left:4px solid var(--s-good)}
+.lote-c.nc{border-left-color:var(--s-bad)}
+.lote-h{display:flex;flex-direction:column;gap:2px} .lote-h small{color:var(--muted)} .lote-h em{color:var(--s-bad);font-style:normal;font-weight:700}
+.lote-f{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px} .lote-f .photo{width:100%;margin:0}
+.lote-b{white-space:normal;line-height:1.25;min-height:52px}
+.priv-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}

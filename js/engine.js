@@ -4,8 +4,10 @@
 let S;
 const person = id => S.people.find(p => p.id === id);
 const pop = id => S.pops.find(p => p.id === id);
-const tpl = id => S.tpls.find(t => t.id === id);
-const inst = id => S.inst.find(i => i.id === id);
+const tpl = id => id === 'TREINO' ? TREINO_TPL : S.tpls.find(t => t.id === id);
+const inst = id => id === 'TREINO' ? TREINO : S.inst.find(i => i.id === id);
+/* Checklist de treino: existe só no aparelho e não entra em nenhum número */
+let TREINO = null;
 const first = p => p ? firstName(p.name) : 'Equipe';
 const NOW = () => S.ui.now;
 const vis = at => at != null && at <= NOW();
@@ -94,7 +96,7 @@ function gerenteFeed(){
     if (st === 'atrasado') {
       const nd = nudgesOf(i.id)[0];
       out.push({k:'bad', ord:0, at:i.due, title:`Atraso: ${t.title} · ${first(p)}`,
-        sub:`Prazo era ${hm(i.due)}, há ${mins(lateMin(i))}. ${g.d} de ${g.n} itens.${nd ? ` Você cobrou às ${hm(nd.at)}.` : ' Ainda não foi cobrado.'}${lateMin(i) >= S.rules.escalar ? ' Já foi avisado aos sócios.' : ''}`,
+        sub:`Prazo era ${hm(i.due)}, há ${mins(lateMin(i))}. ${g.d} de ${g.n} itens.${nd ? ` Você cobrou às ${hm(nd.at)}.` : ' Ainda não foi cobrado.'}${lateMin(i) >= S.rules.escalar && !aprendendo() ? ' Já foi avisado aos sócios.' : ''}`,
         nudge:nd ? null : i.id, open:i.id});
     }
     if (needsVer(i) && n - i.doneAt <= 240) {

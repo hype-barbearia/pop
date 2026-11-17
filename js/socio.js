@@ -20,7 +20,7 @@ function navBadge(k){
   if (k === 'hoje') { const n = dayStats().atrasado; return n ? `<span class="count bad">${n}</span>` : ''; }
   if (k === 'ocorrencias') { const n = occOpen().length; return n ? `<span class="count">${n}</span>` : ''; }
   if (k === 'pops') { const n = pendingReads().length; return n ? `<span class="count">${n}</span>` : ''; }
-  if (k === 'definir') { const n = S.defs.filter(x => !x.resolvido_em).length + conflitos().length; return n ? `<span class="count bad">${n}</span>` : ''; }
+  if (k === 'definir') { const n = S.defs.filter(x => !x.resolvido_em).length + conflitos().length + popsRevisar().length; return n ? `<span class="count bad">${n}</span>` : ''; }
   if (k === 'notas') { const n = S.docs.filter(d => d.status === 'enviada').length; return n ? `<span class="count">${n}</span>` : ''; }
   return '';
 }
@@ -71,8 +71,8 @@ function pgPainel(){
   ].filter(Boolean);
 
   const ph_ = photos().slice(0, 8), salvo = S.resumos.find(r => r.data === TODAY_ISO);
-  return `${ph('Sócios · painel', 'A operação de hoje', `${DIA_LABEL[0].toUpperCase() + DIA_LABEL.slice(1)}. Agora são ${hm(n)}. Tudo o que a equipe marca no app aparece aqui na hora.`)}
-    ${avisoPush()}${avisoInicio()}${avisoFechado()}
+  return `${painelTopo()}
+    ${avisoPush()}${avisoInicio()}${avisoFechado()}${avisoAdesao()}
     ${tasks ? `<section class="tasks"><h2>Precisa de atenção</h2><div class="task-row">${tasks}</div></section>` : `<p class="callout good"><b>Tudo em dia.</b> Nenhum atraso, ocorrência aberta ou conferência pendente.</p>`}
     <div class="grid kpis">
       ${kpi('Conformidade hoje', rateTxt(d.rate), `${d.ok} de ${d.due} checklists vencidos foram feitos no prazo`, rateKind(d.rate), bar(d.rate, rateKind(d.rate), S.rules.meta))}
@@ -84,7 +84,7 @@ function pgPainel(){
     <div class="grid cols-2">
       <section class="panel"><div class="panel-h"><h2>Agora na barbearia</h2><button class="linkbtn small" data-act="nav" data-v="hoje">Ver o dia inteiro</button></div>
         <div class="stack gap8">
-          ${late.length ? `<p class="day-h">Atrasados</p>${late.map(i => instCard(i) + (lateMin(i) >= S.rules.escalar ? `<p class="small bad-t esc">Escalado aos sócios: ${mins(lateMin(i))} de atraso${nudgesOf(i.id).length ? ', já cobrado pela gerente' : ', sem cobrança da gerente'}.</p>` : '')).join('')}` : ''}
+          ${late.length ? `<p class="day-h">Atrasados</p>${late.map(i => instCard(i) + (lateMin(i) >= S.rules.escalar && !aprendendo() ? `<p class="small bad-t esc">Escalado aos sócios: ${mins(lateMin(i))} de atraso${nudgesOf(i.id).length ? ', já cobrado pela gerente' : ', sem cobrança da gerente'}.</p>` : '')).join('')}` : ''}
           ${open.length ? `<p class="day-h">Abertos agora</p>${open.map(i => instCard(i)).join('')}` : ''}
           ${next.length ? `<p class="day-h">Próximos 90 minutos</p>${next.map(i => instCard(i)).join('')}` : ''}
           ${!late.length && !open.length && !next.length ? `<p class="muted">${n >= DAY_END - 15 ? 'O dia acabou. Veja o resumo abaixo.' : 'Nada aberto ou previsto para os próximos 90 minutos.'}</p>` : ''}
@@ -161,6 +161,7 @@ function pgOcc(){
   const atras = all.filter(o => o.status !== 'resolvida' && o.prazo && o.prazo < TODAY_ISO).length;
   return `${ph(eyebrow(), 'Ocorrências', 'Tudo o que saiu do padrão: item não feito, item reprovado na ronda, reclamação de cliente e o que a equipe registrar. Cada uma tem quem resolve e prazo.')}
     <div class="grid kpis">${kpi('Em aberto', occOpen().length, 'aberta ou em tratamento', occOpen().length ? 'warn' : 'good')}${kpi('Fora do prazo', atras, 'abertas com prazo vencido', atras ? 'bad' : '')}${kpi('Hoje', all.filter(o => !o.day).length, 'registradas hoje')}${kpi('Resolvidas', all.filter(o => o.status === 'resolvida').length, 'nos últimos 30 dias')}</div>
+    ${blocoReposicao(canManage())}
     ${canManage() ? formOcorrencia(true) : ''}
     <div class="row between">${segUi('oc', [['abertas','Em aberto'], ['resolvidas','Resolvidas'], ['todas','Todas']], f)}</div>
     <div class="stack gap8">${list.length ? list.map(o => occCard(o, {edit:canManage()})).join('') : '<p class="muted">Nenhuma ocorrência aqui.</p>'}</div>`;
@@ -181,6 +182,7 @@ function pgRelatorios(){
   const linha = (nome, x) => `<tr><td>${nome}</td><td class="num">${x.prev}</td><td class="num"><b class="${rateKind(x.prev ? x.ok / x.prev : null)}-t">${rateTxt(x.prev ? x.ok / x.prev : null)}</b></td><td class="num">${x.late}</td><td class="num">${x.miss}</td><td class="num">${x.nao}</td></tr>`;
   const head = '<thead><tr><th></th><th class="num">Previstos</th><th class="num">No prazo</th><th class="num">Com atraso</th><th class="num">Não feitos</th><th class="num">Itens não feitos</th></tr></thead>';
   return `${ph(eyebrow(), 'Relatórios', 'Os números do mês por pessoa e por checklist. Bom para os one-on-ones de terça e quarta e para a reunião de gestão.', `<label class="sr" for="f-mes">Mês</label><select class="inp w-auto" id="f-mes" data-f="mes">${mesesOpts(mes)}</select><button class="btn" data-act="csv" data-v="${mes}">Baixar planilha (CSV)</button>`)}
+    ${blocoPauta(TODAY_WD === 1)}
     ${!dados ? '<p class="muted">Carregando o relatório…</p>' : !dados.length ? '<p class="callout">Ainda não há dias completos neste mês. O relatório conta até ontem.</p>' : `
     <div class="grid kpis">${kpi('No prazo no mês', rateTxt(tot.prev ? tot.ok / tot.prev : null), `${tot.ok} de ${tot.prev} checklists`, rateKind(tot.prev ? tot.ok / tot.prev : null))}${kpi('Com atraso', tot.late)}${kpi('Não feitos', tot.miss, '', tot.miss ? 'bad' : '')}</div>
     <section class="panel"><div class="panel-h"><h2>Por pessoa</h2></div><div class="tw"><table class="t">${head}<tbody>${Object.entries(porP).sort((a, b) => (person(a[0])?.ordem ?? 0) - (person(b[0])?.ordem ?? 0)).map(([id, x]) => linha(`<span class="who-cell">${av(person(id))}${esc(person(id)?.name || id)}</span>`, x)).join('')}</tbody></table></div></section>
@@ -227,7 +229,7 @@ function pgEquipe(){
   const sel = S.ui.selP;
   const rows = team().map(p => {
     const d = dayStats(i => i.who === p.id), a = histAgg(x => x.byP[p.id]), pr = pendingReads(p.id).length;
-    return `<tr class="${sel === p.id ? 'sel' : ''}"><td><button class="who-cell linkrow" data-act="selP" data-v="${p.id}">${av(p)}<span><b>${esc(p.name)}</b><span class="small muted block">${roleL(p)} · ${esc(p.turno)}${p.folga != null ? ` · folga ${WEEK[p.folga]}` : ''}</span></span></button></td>
+    return `<tr class="${sel === p.id ? 'sel' : ''}"><td><button class="who-cell linkrow" data-act="selP" data-v="${p.id}">${av(p)}<span><b>${esc(p.name)}</b><span class="small muted block">${roleL(p)} · ${esc(p.turno)}${p.folga != null ? ` · folga ${WEEK[p.folga]}` : ''}</span>${statusChips(p.id)}</span></button></td>
       <td class="num">${d.done} de ${d.total}${d.atrasado ? ` ${chip(d.atrasado + ' atrasado', 'bad')}` : ''}</td>
       <td class="num"><span class="${rateKind(a.rate)}-t"><b>${rateTxt(a.rate)}</b></span></td><td class="num">${a.late}</td><td class="num">${a.miss}</td>
       <td>${dots(p.id)}</td><td class="num">${streak(p.id)} ${streak(p.id) === 1 ? 'dia' : 'dias'}</td>
@@ -290,6 +292,7 @@ function pgGerente(){
             <div class="rule"><div><b>Aviso antes da ronda</b><p class="small muted">Minutos antes do horário sorteado</p></div><div class="affix w-num"><input type="number" id="r-antes" data-rule="antes" value="${r.antes}" min="0" ${d}><span>min</span></div></div>
             <div class="rule"><div><b>Escalar atraso aos sócios</b><p class="small muted">Se o checklist continuar atrasado depois de</p></div><div class="affix w-num"><input type="number" id="r-escalar" data-rule="escalar" value="${r.escalar}" min="5" ${d}><span>min</span></div></div>
             <div class="rule"><div><b>Prazo para conferir</b><p class="small muted">Depois que a pessoa conclui, a gerente confere em até</p></div><div class="affix w-num"><input type="number" id="r-conferir" data-rule="conferir" value="${r.conferir}" min="5" ${d}><span>min</span></div></div>
+            <div class="rule"><div><b>Semana de aprendizado até</b><p class="small muted">Até esta data, atraso não chega aos sócios e não entra na média</p></div><input class="inp w-auto" type="date" id="r-aprend" data-rule="aprendizadoAte" data-kind="str" value="${r.aprendizadoAte || ''}" ${d}></div>
             <div class="rule"><div><b>Conferência por amostra</b><p class="small muted">Parte dos checklists que a gerente confere, por sorteio. Com item não feito, sempre confere.</p></div><div class="affix w-num"><input type="number" id="r-amostra" data-rule="amostra" data-kind="amostra" value="${Math.round(r.amostra * 100)}" min="10" max="100" step="5" ${d}><span>%</span></div></div>
             <label class="toggle"><input type="checkbox" id="r-escsoc" data-rule="escalarSocios" data-kind="bool" ${r.escalarSocios ? 'checked' : ''} ${d}><span><b>Avisar também o sócio técnico</b><span>Atraso escalado chega também ao Robson, além do Victor.</span></span></label>
             <div class="rule"><div><b>Meta de conformidade</b><p class="small muted">Abaixo disso o número fica âmbar ou vermelho</p></div><div class="affix w-num"><input type="number" id="r-meta" data-rule="meta" data-kind="pct" value="${Math.round(r.meta * 100)}" min="50" max="100" ${d}><span>%</span></div></div>

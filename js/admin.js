@@ -43,7 +43,7 @@ function editorRotina(t){
       <button class="linkbtn small" data-act="janDel" data-id="${jid}">Remover horário</button></div>`).join('') || '<p class="small muted">Nenhum horário fixo. Use a Agenda para marcar datas avulsas.</p>'}
       <div><button class="btn sm" data-act="janAdd" data-id="${t.id}">Incluir outro horário</button></div></div>
     <p class="day-h">Itens</p>
-    <ol class="steps sm">${itens.map((it, k) => `<li><span><label class="sr" for="ite-${it.id}">Texto</label><input class="inp it-in" id="ite-${it.id}" data-item="${it.id}" value="${esc(it.t)}"></span>
+    <ol class="steps sm">${itens.map((it, k) => `<li><span><label class="sr" for="ite-${it.id}">Texto</label><input class="inp it-in" id="ite-${it.id}" data-item="${it.id}" value="${esc(it.t)}">${refEditor({id:it.id, t:it.t, ref:it.foto_ref ?? it.ref ?? null})}</span>
       <span class="row nowrap gap6"><label class="ph-toggle ${it.photo ? 'on' : ''}"><input type="checkbox" data-photo="${t.id}|${it.id}" ${it.photo ? 'checked' : ''}>${icon('camera', 'ni xs')}foto</label>
         <label class="ph-toggle ${it.crit ? 'on crit' : ''}"><input type="checkbox" data-crit="${it.id}" ${it.crit ? 'checked' : ''}>crítico</label>
         <button class="linkbtn small" data-act="itemMove" data-id="${it.id}" data-v="-1" ${k === 0 ? 'disabled' : ''} aria-label="Subir">↑</button><button class="linkbtn small" data-act="itemMove" data-id="${it.id}" data-v="1" ${k === itens.length - 1 ? 'disabled' : ''} aria-label="Descer">↓</button>
@@ -102,7 +102,7 @@ function popExtras(){
 function pgInfo(){
   const ed = canEdit(), d = ed ? '' : 'disabled';
   return `${ph(eyebrow(), 'Informações da casa', 'Cultura, horário, posições, reuniões e áreas dos POPs. O que estiver aqui aparece na biblioteca, na rotina e no app da equipe.')}
-    ${roNote()}
+    ${roNote()}${blocoCopia()}
     <form class="panel stack gap8" data-form="info-cultura"><div class="panel-h"><h2>Cultura HYPE</h2></div>
       <div class="field"><label for="in-missao">Missão</label><textarea class="inp" id="in-missao" rows="3" ${d}>${esc(CULTURA.missao)}</textarea></div>
       <div class="field"><label for="in-visao">Visão</label><textarea class="inp" id="in-visao" rows="2" ${d}>${esc(CULTURA.visao)}</textarea></div>
@@ -248,6 +248,7 @@ function pgDefinir(){
   return `${ph(eyebrow(), 'Para definir', 'O que ainda depende de uma decisão dos sócios. Os conflitos de horário são conferidos sozinhos e somem quando a rotina é ajustada.')}
     <section class="panel"><div class="panel-h"><h2>Conflitos de horário</h2><p>${cf.length ? `${cf.length} encontrados na semana` : 'nenhum'}</p></div>
       ${cf.length ? `<div class="stack gap8">${cf.map(c => `<div class="def ${c.k}"><div class="grow"><b>${esc(c.t)}</b><p class="small muted">${esc(c.s)}</p></div>${ir(c.onde)}</div>`).join('')}</div>` : '<p class="muted">A rotina da semana não tem conflitos de horário.</p>'}</section>
+    ${popsRevisar().length ? `<section class="panel"><div class="panel-h"><h2>POPs para revisar</h2><p>item que falhou 3 vezes ou mais em 14 dias</p></div><div class="stack gap8">${popsRevisar().map(f => `<div class="def warn"><div class="grow"><b>${esc(f.pop_id || '')} · ${esc(f.texto)}</b><p class="small muted">${esc(f.rotina)}: ${f.falhas} vezes "não feito" desde ${dLabelISO(isoMinus(14))}. Quando o mesmo item falha muito, o problema costuma ser o processo (material, horário, responsável), não a pessoa.</p></div>${f.pop_id ? `<button class="btn sm" data-act="nav" data-v="pops">Abrir POPs →</button>` : ''}</div>`).join('')}</div></section>` : ''}
     <section class="panel"><div class="panel-h"><h2>Pontos em aberto</h2><p>${abertos.length} para decidir</p></div>
       ${abertos.length ? `<ol class="stack gap10 deflist">${abertos.map(x => `<li class="def"><div class="grow stack gap6">
           <b>${esc(x.titulo)}</b>${x.detalhe ? `<p class="small">${esc(x.detalhe)}</p>` : ''}${x.sugestao ? `<p class="small muted"><b>Sugestão:</b> ${esc(x.sugestao)}</p>` : ''}
