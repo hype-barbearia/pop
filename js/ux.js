@@ -126,7 +126,7 @@ function instBody(i, mode){
   const quem = mode !== 'exec' ? `<div class="row between nowrap who-row"><span class="row nowrap gap8">${av(p)}<b>${esc(whoTxt(i))}</b></span>${mode === 'verify' && s === 'atrasado' ? `<button class="btn no" data-act="nudge" data-id="${i.id}">Cobrar ${esc(first(p))}</button>` : stChip(i)}</div>` : '';
   const foot = canAct ? `<div class="ck-foot"><span class="num"><b>${g.d}</b>/${g.n}</span>${left ? `<button class="btn primary big" disabled>Faltam ${left}</button>` : `<button class="btn primary big" data-act="finish" data-id="${i.id}">Concluir checklist</button>`}</div>` : '';
   return `<div class="stack gap12">${quem}${redo}${nudge}${early}<div class="its">${rows}</div>${verBox}
-    <button class="linkbtn small center" data-act="pop" data-id="${t.pop}">Ver o procedimento ${t.pop}</button></div>${foot}`;
+    ${t.pop ? `<button class="linkbtn small center" data-act="pop" data-id="${t.pop}">Ver o procedimento ${t.pop}</button>` : '<p class="small muted center">Este é só um treino: nada aqui é registrado.</p>'}</div>${foot}`;
 }
 
 /* ---------- Gerente: fila de ações ---------- */

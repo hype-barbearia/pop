@@ -940,7 +940,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 0
+"ordem": 0,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "BIN",
@@ -953,8 +955,7 @@
 2,
 3,
 4,
-5,
-6
+5
 ],
 "cada": [
 "breno",
@@ -964,7 +965,27 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 1
+"ordem": 1,
+"ignora_folga": false,
+"rodizio": false
+},
+{
+"id": "BIS",
+"titulo": "Chegada e grades (sábado)",
+"pop_id": "POP-01",
+"tipo": "check",
+"conferir": true,
+"dias": [
+6
+],
+"cada": null,
+"cada_papel": "barbeiro",
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 2,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "REC",
@@ -985,7 +1006,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 2
+"ordem": 3,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "PLA",
@@ -1002,7 +1025,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 3
+"ordem": 4,
+"ignora_folga": false,
+"rodizio": true
 },
 {
 "id": "GRD",
@@ -1020,7 +1045,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 4
+"ordem": 5,
+"ignora_folga": false,
+"rodizio": true
 },
 {
 "id": "BIF",
@@ -1033,8 +1060,7 @@
 2,
 3,
 4,
-5,
-6
+5
 ],
 "cada": [
 "durval",
@@ -1044,7 +1070,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 5
+"ordem": 6,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "AMB",
@@ -1065,7 +1093,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 6
+"ordem": 7,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "GOU",
@@ -1086,7 +1116,32 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 7
+"ordem": 8,
+"ignora_folga": false,
+"rodizio": false
+},
+{
+"id": "POR",
+"titulo": "Porta de vidro e área do Head Spa",
+"pop_id": "POP-04",
+"tipo": "check",
+"conferir": true,
+"dias": [
+1,
+2,
+3,
+4,
+5,
+6
+],
+"cada": null,
+"cada_papel": null,
+"junto": null,
+"quinzenal": false,
+"ativo": true,
+"ordem": 9,
+"ignora_folga": false,
+"rodizio": true
 },
 {
 "id": "RON",
@@ -1107,7 +1162,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 8
+"ordem": 10,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "INF",
@@ -1128,7 +1185,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 9
+"ordem": 11,
+"ignora_folga": false,
+"rodizio": true
 },
 {
 "id": "FEC",
@@ -1149,7 +1208,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 10
+"ordem": 12,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "BFE",
@@ -1170,7 +1231,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 11
+"ordem": 13,
+"ignora_folga": false,
+"rodizio": false
 },
 {
 "id": "GRA",
@@ -1179,38 +1242,21 @@
 "tipo": "check",
 "conferir": true,
 "dias": [
+1,
 2,
+3,
 4,
+5,
 6
 ],
 "cada": null,
 "cada_papel": null,
-"junto": [
-"daniel"
-],
+"junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 12
-},
-{
-"id": "GRB",
-"titulo": "Grades fechadas",
-"pop_id": "POP-09",
-"tipo": "check",
-"conferir": true,
-"dias": [
-1,
-3,
-5
-],
-"cada": null,
-"cada_papel": null,
-"junto": [
-"heberth"
-],
-"quinzenal": false,
-"ativo": true,
-"ordem": 13
+"ordem": 14,
+"ignora_folga": false,
+"rodizio": true
 },
 {
 "id": "GES",
@@ -1226,7 +1272,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 14
+"ordem": 15,
+"ignora_folga": true,
+"rodizio": false
 },
 {
 "id": "ALI",
@@ -1242,7 +1290,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 15
+"ordem": 16,
+"ignora_folga": true,
+"rodizio": false
 },
 {
 "id": "TEC",
@@ -1256,9 +1306,11 @@
 "cada": null,
 "cada_papel": null,
 "junto": null,
-"quinzenal": true,
+"quinzenal": false,
 "ativo": true,
-"ordem": 16
+"ordem": 17,
+"ignora_folga": true,
+"rodizio": false
 },
 {
 "id": "O1T",
@@ -1274,7 +1326,9 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 17
+"ordem": 18,
+"ignora_folga": true,
+"rodizio": false
 },
 {
 "id": "O1Q",
@@ -1290,163 +1344,277 @@
 "junto": null,
 "quinzenal": false,
 "ativo": true,
-"ordem": 18
+"ordem": 19,
+"ignora_folga": true,
+"rodizio": false
 }
 ],
 "rotina_janelas": [
 {
 "id": 1,
-"rotina_id": "BIF",
-"inicio": "10:50:00",
-"prazo": "11:00:00",
-"responsavel": null
+"rotina_id": "ABR",
+"inicio": "08:30:00",
+"prazo": "09:00:00",
+"responsavel": "magda",
+"dias": null,
+"ativo": true
 },
 {
 "id": 2,
-"rotina_id": "O1Q",
-"inicio": "09:00:00",
-"prazo": "10:00:00",
-"responsavel": "jessica"
+"rotina_id": "BIN",
+"inicio": "08:50:00",
+"prazo": "09:00:00",
+"responsavel": null,
+"dias": null,
+"ativo": true
 },
 {
 "id": 3,
-"rotina_id": "AMB",
-"inicio": "17:00:00",
-"prazo": "17:30:00",
-"responsavel": "suellen"
+"rotina_id": "BIS",
+"inicio": "08:50:00",
+"prazo": "09:00:00",
+"responsavel": null,
+"dias": null,
+"ativo": true
 },
 {
 "id": 4,
-"rotina_id": "GOU",
-"inicio": "11:30:00",
-"prazo": "11:45:00",
-"responsavel": "magda"
-},
-{
-"id": 5,
-"rotina_id": "RON",
-"inicio": "12:00:00",
-"prazo": "12:30:00",
-"responsavel": "jessica"
-},
-{
-"id": 6,
 "rotina_id": "REC",
 "inicio": "09:00:00",
 "prazo": "09:15:00",
-"responsavel": "magda"
+"responsavel": "magda",
+"dias": null,
+"ativo": true
+},
+{
+"id": 5,
+"rotina_id": "PLA",
+"inicio": "10:00:00",
+"prazo": "12:00:00",
+"responsavel": "magda",
+"dias": null,
+"ativo": true
+},
+{
+"id": 6,
+"rotina_id": "GRD",
+"inicio": "10:00:00",
+"prazo": "12:00:00",
+"responsavel": "suellen",
+"dias": null,
+"ativo": true
 },
 {
 "id": 7,
-"rotina_id": "TEC",
-"inicio": "19:30:00",
-"prazo": "20:30:00",
-"responsavel": "robson"
+"rotina_id": "BIF",
+"inicio": "10:50:00",
+"prazo": "11:00:00",
+"responsavel": null,
+"dias": null,
+"ativo": true
 },
 {
 "id": 8,
-"rotina_id": "GRA",
-"inicio": "20:20:00",
-"prazo": "20:40:00",
-"responsavel": "breno"
+"rotina_id": "AMB",
+"inicio": "11:00:00",
+"prazo": "11:30:00",
+"responsavel": "magda",
+"dias": null,
+"ativo": true
 },
 {
 "id": 9,
-"rotina_id": "GRB",
-"inicio": "20:20:00",
-"prazo": "20:40:00",
-"responsavel": "durval"
+"rotina_id": "AMB",
+"inicio": "14:00:00",
+"prazo": "14:30:00",
+"responsavel": "magda",
+"dias": null,
+"ativo": true
 },
 {
 "id": 10,
-"rotina_id": "RON",
-"inicio": "16:30:00",
-"prazo": "17:00:00",
-"responsavel": "jessica"
+"rotina_id": "AMB",
+"inicio": "17:00:00",
+"prazo": "17:30:00",
+"responsavel": "suellen",
+"dias": null,
+"ativo": true
 },
 {
 "id": 11,
-"rotina_id": "GES",
-"inicio": "14:00:00",
-"prazo": "15:00:00",
-"responsavel": "jessica"
+"rotina_id": "GOU",
+"inicio": "11:30:00",
+"prazo": "11:45:00",
+"responsavel": "magda",
+"dias": null,
+"ativo": true
 },
 {
 "id": 12,
-"rotina_id": "BFE",
-"inicio": "20:00:00",
-"prazo": "20:20:00",
-"responsavel": null
+"rotina_id": "POR",
+"inicio": "15:00:00",
+"prazo": "16:00:00",
+"responsavel": "magda",
+"dias": null,
+"ativo": true
 },
 {
 "id": 13,
-"rotina_id": "FEC",
-"inicio": "20:00:00",
-"prazo": "20:30:00",
-"responsavel": "suellen"
+"rotina_id": "RON",
+"inicio": "12:00:00",
+"prazo": "12:30:00",
+"responsavel": "jessica",
+"dias": null,
+"ativo": true
 },
 {
 "id": 14,
-"rotina_id": "O1T",
-"inicio": "09:00:00",
-"prazo": "11:30:00",
-"responsavel": "jessica"
+"rotina_id": "RON",
+"inicio": "16:30:00",
+"prazo": "17:00:00",
+"responsavel": "jessica",
+"dias": null,
+"ativo": true
 },
 {
 "id": 15,
 "rotina_id": "INF",
-"inicio": "19:40:00",
-"prazo": "20:10:00",
-"responsavel": "daniel"
+"inicio": "17:40:00",
+"prazo": "18:10:00",
+"responsavel": "daniel",
+"dias": [
+6
+],
+"ativo": true
 },
 {
 "id": 16,
-"rotina_id": "GRD",
-"inicio": "10:00:00",
-"prazo": "12:00:00",
-"responsavel": "suellen"
+"rotina_id": "INF",
+"inicio": "19:40:00",
+"prazo": "20:10:00",
+"responsavel": "daniel",
+"dias": [
+1,
+2,
+3,
+4,
+5
+],
+"ativo": true
 },
 {
 "id": 17,
-"rotina_id": "AMB",
-"inicio": "11:00:00",
-"prazo": "11:30:00",
-"responsavel": "magda"
+"rotina_id": "FEC",
+"inicio": "18:00:00",
+"prazo": "18:30:00",
+"responsavel": "suellen",
+"dias": [
+6
+],
+"ativo": true
 },
 {
 "id": 18,
-"rotina_id": "AMB",
-"inicio": "14:00:00",
-"prazo": "14:30:00",
-"responsavel": "magda"
+"rotina_id": "FEC",
+"inicio": "20:00:00",
+"prazo": "20:30:00",
+"responsavel": "suellen",
+"dias": [
+1,
+2,
+3,
+4,
+5
+],
+"ativo": true
 },
 {
 "id": 19,
-"rotina_id": "ALI",
-"inicio": "19:00:00",
-"prazo": "19:30:00",
-"responsavel": "jessica"
+"rotina_id": "BFE",
+"inicio": "18:00:00",
+"prazo": "18:20:00",
+"responsavel": null,
+"dias": [
+6
+],
+"ativo": true
 },
 {
 "id": 20,
-"rotina_id": "ABR",
-"inicio": "08:30:00",
-"prazo": "09:00:00",
-"responsavel": "magda"
+"rotina_id": "BFE",
+"inicio": "20:00:00",
+"prazo": "20:20:00",
+"responsavel": null,
+"dias": [
+1,
+2,
+3,
+4,
+5
+],
+"ativo": true
 },
 {
 "id": 21,
-"rotina_id": "PLA",
-"inicio": "10:00:00",
-"prazo": "12:00:00",
-"responsavel": "magda"
+"rotina_id": "GRA",
+"inicio": "17:30:00",
+"prazo": "17:50:00",
+"responsavel": "breno",
+"dias": [
+6
+],
+"ativo": true
 },
 {
 "id": 22,
-"rotina_id": "BIN",
-"inicio": "08:50:00",
-"prazo": "09:00:00",
-"responsavel": null
+"rotina_id": "GRA",
+"inicio": "19:30:00",
+"prazo": "19:50:00",
+"responsavel": "breno",
+"dias": [
+1,
+2,
+3,
+4,
+5
+],
+"ativo": true
+},
+{
+"id": 23,
+"rotina_id": "GES",
+"inicio": "14:00:00",
+"prazo": "15:00:00",
+"responsavel": "jessica",
+"dias": null,
+"ativo": true
+},
+{
+"id": 24,
+"rotina_id": "ALI",
+"inicio": "19:00:00",
+"prazo": "19:30:00",
+"responsavel": "jessica",
+"dias": null,
+"ativo": true
+},
+{
+"id": 25,
+"rotina_id": "O1T",
+"inicio": "09:00:00",
+"prazo": "11:30:00",
+"responsavel": "jessica",
+"dias": null,
+"ativo": true
+},
+{
+"id": 26,
+"rotina_id": "O1Q",
+"inicio": "09:00:00",
+"prazo": "10:00:00",
+"responsavel": "jessica",
+"dias": null,
+"ativo": true
 }
 ],
 "rotina_itens": [
@@ -1457,7 +1625,8 @@
 "texto": "Ar-condicionados da recepção, área de corte e VIX do lavatório funcionando",
 "foto": false,
 "critico": true,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ABR.i2",
@@ -1466,7 +1635,8 @@
 "texto": "Todas as luzes ligadas, incluindo as amarelas do lavatório",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ABR.i3",
@@ -1475,7 +1645,8 @@
 "texto": "Limpeza da área interna",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ABR.i4",
@@ -1484,7 +1655,8 @@
 "texto": "Limpeza dos banheiros",
 "foto": true,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ABR.i5",
@@ -1493,7 +1665,8 @@
 "texto": "Sala de Spa organizada",
 "foto": true,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ABR.i6",
@@ -1502,7 +1675,8 @@
 "texto": "Café coado passado",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ABR.i7",
@@ -1511,7 +1685,8 @@
 "texto": "Playlists da recepção e do lavatório tocando",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ABR.i8",
@@ -1520,7 +1695,8 @@
 "texto": "TV do Lounge na ESPN (Disney+)",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BIN.i1",
@@ -1529,7 +1705,8 @@
 "texto": "Chegada às 08:50",
 "foto": false,
 "critico": true,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BIN.i2",
@@ -1538,7 +1715,8 @@
 "texto": "Grades retiradas",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BIN.i3",
@@ -1547,7 +1725,8 @@
 "texto": "Bancada organizada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BIN.i4",
@@ -1556,7 +1735,38 @@
 "texto": "Ajuda à atendente na conferência da abertura (se não houver cliente)",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
+},
+{
+"id": "BIS.i1",
+"rotina_id": "BIS",
+"ordem": 1,
+"texto": "Chegada às 08:50",
+"foto": false,
+"critico": true,
+"ativo": true,
+"foto_ref": null
+},
+{
+"id": "BIS.i2",
+"rotina_id": "BIS",
+"ordem": 2,
+"texto": "Grades retiradas",
+"foto": false,
+"critico": false,
+"ativo": true,
+"foto_ref": null
+},
+{
+"id": "BIS.i3",
+"rotina_id": "BIS",
+"ordem": 3,
+"texto": "Bancada organizada",
+"foto": false,
+"critico": false,
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "REC.i1",
@@ -1565,7 +1775,8 @@
 "texto": "Respostas do WhatsApp e Direct iniciadas às 09:00",
 "foto": false,
 "critico": true,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "REC.i2",
@@ -1574,7 +1785,8 @@
 "texto": "Lista de chegada dos barbeiros atualizada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "REC.i3",
@@ -1583,7 +1795,8 @@
 "texto": "Confirmações de 1 hora antes programadas para a manhã",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "PLA.i1",
@@ -1592,7 +1805,8 @@
 "texto": "Plantas aguadas",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "GRD.i1",
@@ -1601,7 +1815,8 @@
 "texto": "Gradis limpos",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "GRD.i2",
@@ -1610,7 +1825,8 @@
 "texto": "Produtos da vitrine limpos e alinhados",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BIF.i1",
@@ -1619,7 +1835,8 @@
 "texto": "Chegada às 10:50",
 "foto": false,
 "critico": true,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BIF.i2",
@@ -1628,7 +1845,8 @@
 "texto": "Bancada organizada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BIF.i3",
@@ -1637,7 +1855,8 @@
 "texto": "Chegada avisada à recepção para a lista de chegada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "AMB.i1",
@@ -1646,7 +1865,8 @@
 "texto": "Banheiros conferidos: papel, sabonete, lixo e piso",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "AMB.i2",
@@ -1655,7 +1875,8 @@
 "texto": "Sala de Spa limpa e organizada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "AMB.i3",
@@ -1664,7 +1885,8 @@
 "texto": "Lounge organizado e bandejas limpas",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "AMB.i4",
@@ -1673,7 +1895,8 @@
 "texto": "Copa organizada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "GOU.i1",
@@ -1682,7 +1905,28 @@
 "texto": "VIX da área gourmet ligado e conferido",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
+},
+{
+"id": "POR.i1",
+"rotina_id": "POR",
+"ordem": 1,
+"texto": "Porta de vidro da entrada limpa, por dentro e por fora",
+"foto": false,
+"critico": false,
+"ativo": true,
+"foto_ref": null
+},
+{
+"id": "POR.i2",
+"rotina_id": "POR",
+"ordem": 2,
+"texto": "Área do Head Spa limpa e organizada",
+"foto": false,
+"critico": false,
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i1",
@@ -1691,7 +1935,8 @@
 "texto": "Cliente vem primeiro: ninguém esperando sem atendimento",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i2",
@@ -1700,7 +1945,8 @@
 "texto": "Sorriso e gentileza no balcão, na cadeira e no lavatório",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i3",
@@ -1709,7 +1955,8 @@
 "texto": "Benefícios oferecidos e servidos na bandeja",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i4",
@@ -1718,7 +1965,8 @@
 "texto": "Todo corte terminando no lavatório",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i5",
@@ -1727,7 +1975,8 @@
 "texto": "Head Spa oferecido no lavatório",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i6",
@@ -1736,7 +1985,8 @@
 "texto": "Agenda em dia, com preferência de barbeiro perguntada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i7",
@@ -1745,7 +1995,8 @@
 "texto": "Regra dos 15 minutos respeitada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i8",
@@ -1754,7 +2005,8 @@
 "texto": "Nenhuma comanda aberta de cliente que já saiu",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i9",
@@ -1763,7 +2015,8 @@
 "texto": "Bancadas organizadas",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "RON.i10",
@@ -1772,7 +2025,8 @@
 "texto": "Postura: foco no cliente, sem conversa paralela, sem gritar",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "INF.i1",
@@ -1781,7 +2035,8 @@
 "texto": "Bancada infantil limpa e organizada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i1",
@@ -1790,7 +2045,8 @@
 "texto": "Todas as comandas fechadas",
 "foto": false,
 "critico": true,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i2",
@@ -1799,7 +2055,8 @@
 "texto": "Relatório da maquineta emitido",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i3",
@@ -1808,7 +2065,8 @@
 "texto": "Vias de pagamento grampeadas",
 "foto": true,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i4",
@@ -1817,7 +2075,8 @@
 "texto": "Comandas conferidas com o relatório da maquineta",
 "foto": false,
 "critico": true,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i5",
@@ -1826,7 +2085,8 @@
 "texto": "Copa limpa e organizada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i6",
@@ -1835,7 +2095,8 @@
 "texto": "Lavatório limpo e organizado",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i7",
@@ -1844,7 +2105,8 @@
 "texto": "Salão limpo e organizado",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i8",
@@ -1853,7 +2115,8 @@
 "texto": "Cafeteira limpa e pronta para a manhã",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "FEC.i9",
@@ -1862,7 +2125,8 @@
 "texto": "Banheiros conferidos",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "BFE.i1",
@@ -1871,7 +2135,8 @@
 "texto": "Bancada limpa e organizada",
 "foto": true,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "GRA.i1",
@@ -1880,16 +2145,8 @@
 "texto": "Grades fechadas",
 "foto": false,
 "critico": false,
-"ativo": true
-},
-{
-"id": "GRB.i1",
-"rotina_id": "GRB",
-"ordem": 1,
-"texto": "Grades fechadas",
-"foto": false,
-"critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "GES.i1",
@@ -1898,7 +2155,8 @@
 "texto": "Reunião feita com Victor e Robson",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "GES.i2",
@@ -1907,7 +2165,8 @@
 "texto": "Combinados registrados",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ALI.i1",
@@ -1916,7 +2175,8 @@
 "texto": "Reunião feita no horário",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ALI.i2",
@@ -1925,7 +2185,8 @@
 "texto": "Presença registrada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "ALI.i3",
@@ -1934,7 +2195,8 @@
 "texto": "Combinados registrados",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "TEC.i1",
@@ -1943,7 +2205,8 @@
 "texto": "Reunião feita",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "TEC.i2",
@@ -1952,7 +2215,8 @@
 "texto": "Presença dos barbeiros registrada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "TEC.i3",
@@ -1961,7 +2225,8 @@
 "texto": "Técnica do dia registrada",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "O1T.i1",
@@ -1970,7 +2235,8 @@
 "texto": "Breno",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "O1T.i2",
@@ -1979,7 +2245,8 @@
 "texto": "Magda",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "O1T.i3",
@@ -1988,7 +2255,8 @@
 "texto": "Daniel",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "O1T.i4",
@@ -1997,7 +2265,8 @@
 "texto": "Heberth",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "O1T.i5",
@@ -2006,7 +2275,8 @@
 "texto": "Suellen",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "O1Q.i1",
@@ -2015,7 +2285,8 @@
 "texto": "Durval",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 },
 {
 "id": "O1Q.i2",
@@ -2024,7 +2295,8 @@
 "texto": "Jessica, com a sociedade",
 "foto": false,
 "critico": false,
-"ativo": true
+"ativo": true,
+"foto_ref": null
 }
 ],
 "execucoes": [],
@@ -2099,7 +2371,11 @@
 "nf_exigir_das": true,
 "nf_cnpj": "00000000000000",
 "nf_razao": "",
-"nf_descricao": "Serviços ... {mes}."
+"nf_descricao": "Serviços ... {mes}.",
+"conferir_amostra": 1,
+"escalar_socios": false,
+"aprendizado_ate": null,
+"inicio_hora": "09:00:00"
 },
 "documentos_fiscais": [],
 "nf_valores": [],
@@ -2131,10 +2407,155 @@
 "lembretes_feitos": [],
 "pop_leituras": [],
 "dias_fechados": [],
-"rodizio_escala": [],
+"rodizio_escala": [
+{
+"rotina_id": "POR",
+"dow": 1,
+"pessoa_id": "magda"
+},
+{
+"rotina_id": "POR",
+"dow": 2,
+"pessoa_id": "suellen"
+},
+{
+"rotina_id": "POR",
+"dow": 3,
+"pessoa_id": "magda"
+},
+{
+"rotina_id": "POR",
+"dow": 4,
+"pessoa_id": "suellen"
+},
+{
+"rotina_id": "POR",
+"dow": 5,
+"pessoa_id": "magda"
+},
+{
+"rotina_id": "POR",
+"dow": 6,
+"pessoa_id": "suellen"
+},
+{
+"rotina_id": "GRA",
+"dow": 1,
+"pessoa_id": "durval"
+},
+{
+"rotina_id": "GRA",
+"dow": 2,
+"pessoa_id": "breno"
+},
+{
+"rotina_id": "GRA",
+"dow": 3,
+"pessoa_id": "durval"
+},
+{
+"rotina_id": "GRA",
+"dow": 4,
+"pessoa_id": "breno"
+},
+{
+"rotina_id": "GRA",
+"dow": 5,
+"pessoa_id": "durval"
+},
+{
+"rotina_id": "GRA",
+"dow": 6,
+"pessoa_id": "breno"
+}
+],
 "pop_versoes": [],
 "resumos": [],
-"config_textos": [],
+"config_textos": [
+{
+"chave": "cultura",
+"valor": {
+"visao": "Ser a barbearia referência em qualidade e satisfação dos clientes na Zona Norte do Recife.",
+"missao": "Oferecer a cada cliente uma experiência de cuidado, relaxamento e renovação, com atenção a cada detalhe, domínio técnico e soluções reais para o seu cabelo, barba e pele.",
+"valores": [
+[
+"Cooperação",
+"Jogamos juntos e cobrimos uns aos outros.",
+"Sem cliente na cadeira? Olhe ao redor."
+],
+[
+"Posicionamento",
+"Somos autoridade no que fazemos.",
+"Quem domina o assunto não precisa convencer: o cliente confia."
+],
+[
+"Atenção",
+"Fazemos o cliente se sentir cuidado.",
+"Lembrar o nome de todos os clientes atendidos."
+],
+[
+"Intenção",
+"Todo atendimento resolve algo.",
+"Não vendemos serviços. Resolvemos problemas."
+]
+]
+}
+},
+{
+"chave": "escala",
+"valor": {
+"horario": "Segunda a sexta, 09h às 20h. Sábado, 09h às 18h, e todos os barbeiros chegam às 08:50.",
+"posicoes": "Posição padrão: Magda no balcão do Lounge, Suellen no sofá da recepção.",
+"reunioes": [
+[
+"Segunda",
+"14:00 às 15:00",
+"Gestão",
+"Semanal"
+],
+[
+"Segunda",
+"19:00 às 19:30",
+"Alinhamento semanal",
+"Semanal"
+],
+[
+"Variável",
+"Agendada no app",
+"Técnicas com Robson",
+"Data e horário marcados a cada reunião"
+],
+[
+"Terça",
+"09:00 às 11:30",
+"One-on-ones de 30 min: Breno 09:00, Magda 09:30, Daniel 10:00, Heberth 10:30, Suellen 11:00",
+"Semanal"
+],
+[
+"Quarta",
+"09:00 às 10:00",
+"One-on-ones de 30 min: Durval 09:00, Jessica 09:30",
+"Semanal"
+]
+]
+}
+},
+{
+"chave": "areas",
+"valor": {
+"agenda": "Agenda",
+"gestao": "Reuniões",
+"vendas": "Preços e indicações",
+"cultura": "Inegociáveis",
+"jornada": "Jornada do cliente",
+"abertura": "Abertura",
+"recepcao": "Recepção",
+"barbeiros": "Barbeiros",
+"fechamento": "Fechamento",
+"atendimento": "Atendimento"
+}
+}
+],
 "execucao_itens": [],
 "reposicao": [
 {
