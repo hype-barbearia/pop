@@ -1,12 +1,13 @@
-# Hype POP · testa e publica
-# A cada envio para a main: confere a sintaxe de todos os arquivos, abre todas as telas de todos os
-# tipos de acesso com dados de exemplo (tests/smoke.js) e só então publica em pop.hypebarbearia.com.
-# Se algum teste falhar, a versão que está no ar continua a mesma.
+# Hype POP · testa e publica, em dois ambientes
+#   branch teste → teste.pop.hypebarbearia.com (banco "Hype POP Teste", nada chega à equipe)
+#   branch main  → pop.hypebarbearia.com (produção), e marca a versão com uma tag producao-AAAA.MM.DD-HHMM
+# Nos dois casos: confere a sintaxe, abre todas as telas de todos os acessos com dados de exemplo
+# (tests/smoke.js) e só então publica. Se algum teste falhar, o que está no ar continua igual.
 name: Testar e publicar
 
 on:
   push:
-    branches: [main]
+    branches: [main, teste]
   pull_request:
   workflow_dispatch:
 
@@ -16,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: publicar-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -28,12 +29,13 @@ jobs:
         with:
           node-version: 20
       - name: Sintaxe dos arquivos
-        run: for f in js/*.js sw.js tests/*.js; do node --check "$f"; done
-      - name: Listas de arquivos iguais (index, service worker, testes)
+        run: for f in js/*.js sw.js tests/*.js ambientes/*/config.js; do node --check "$f"; done
+      - name: Listas de arquivos iguais (index, service worker, testes) e configuração do teste
         run: node tests/coerencia.js
       - name: Todas as telas, todos os acessos
         run: node tests/smoke.js
 
+  # ---------- Produção ----------
   publicar:
     needs: testar
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -48,12 +50,57 @@ jobs:
           mkdir _site
           cp -r index.html sw.js manifest.webmanifest icon.svg icon-180.png icon-512.png CNAME .nojekyll css js _site/
           # Versão da cópia offline = commit publicado: cada publicação renova a cópia guardada nos aparelhos
-          # (antes era preciso trocar o número à mão em sw.js).
           sed -i "s/const CACHE = 'hype-pop-app-[^']*'/const CACHE = 'hype-pop-app-${GITHUB_SHA::7}'/" _site/sw.js
           grep -q "hype-pop-app-${GITHUB_SHA::7}" _site/sw.js
+          grep -q "ambiente: 'producao'" _site/js/config.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
       - id: deploy
         uses: actions/deploy-pages@v4
+
+  marcar-versao:
+    needs: publicar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag da versão publicada
+        run: |
+          TAG="producao-$(TZ=America/Recife date +%Y.%m.%d-%H%M)"
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "$TAG"
+          echo "Versão publicada: $TAG" >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------- Teste ----------
+  publicar-teste:
+    needs: testar
+    if: github.event_name == 'push' && github.ref == 'refs/heads/teste'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Montar o site de teste
+        run: |
+          mkdir _site
+          cp -r index.html sw.js manifest.webmanifest icon.svg icon-180.png icon-512.png .nojekyll css js _site/
+          cp ambientes/teste/config.js _site/js/config.js
+          echo "teste.pop.hypebarbearia.com" > _site/CNAME
+          sed -i "s/const CACHE = 'hype-pop-app-[^']*'/const CACHE = 'hype-pop-teste-${GITHUB_SHA::7}'/" _site/sw.js
+          sed -i 's/"name": "Hype POP"/"name": "Hype POP · TESTE"/; s/"short_name": "Hype POP"/"short_name": "POP Teste"/' _site/manifest.webmanifest
+          grep -q "ambiente: 'teste'" _site/js/config.js
+          ! grep -q fwecscsvfxocgjspdsis _site/js/config.js
+      - name: Publicar em teste.pop.hypebarbearia.com
+        env:
+          CHAVE: ${{ secrets.TESTE_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh && echo "$CHAVE" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          cd _site
+          git init -q -b gh-pages
+          MSG="Teste: ${GITHUB_SHA::7} · $(git -C .. log -1 --format=%s)"
+          git add -A
+          git -c user.name="Hype POP" -c user.email="sistemas@hypebarbearia.com" commit -q -m "$MSG"
+          git push -q -f git@github.com:hype-barbearia/pop-teste.git gh-pages
+          echo "Publicado no teste: ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"

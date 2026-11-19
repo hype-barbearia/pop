@@ -1,4 +1,6 @@
-# Banco de dados (Supabase · projeto "Hype Barbearia")
+# Banco de dados (Supabase)
+
+Dois projetos com o mesmo esquema: **Hype Barbearia** (`fwecscsvfxocgjspdsis`, produção) e **Hype POP Teste** (`fdqyrywibppciaqgxhsg`, teste). Toda migração nova roda primeiro no teste e, depois de aprovada, na produção. As chaves de `privado.config` (segredo do agendador, chaves das notificações, `url_projeto`) são diferentes em cada um e não ficam no repositório.
 
 ## Como o banco está organizado
 
@@ -34,12 +36,12 @@ Cada mudança no banco é um arquivo novo e numerado em `migrations/`, aplicado 
 
 | Arquivo | Situação |
 |---|---|
-| 001 a 005, 007 a 010, 012 a 017, 019 a 024 | Aplicadas (aparecem no histórico de migrações do Supabase; de 016 em diante, sem o número no nome) |
+| 001 a 005, 007 a 010, 012 a 017, 019 a 025 | Aplicadas (aparecem no histórico de migrações do Supabase; de 016 em diante, sem o número no nome) |
 | 006, 011 | Dados (primeiro sócio, CNPJ), aplicados direto pelo SQL Editor |
 | 010b, 012b | Correções pequenas aplicadas só no banco; o efeito está consolidado na 018 |
 | 018 | **Referência**, não precisa rodar: guarda a versão final, inteira, das funções alteradas por troca de texto nas 008, 010, 014, 016 e 017. Rodar de novo não muda nada |
 
-Para recriar o banco do zero: rode as migrações em ordem numérica (a 018 depois da 017 deixa as funções na versão final).
+Para recriar o banco do zero: rode as migrações em ordem numérica, 001 a 025 (foi assim que o banco de teste foi montado em 19/11/2026). A 025 grava a versão real da produção de 7 funções que tinham sido ajustadas direto no banco. Depois, em `privado.config`, inclua `url_projeto`, `segredo_cron` e as chaves VAPID do novo projeto, e publique a função `notificar`.
 
 ## Funções e envio
 

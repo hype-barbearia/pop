@@ -2,6 +2,11 @@
 
 Cada publicação é um commit na `main` (testado e publicado pelo GitHub Actions). Para voltar a uma versão: `git revert` do commit e push. Mudanças no banco estão em `supabase/migrations/`, com o número indicado.
 
+## 19/11/2026 · ambiente de teste e versões (migração 025)
+- Ambiente de teste em teste.pop.hypebarbearia.com, com banco próprio ("Hype POP Teste") montado pelas migrações e comparado com a produção objeto por objeto.
+- Branch `teste` publica no teste; `main` publica na produção e cria uma tag `producao-…` por versão.
+- Migração 025: 7 funções da produção que não estavam nas migrações agora estão; envio de notificações com endereço do projeto configurável.
+
 ## 19/11/2026 · tipos de atividade e cultura (migração 024)
 - Tipos separados na Rotina: checklist, ronda, reunião, lembrete, instrução e cultura, com um quadro explicando cada um.
 - Reunião (gestão, alinhamento, técnicas, one-on-ones): "Aconteceu / Não aconteceu" e campo de combinados e presença. No one-on-one, o resumo de cultura da semana ao lado de cada nome.
