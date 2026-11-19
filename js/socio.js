@@ -187,7 +187,7 @@ function pgEquipe(){
   return `${ph(eyebrow(), 'Equipe e ausências', 'Quem cumpre a rotina no prazo, quem está ausente e quem ainda não assinou os POPs. O e-mail é o que a pessoa usa para entrar no app.')}
     <section class="panel"><div class="tw"><table class="t"><thead><tr><th>Pessoa</th><th class="num">Hoje</th><th class="num">No prazo, 4 sem.</th><th class="num">Com atraso</th><th class="num">Não feitos</th><th>Últimos 24 dias</th><th class="num">Sequência</th><th>Termo de ciência</th><th>E-mail de acesso</th></tr></thead><tbody>${rows}</tbody></table></div>
       <p class="small muted pager-info">Cada tracinho é um dia: verde, tudo no prazo; âmbar, algo com atraso; vermelho, algo não feito. Toque no nome para ver e editar a pessoa.</p></section>
-    ${p ? fichaPessoa(p) : ''}
+    ${p ? fichaPessoa(p) + fichaCultura(p) : ''}
     ${blocoAusencias()}
     ${blocoAcessosDev()}
     ${canEdit() ? `<details class="panel" id="det-nova-pessoa"><summary class="sum">Incluir pessoa na equipe</summary>
@@ -321,15 +321,19 @@ function pgRotina(){
   const rod = S.allTpls.filter(t => t.active && t.rodizio);
   return `${ph(eyebrow(), 'Rotina e checklists', 'A agenda fixa da semana. Toda madrugada o sistema cria os checklists do dia a partir daqui, respeitando folgas, ausências e dias fechados. Mudanças valem a partir de amanhã.')}
     ${roNote()}
-    <section class="panel"><div class="tw"><table class="t rot"><thead><tr><th>Janela</th><th>Checklist</th><th>POP</th><th>Responsável</th><th>Dias</th><th class="num">Itens</th><th>Conferência</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td class="nowrap"><label class="sr" for="ss-${r.t.id}-${r.k}">Início</label><input class="inp time" type="time" id="ss-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|0" value="${r.s[0]}" ${d}> às <label class="sr" for="sd-${r.t.id}-${r.k}">Prazo</label><input class="inp time" type="time" id="sd-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|1" value="${r.s[1]}" ${d}></td>
-        <td><b>${esc(r.t.title)}</b>${r.t.kind === 'ronda' ? ` ${chip('ronda', 'acc')}` : ''}</td><td><button class="chip linkchip" data-act="pop" data-id="${r.t.pop}">${r.t.pop}</button></td><td>${whoOpt(r, r.t)}</td>
+    ${blocoTipos()}
+    <section class="panel"><div class="tw"><table class="t rot"><thead><tr><th>Janela</th><th>Checklist</th><th>POP</th><th>Responsável</th><th>Dias</th><th class="num">Itens</th><th>Conferência</th>${ed ? '<th><span class="sr">Editar</span></th>' : ''}</tr></thead><tbody>
+      ${rows.map(r => `<tr class="${S.ui.rotEdit === r.t.id ? 'sel' : ''}"><td class="nowrap"><label class="sr" for="ss-${r.t.id}-${r.k}">Início</label><input class="inp time" type="time" id="ss-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|0" value="${r.s[0]}" ${d}> às <label class="sr" for="sd-${r.t.id}-${r.k}">Prazo</label><input class="inp time" type="time" id="sd-${r.t.id}-${r.k}" data-slot="${r.t.id}|${r.k}|1" value="${r.s[1]}" ${d}></td>
+        <td>${ed ? `<button class="linkrow" data-act="rotEditar" data-v="${r.t.id}"><b>${esc(r.t.title)}</b></button>` : `<b>${esc(r.t.title)}</b>`}${r.t.kind === 'ronda' ? ` ${chip('ronda', 'acc')}` : r.t.kind === 'reuniao' ? ` ${chip('reunião', 'acc')}` : ''}</td><td><button class="chip linkchip" data-act="pop" data-id="${r.t.pop}">${r.t.pop}</button></td><td>${whoOpt(r, r.t)}</td>
         <td class="small">${diasTxt(r.t, r.s)}</td>
         <td class="num">${r.t.items.length}${r.t.items.some(i => i.photo) ? ` <span class="small muted">· ${r.t.items.filter(i => i.photo).length} com foto</span>` : ''}</td>
-        <td>${r.t.verify ? chip('gerente confere', 'good') : chip(r.t.kind === 'ronda' ? 'é a própria conferência' : 'sem conferência')}</td></tr>`).join('')}
-    </tbody></table></div></section>
+        <td>${r.t.verify ? chip('gerente confere', 'good') : chip(r.t.kind === 'ronda' ? 'é a própria conferência' : 'sem conferência')}</td>
+        ${ed ? `<td><button class="btn sm" data-act="rotEditar" data-v="${S.ui.rotEdit === r.t.id ? '' : r.t.id}">${S.ui.rotEdit === r.t.id ? 'Fechar' : 'Editar'}</button></td>` : ''}</tr>
+        ${ed && S.ui.rotEdit === r.t.id && rows.find(x => x.t.id === r.t.id) === r ? `<tr class="rot-ed"><td colspan="8">${editorRotina(r.t)}</td></tr>` : ''}`).join('')}
+    </tbody></table></div>
+    ${ed ? '<p class="small muted pager-info">Horário e responsável fixo mudam direto na tabela. Para o resto (nome, tipo, POP, dias, quem faz, conferência, itens e instruções), toque em Editar.</p>' : ''}</section>
+    ${S.ui.rotEdit && canEdit() && !rows.some(x => x.t.id === S.ui.rotEdit) ? editorRotina(S.allTpls.find(t => t.id === S.ui.rotEdit)) : ''}
     ${blocoAgenda()}
-    ${S.ui.rotEdit && canEdit() ? editorRotina(S.allTpls.find(t => t.id === S.ui.rotEdit)) : ''}
     <section class="panel"><div class="panel-h"><h2>Escala dos revezamentos</h2><p>quem faz em cada dia da semana</p></div>
       <div class="tw"><table class="t"><thead><tr><th>Tarefa</th>${DOW.map(x => `<th>${WEEK[x]}</th>`).join('')}</tr></thead><tbody>
         ${rod.map(t => `<tr><td><b>${esc(t.title)}</b><span class="small muted block">${t.days.length === 6 ? 'todo dia' : t.days.map(x => WEEK[x]).join(', ')}</span></td>${DOW.map(x => t.days.includes(x)

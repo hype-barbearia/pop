@@ -31,7 +31,7 @@ function avisoAdesao(){
 /* ---------- Aviso de privacidade (LGPD) ---------- */
 function textoPrivacidade(p){
   return `<div class="priv-tx stack gap8">
-    <p><b>O que o app registra:</b> seu nome, e-mail de acesso, o horário de cada item marcado, as fotos tiradas nos checklists, as ocorrências que você abre ou em que aparece, o termo de ciência dos POPs${p?.parceiro ? ', as notas fiscais e comprovantes que você envia' : ''} e o aparelho em que você ativou as notificações.</p>
+    <p><b>O que o app registra:</b> seu nome, e-mail de acesso, o horário de cada item marcado, as fotos tiradas nos checklists, as ocorrências que você abre ou em que aparece, os destaques e desvios de comportamento que a gerência registrar sobre você, o termo de ciência dos POPs${p?.parceiro ? ', as notas fiscais e comprovantes que você envia' : ''} e o aparelho em que você ativou as notificações.</p>
     <p><b>Para quê:</b> manter o padrão de qualidade e de higiene da casa, dar a estrutura certa para cada um trabalhar bem, organizar a rotina${p?.parceiro ? ' e cumprir as obrigações fiscais da parceria' : ''}.</p>
     ${p?.parceiro ? `<p><b>Para o profissional-parceiro:</b> os checklists não são funções do serviço que você presta. São orientações de convivência no espaço. A Hype acompanha esses dados para garantir que você tenha a melhor estrutura e experiência para desempenhar seu trabalho.</p>` : ''}
     <p><b>Quem vê:</b> você vê os seus registros. A gerente e os sócios veem os de toda a equipe. Ninguém de fora da Hype tem acesso.</p>
@@ -72,7 +72,7 @@ function blocoRegistrar(gestor){
         <div class="field"><label for="cl-x">O que o cliente disse</label><textarea class="inp" id="cl-x" rows="2" required></textarea></div>
         <div class="field"><label for="cl-p">Sobre quem</label><select class="inp" id="cl-p">${pessoas}</select></div>
         <p class="small muted">Não escreva nome, telefone ou dados do cliente.</p>
-        <div><button class="btn primary">Registrar</button></div></form></details>` : ''}</section>`;
+        <div><button class="btn primary">Registrar</button></div></form></details>` : ''}${gestor ? blocoCulturaReg() : ''}</section>`;
 }
 
 /* ---------- Lista de reposição ---------- */

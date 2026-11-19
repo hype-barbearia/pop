@@ -77,7 +77,10 @@ async function testar(who){
     ver('ocorrencias-reposicao', `S.ui.view='ocorrencias'`, 'Álcool 70%');
     ver('rotina-editor', `S.ui.view='rotina'; S.ui.rotEdit='AMB'`, 'foto de referência');
     ver('pop-editor', `S.ui.rotEdit=null; S.ui.view='pops'; S.ui.pop='POP-07'; S.ui.popEdit='POP-07'`);
-    ver('conflitos', `S.ui.pop=null; S.ui.popEdit=null; S.ui.view='painel'; if (!Array.isArray(conflitos())) throw new Error('conflitos() não é lista')`);
+    ver('rotina-tipos', `S.ui.pop=null; S.ui.popEdit=null; S.ui.view='rotina'; S.ui.rotEdit=null`, 'Tipos de atividade');
+    ver('info-padroes', `S.ui.view='info'`, 'Padrões de comportamento');
+    ver('equipe-cultura', `S.ui.view='equipe'; S.ui.selP='breno'`, 'Recebeu o cliente pelo nome');
+        ver('conflitos', `S.ui.pop=null; S.ui.popEdit=null; S.ui.view='painel'; if (!Array.isArray(conflitos())) throw new Error('conflitos() não é lista')`);
     if (r(`canEdit()`)) {
       ver('copia', `S.ui.view='info'`, 'Baixar cópia dos dados');
       ver('modo-tv', `S.ui.view='tv'`, 'Iniciar apresentação');
@@ -94,9 +97,13 @@ async function testar(who){
       ver(t, `S.ui.tab='${t}'; S.ui.open=null; S.ui.pop=null;`);
     ver('registrar', `S.ui.tab='${ger ? 'agora' : 'hoje'}'`, 'Falta material ou produto');
     ver('privacidade-perfil', `S.ui.tab='perfil'`, 'Privacidade');
+    if (who === 'breno') ver('perfil-cultura', `S.ui.tab='perfil'`, 'Recebeu o cliente pelo nome');
     if (r(`S.inst.some(i => mine(i, S.ui.user))`)) ver('checklist', `S.ui.tab='${ger ? 'agora' : 'hoje'}'; S.ui.open=S.inst.find(i => mine(i, S.ui.user)).id`);
     if (ger) {
       ver('lote', `S.ui.open=null; S.ui.lote=true`, 'Conferência rápida');
+      ver('cultura-registrar', `S.ui.lote=false; S.ui.open=null; S.ui.tab='agora'`, 'Comportamento: destaque ou desvio');
+      ver('reuniao', `S.ui.open='e11'`, 'Combinados e presença');
+      ok(r(`document.querySelector('#app').innerHTML.includes('Últimos 7 dias: 1 destaque')`), `${who}/reuniao: faltou o resumo de cultura no one-on-one`);
       ver('verificar', `S.ui.lote=false; S.ui.open=S.inst.find(i => needsVer(i)).id`, 'Conferência');
     }
     // Treino: abre, marca, registra um "não deu" e conclui sem tocar no servidor

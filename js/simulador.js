@@ -6,9 +6,9 @@
    aparelho e some ao sair do simulador ou recarregar a página.
    ========================================================= */
 let SIM = null;
-const SIM_CONFIG = ['pessoas', 'pops', 'pop_versoes', 'rotinas', 'rotina_janelas', 'rotina_itens', 'rodizio_escala', 'lembretes', 'regras', 'config_textos', 'definicoes', 'recursos'];
+const SIM_CONFIG = ['pessoas', 'pops', 'pop_versoes', 'rotinas', 'rotina_janelas', 'rotina_itens', 'rodizio_escala', 'lembretes', 'regras', 'config_textos', 'definicoes', 'recursos', 'cultura_padroes'];
 const SIM_VAZIAS = ['execucoes', 'execucao_itens', 'cobrancas', 'ocorrencias', 'ocorrencia_acoes', 'lembretes_feitos', 'pop_leituras', 'ausencias', 'dias_fechados',
-  'resumos', 'documentos_fiscais', 'nf_valores', 'rotina_agendamentos', 'reposicao', 'privacidade_aceite', 'dev_acessos'];
+  'resumos', 'documentos_fiscais', 'nf_valores', 'rotina_agendamentos', 'reposicao', 'privacidade_aceite', 'dev_acessos', 'cultura_registros'];
 const SIM_PK = {rodizio_escala:['rotina_id', 'dow'], config_textos:['chave'], recursos:['chave'], privacidade_aceite:['pessoa_id', 'versao'], nf_valores:['pessoa_id', 'periodo'],
   execucao_itens:['execucao_id', 'item_id'], pop_leituras:['pop_id', 'pessoa_id', 'versao'], lembretes_feitos:['lembrete_id', 'data']};
 
@@ -121,6 +121,10 @@ function simRpc(f, a = {}){
     case 'pedir_reposicao': db.reposicao.unshift({id:simId(), item:a.item, obs:a.obs || null, execucao_id:a.execucao || null, pedido_por:U, em:agora, resolvido_em:null, resolvido_por:null}); return ok(null);
     case 'resolver_reposicao': { if (!gestor) return erro('Só a gerente ou os sócios marcam a reposição.'); const r = db.reposicao.find(r_ => r_.id === a.r); if (r) Object.assign(r, {resolvido_em:a.desfazer ? null : agora, resolvido_por:a.desfazer ? null : U}); return ok(null); }
     case 'registrar_cliente': ocorrencia({titulo:a.tipo === 'elogio' ? 'Elogio de cliente' : 'Reclamação de cliente', origem:a.tipo === 'elogio' ? 'Cliente · elogio' : 'Cliente · reclamação', descricao:a.texto, pessoa_id:a.pessoa || null, status:a.tipo === 'elogio' ? 'resolvida' : 'aberta'}); return ok(simId());
+    case 'registrar_cultura': if (!gestor) return erro('Só a gerente ou os sócios registram.'); if (a.tipo === 'desvio' && !String(a.nota || '').trim()) return erro('Escreva o que aconteceu.');
+      db.cultura_registros.unshift({id:simId(), data:TODAY_ISO, em:agora, pessoa_id:a.pessoa, padrao_id:a.padrao, tipo:a.tipo, nota:a.nota || null, por:U}); return ok(null);
+    case 'apagar_cultura': db.cultura_registros = db.cultura_registros.filter(r => r.id !== a.r); return ok(null);
+    case 'anotar_reuniao': { const e_ = db.execucoes.find(x_ => x_.id === a.e); if (e_) e_.notas = String(a.texto || '').trim() || null; return ok(null); }
     case 'aceitar_privacidade': db.privacidade_aceite.push({pessoa_id:U, versao:a.versao, em:agora}); return ok(null);
     case 'registrar_ausencia': if (!gestor) return erro('Só a gerente ou os sócios registram ausência.'); db.ausencias.push({id:simId(), pessoa_id:a.pessoa, inicio:a.de, fim:a.ate, motivo:a.motivo || null, substituto:a.substituto || null, por:U, em:agora}); return ok(null);
     case 'remover_ausencia': db.ausencias = db.ausencias.filter(x_ => x_.id !== a.a); return ok(null);

@@ -27,8 +27,8 @@ async function carregar(){
     const c = lerCache();
     if (semRede(e) && c && c.dia === TODAY_ISO) { rows = c.rows; OFFLINE = c.em; } else throw e;
   }
-  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc] = rows;
-  montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc);
+  const [pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc, cpad, creg] = rows;
+  montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc, cpad, creg);
   await assinarFotos().catch(() => {});
 }
 
@@ -86,6 +86,8 @@ async function buscar(d30){
     [0, () => sb.from('privacidade_aceite').select('*')],
     [1, () => sb.from('recursos').select('*').order('chave')],
     [0, () => sb.from('dev_acessos').select('*').order('em', {ascending:false}).limit(40)],
+    [1, () => sb.from('cultura_padroes').select('*').order('ordem')],
+    [0, () => sb.from('cultura_registros').select('*').gte('data', d30).order('em', {ascending:false})],
   ];
   const fixosOk = real && FIXOS && FIXOS.dia === TODAY_ISO && Date.now() - FIXOS.em < FIXOS_TTL;
   const histOk = real && HIST_DIA && HIST_DIA.dia === TODAY_ISO;
@@ -99,7 +101,7 @@ async function buscar(d30){
   return q;
 }
 
-function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc){
+function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, df, re, pv, rs, dfis, nfv, cfg, ags, defs, repo, steq, f7, f14, priv, rec, dacc, cpad, creg){
   aplicarTextos(cfg);
 
   const people = pe.map(p => ({id:p.id, name:p.nome, role:p.papel, label:p.rotulo, turno:p.turno || '', folga:p.folga, socio:p.socio, hue:p.cor, email:p.email || '', active:p.ativo, ordem:p.ordem, fullName:p.nome_completo || p.nome, parceiro:p.parceiro}));
@@ -111,7 +113,7 @@ function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, 
   const janelas = Object.fromEntries(ja.map(j => [j.id, j]));
   const allTpls = ro.map(r => ({id:r.id, title:r.titulo, pop:r.pop_id, kind:r.tipo, verify:r.conferir, days:r.dias, each:r.cada || r.cada_papel || null, also:r.junto, every2:r.quinzenal,
     active:r.ativo, rodizio:r.rodizio, ignoraFolga:r.ignora_folga,
-    items:it.filter(i => i.rotina_id === r.id && i.ativo).map(i => ({id:i.id, t:i.texto, photo:i.foto, crit:i.critico, ordem:i.ordem, ref:i.foto_ref || null})),
+    items:it.filter(i => i.rotina_id === r.id && i.ativo).map(i => ({id:i.id, t:i.texto, photo:i.foto, crit:i.critico, ordem:i.ordem, ref:i.foto_ref || null, how:i.instrucao || null})),
     allItems:it.filter(i => i.rotina_id === r.id),
     escala:Object.fromEntries(re.filter(e => e.rotina_id === r.id).map(e => [e.dow, e.pessoa_id])),
     slots:ja.filter(j => j.rotina_id === r.id && j.ativo !== false).map(j => [hmT(j.inicio), hmT(j.prazo), j.responsavel, j.id, j.dias])}));
@@ -122,7 +124,7 @@ function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, 
     return {id:x.id, avulso:!!x.agendamento_id, key:`${x.rotina_id}.${x.pessoa_id}.${x.janela_id ? hmT(janelas[x.janela_id]?.inicio).replace(':', '') : 'AVULSO'}`, tpl:x.rotina_id, who:x.pessoa_id,
       start:minOf(x.inicio), due:minOf(x.prazo), checks, doneAt:minOf(x.concluida_em),
       ver:x.conferido_em ? {at:minOf(x.conferido_em), res:x.conferido_resultado, note:x.conferido_obs || '', by:x.conferido_por} : null,
-      sorteada:x.sorteada,
+      sorteada:x.sorteada, notas:x.notas || '',
       redo:x.refazer_em ? {at:minOf(x.refazer_em), note:x.refazer_obs || ''} : null};
   });
   const occ = oc.map(o => ({id:'OC-' + o.id, num:o.id, data:o.data, at:minOf(o.em), day:o.data !== TODAY_ISO ? dLabelISO(o.data) : null, who:o.pessoa_id, src:o.origem, inst:o.execucao_id,
@@ -138,7 +140,7 @@ function montar(pe, po, le, ro, ja, it, ex, ei, co, oc, oa, lb, lf, rg, hi, au, 
 
   const ui = S?.ui || {...{view:'painel', tab:'hoje', f:{}, mode:'app'}, ...uiLoad(), open:null, pop:null, nao:null, more:false, selP:null};
   S = {people, pops, tpls, allTpls, inst, occ, occ30:{}, reminders, remDone, nudges, rules, hist:hi || [], histDays:null, ui,
-    allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], repo:repo || [], statusEq:Object.fromEntries((steq || []).map(x => [x.pessoa_id, x])), falhas7:f7 || [], falhas14:f14 || [], priv:priv || [], recursos:rec || [], devAcessos:dacc || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
+    allReminders, docs:dfis, nfValores:nfv, agenda:ags, defs:defs || [], repo:repo || [], statusEq:Object.fromEntries((steq || []).map(x => [x.pessoa_id, x])), falhas7:f7 || [], falhas14:f14 || [], priv:priv || [], recursos:rec || [], devAcessos:dacc || [], culturaPadroes:cpad || [], culturaReg:creg || [], cfgTextos:cfg, ausencias:au, fechados:df, resumos:rs, fechadoHoje:df.find(x => x.data === TODAY_ISO) || null};
   S.ui.now = horaAgora();
 }
 

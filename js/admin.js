@@ -19,7 +19,7 @@ function editorRotina(t){
       <div class="form-grid">
         <div class="field span2"><label for="re-t">Nome do checklist</label><input class="inp" id="re-t" value="${esc(t.title)}" required></div>
         <div class="field"><label for="re-pop">POP</label><select class="inp" id="re-pop">${S.pops.map(p => `<option value="${p.id}" ${p.id === t.pop ? 'selected' : ''}>${p.id} · ${esc(p.title)}</option>`).join('')}</select></div>
-        <div class="field"><label for="re-tipo">Tipo</label><select class="inp" id="re-tipo"><option value="check" ${t.kind !== 'ronda' ? 'selected' : ''}>Checklist (Feito / Não deu)</option><option value="ronda" ${t.kind === 'ronda' ? 'selected' : ''}>Ronda (Conforme / Não conforme)</option></select></div>
+        <div class="field"><label for="re-tipo">Tipo</label><select class="inp" id="re-tipo"><option value="check" ${!t.kind || t.kind === 'check' ? 'selected' : ''}>Checklist (Feito / Não deu)</option><option value="ronda" ${t.kind === 'ronda' ? 'selected' : ''}>Ronda (Conforme / Não conforme)</option><option value="reuniao" ${t.kind === 'reuniao' ? 'selected' : ''}>Reunião (presença e combinados)</option></select></div>
       </div>
       <fieldset class="dias"><legend class="small muted">Dias da semana</legend>${diasBox('re-dia', t.days)}</fieldset>
       <div class="form-grid">
@@ -43,7 +43,7 @@ function editorRotina(t){
       <button class="linkbtn small" data-act="janDel" data-id="${jid}">Remover horário</button></div>`).join('') || '<p class="small muted">Nenhum horário fixo. Use a Agenda para marcar datas avulsas.</p>'}
       <div><button class="btn sm" data-act="janAdd" data-id="${t.id}">Incluir outro horário</button></div></div>
     <p class="day-h">Itens</p>
-    <ol class="steps sm">${itens.map((it, k) => `<li><span><label class="sr" for="ite-${it.id}">Texto</label><input class="inp it-in" id="ite-${it.id}" data-item="${it.id}" value="${esc(it.t)}">${refEditor({id:it.id, t:it.t, ref:it.foto_ref ?? it.ref ?? null})}</span>
+    <ol class="steps sm">${itens.map((it, k) => `<li><span><label class="sr" for="ite-${it.id}">Texto</label><input class="inp it-in" id="ite-${it.id}" data-item="${it.id}" value="${esc(it.t)}"><label class="sr" for="ith-${it.id}">Como fazer</label><input class="inp it-in sm-how" id="ith-${it.id}" data-itemhow="${it.id}" value="${esc(it.how || '')}" placeholder="Como fazer (opcional): a pessoa lê, não marca">${refEditor({id:it.id, t:it.t, ref:it.foto_ref ?? it.ref ?? null})}</span>
       <span class="row nowrap gap6"><label class="ph-toggle ${it.photo ? 'on' : ''}"><input type="checkbox" data-photo="${t.id}|${it.id}" ${it.photo ? 'checked' : ''}>${icon('camera', 'ni xs')}foto</label>
         <label class="ph-toggle ${it.crit ? 'on crit' : ''}"><input type="checkbox" data-crit="${it.id}" ${it.crit ? 'checked' : ''}>crítico</label>
         <button class="linkbtn small" data-act="itemMove" data-id="${it.id}" data-v="-1" ${k === 0 ? 'disabled' : ''} aria-label="Subir">↑</button><button class="linkbtn small" data-act="itemMove" data-id="${it.id}" data-v="1" ${k === itens.length - 1 ? 'disabled' : ''} aria-label="Descer">↓</button>
@@ -103,6 +103,7 @@ function pgInfo(){
   const ed = canEdit(), d = ed ? '' : 'disabled';
   return `${ph(eyebrow(), 'Informações da casa', 'Cultura, horário, posições, reuniões e áreas dos POPs. O que estiver aqui aparece na biblioteca, na rotina e no app da equipe.')}
     ${roNote()}${blocoCopia()}
+    ${editorPadroes()}
     <form class="panel stack gap8" data-form="info-cultura"><div class="panel-h"><h2>Cultura HYPE</h2></div>
       <div class="field"><label for="in-missao">Missão</label><textarea class="inp" id="in-missao" rows="3" ${d}>${esc(CULTURA.missao)}</textarea></div>
       <div class="field"><label for="in-visao">Visão</label><textarea class="inp" id="in-visao" rows="2" ${d}>${esc(CULTURA.visao)}</textarea></div>

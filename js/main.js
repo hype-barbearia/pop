@@ -25,7 +25,7 @@ function render(){
   else { app.className = 'phoneview'; app.innerHTML = renderPhone(p); }
   app.classList.toggle('ro', socioView() && !canEdit());
   const i = S.ui.open && inst(S.ui.open), sp = socioView();
-  $('#modal').innerHTML = sp && i ? modal(`${tpl(i.tpl).title}`, `${tpl(i.tpl).kind === 'ronda' ? 'Ronda' : 'Checklist'} · ${tpl(i.tpl).pop}`, instBody(i, 'view'))
+  $('#modal').innerHTML = sp && i ? modal(`${tpl(i.tpl).title}`, `${tipoNome(tpl(i.tpl))} · ${tpl(i.tpl).pop}`, instBody(i, 'view'))
     : sp && S.ui.pop && S.ui.view !== 'pops' && pop(S.ui.pop) ? modal(`${pop(S.ui.pop).id} · ${esc(pop(S.ui.pop).title)}`, 'Procedimento', popBody(pop(S.ui.pop), p)) : '';
   abertos.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; });
   rolagem.forEach(([q, t, l]) => { const el = $(q); if (el) { el.scrollTop = t; el.scrollLeft = l; } });

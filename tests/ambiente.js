@@ -3,7 +3,7 @@
    Usado pelos testes automáticos (tests/smoke.js) e pelas telas de conferência visual (tests/mock.js). */
 const fs = require('fs'), path = require('path');
 const RAIZ = path.join(__dirname, '..');
-const ARQUIVOS = ['config', 'core', 'consts', 'engine', 'data', 'ui', 'socio', 'app', 'main', 'admin', 'ux', 'recursos', 'tv', 'dev', 'simulador', 'gestao', 'notas'];
+const ARQUIVOS = ['config', 'core', 'consts', 'engine', 'data', 'ui', 'socio', 'app', 'main', 'admin', 'ux', 'recursos', 'tv', 'dev', 'simulador', 'gestao', 'notas', 'cultura'];
 const HORA_FIXA = 15 * 60 + 40; // as telas de teste ficam paradas às 15:40
 
 function hojeRecife(){ return new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10); }
@@ -30,6 +30,15 @@ function dados(){
   add('e8', 'AMB', 'magda', [11, 0], [11, 30], [11, 20], 4, true);
   add('e9', 'FEC', 'suellen', [20, 0], [20, 30]);
   add('e10', 'RON', 'jessica', [16, 30], [17, 0]);
+  // Tipos e cultura (migração 024): reuniões, instrução por item, padrões e registros
+  db.rotinas.forEach(r => { if (['GES', 'ALI', 'TEC', 'O1T', 'O1Q'].includes(r.id)) r.tipo = 'reuniao'; });
+  db.rotina_itens.forEach(i => { if (i.id === 'RON.i2' || i.id === 'RON.i10') i.ativo = false; });
+  const abr = db.rotina_itens.find(i => i.rotina_id === 'ABR'); if (abr) abr.instrucao = 'Ligar pelo controle da recepção, em 23 graus.';
+  add('e11', 'O1T', 'jessica', [15, 0], [16, 30], null, 1);
+  db.cultura_padroes = [{id:1, texto:'Cliente vem primeiro', detalhe:'Ninguém esperando sem atendimento.', pop_id:'POP-00', ordem:1, ativo:true},
+    {id:2, texto:'Sorriso e gentileza', detalhe:'No balcão, na cadeira e no lavatório.', pop_id:'POP-00', ordem:2, ativo:true}];
+  db.cultura_registros = [{id:1, data:hoje, em:ts(11, 0), pessoa_id:'breno', padrao_id:2, tipo:'destaque', nota:'Recebeu o cliente pelo nome', por:'jessica'},
+    {id:2, data:hoje, em:ts(12, 10), pessoa_id:'magda', padrao_id:1, tipo:'desvio', nota:'Cliente esperou no balcão', por:'jessica'}];
   return db;
 }
 

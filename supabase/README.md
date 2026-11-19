@@ -9,6 +9,7 @@
 | Rotina (o que deve acontecer) | `rotinas`, `rotina_janelas`, `rotina_itens`, `rotina_agendamentos`, `rodizio_escala`, `lembretes`, `regras`, `dias_fechados` |
 | Operação (o que aconteceu) | `execucoes`, `execucao_itens`, `cobrancas`, `lembretes_feitos`, `ocorrencias`, `ocorrencia_acoes`, `reposicao`, `resumos` |
 | Notas fiscais | `nf_valores`, `documentos_fiscais` |
+| Cultura | `cultura_padroes`, `cultura_registros` (desvio ou destaque por pessoa; a gestão vê todos, cada pessoa vê os seus) |
 | Textos e técnica | `config_textos`, `definicoes`, `notificacoes`, `erros_app` |
 
 - **Leitura:** regras de acesso (RLS) com as funções `eu()`, `sou_membro()`, `sou_socio()`, `sou_gestor()`, `ve_tudo()` e `sou_dev()`. Desde a 023 elas aparecem como `(select sou_socio())`: o resultado é o mesmo, mas o banco calcula uma vez por consulta e não uma vez por linha.
@@ -33,7 +34,7 @@ Cada mudança no banco é um arquivo novo e numerado em `migrations/`, aplicado 
 
 | Arquivo | Situação |
 |---|---|
-| 001 a 005, 007 a 010, 012 a 017, 019 a 023 | Aplicadas (aparecem no histórico de migrações do Supabase; de 016 em diante, sem o número no nome) |
+| 001 a 005, 007 a 010, 012 a 017, 019 a 024 | Aplicadas (aparecem no histórico de migrações do Supabase; de 016 em diante, sem o número no nome) |
 | 006, 011 | Dados (primeiro sócio, CNPJ), aplicados direto pelo SQL Editor |
 | 010b, 012b | Correções pequenas aplicadas só no banco; o efeito está consolidado na 018 |
 | 018 | **Referência**, não precisa rodar: guarda a versão final, inteira, das funções alteradas por troca de texto nas 008, 010, 014, 016 e 017. Rodar de novo não muda nada |

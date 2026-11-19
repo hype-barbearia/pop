@@ -2,6 +2,14 @@
 
 Cada publicação é um commit na `main` (testado e publicado pelo GitHub Actions). Para voltar a uma versão: `git revert` do commit e push. Mudanças no banco estão em `supabase/migrations/`, com o número indicado.
 
+## 19/11/2026 · tipos de atividade e cultura (migração 024)
+- Tipos separados na Rotina: checklist, ronda, reunião, lembrete, instrução e cultura, com um quadro explicando cada um.
+- Reunião (gestão, alinhamento, técnicas, one-on-ones): "Aconteceu / Não aconteceu" e campo de combinados e presença. No one-on-one, o resumo de cultura da semana ao lado de cada nome.
+- Instrução ("como fazer") em cada item, editada no checklist; a pessoa lê e não marca.
+- Cultura por exceção: padrões de comportamento em Informações da casa; a gerente e os sócios registram só o destaque ou o desvio, por pessoa. A pessoa vê os próprios registros no Perfil. "Sorriso e gentileza" e "Postura" saíram da ronda.
+- Rotina: toda linha da tabela abre o editor completo ali mesmo.
+- Semana de aprendizado até 28/11.
+
 ## 17/11/2026 · desempenho e manutenção (migração 023)
 - Carregamento em duas partes: configuração relida no máximo a cada 60 s, histórico uma vez por dia; atualizações em tempo real com 18 consultas em vez de 33.
 - Ações das ocorrências limitadas aos mesmos 30 dias das ocorrências.

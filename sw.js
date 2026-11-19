@@ -6,7 +6,7 @@
 // Na publicação, o GitHub troca 'dev' pelo código do commit (ver .github/workflows/publicar.yml).
 const CACHE = 'hype-pop-app-dev';
 const ARQUIVOS = ['./', './index.html', './css/app.css', './manifest.webmanifest', './icon.svg', './icon-180.png',
-  ...['config','core','consts','engine','data','ui','socio','app','main','admin','ux','recursos','tv','dev','simulador','gestao','notas'].map(f => `./js/${f}.js`),
+  ...['config','core','consts','engine','data','ui','socio','app','main','admin','ux','recursos','tv','dev','simulador','gestao','notas','cultura'].map(f => `./js/${f}.js`),
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
 
 self.addEventListener('install', e => {

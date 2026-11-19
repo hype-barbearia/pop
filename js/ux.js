@@ -83,7 +83,7 @@ function eHoje(p){
 /* ---------- Checklist aberto ---------- */
 function scInst(p){
   const i = inst(S.ui.open), t = tpl(i.tpl), mode = mine(i, p.id) ? 'exec' : p.role === 'gerente' ? 'verify' : 'view', g = prog(i), s = status(i);
-  return `<header class="hb slim ck"><div class="hb-top"><button class="hb-back" data-act="close" aria-label="Voltar">${icon('voltar')}</button><span class="hb-date">${t.kind === 'ronda' ? 'Ronda' : 'Checklist'} · ${hm(i.start)} às ${hm(i.due)}</span><span class="tag-st s-${SK[s]}">${ST[s].l}</span></div>
+  return `<header class="hb slim ck"><div class="hb-top"><button class="hb-back" data-act="close" aria-label="Voltar">${icon('voltar')}</button><span class="hb-date">${tipoNome(t)} · ${hm(i.start)} às ${hm(i.due)}</span><span class="tag-st s-${SK[s]}">${ST[s].l}</span></div>
       <div class="ck-head"><div><h1 class="hb-h">${esc(t.title)}</h1><p class="hb-sub">${esc(whoTxt(i))}${isDone(i) ? ` · concluído às ${hm(i.doneAt)}` : ''}</p></div>${ring(g.d / g.n, 76, `${g.d}/${g.n}`, true)}</div></header>
     <main class="sheet-c">${instBody(i, mode)}</main>`;
 }
@@ -95,24 +95,25 @@ function scPop(p){
 
 /* Itens com toque grande: a linha inteira marca; "Não deu" fica ao lado */
 function instBody(i, mode){
-  const t = tpl(i.tpl), p = person(i.who), c = checks(i), s = status(i), done = isDone(i), ronda = t.kind === 'ronda';
+  const t = tpl(i.tpl), p = person(i.who), c = checks(i), s = status(i), done = isDone(i), ronda = t.kind === 'ronda', reu = ehReuniao(t);
   const canAct = mode === 'exec' && !done && NOW() >= i.start - 30, g = prog(i), left = g.n - g.d;
+  const extra = it => `${it.how ? `<small class="it-how">Como fazer: ${esc(it.how)}</small>` : ''}${reu ? umAUm(it) : ''}`;
   const tags = it => `${it.photo ? `<span class="tag">${icon('camera', 'ni xs')}foto</span>` : ''}${it.crit ? '<span class="tag crit">crítico</span>' : ''}`;
   const rows = t.items.map(it => {
     const k = c[it.id];
     if (k) return `<div class="it ${k.ok ? 'ok' : 'nc'}"><span class="it-ck" aria-hidden="true">${k.ok ? '✓' : '✕'}</span><span class="it-tx"><b>${esc(it.t)}</b>${tags(it)}
-        <small>${k.ok ? (ronda ? 'Conforme' : 'Feito') : (ronda ? 'Não conforme' : 'Não feito')} às ${hm(k.at)}${k.note ? `: ${esc(k.note)}` : ''}</small>${k.photo || it.ref ? `<span class="ph-pair">${k.photo ? photo(it.t, k.at, k.photo) : ''}${mode === 'verify' ? refThumb(it) : ''}</span>` : ''}</span>
+        <small>${k.ok ? (ronda ? 'Conforme' : reu ? 'Aconteceu' : 'Feito') : (ronda ? 'Não conforme' : reu ? 'Não aconteceu' : 'Não feito')} às ${hm(k.at)}${k.note ? `: ${esc(k.note)}` : ''}</small>${extra(it)}${k.photo || it.ref ? `<span class="ph-pair">${k.photo ? photo(it.t, k.at, k.photo) : ''}${mode === 'verify' ? refThumb(it) : ''}</span>` : ''}</span>
         ${canAct ? `<button class="it-undo" data-act="uncheck" data-id="${i.id}" data-it="${it.id}">Desfazer</button>` : ''}</div>`;
     if (canAct && S.ui.nao === i.id + '|' + it.id) return `<div class="it open"><span class="it-ck" aria-hidden="true"></span><span class="it-tx stack gap8"><b>${esc(it.t)}</b>
-        <label class="small muted" for="nao-note">${ronda ? 'O que está fora do padrão?' : 'Por que não deu?'} A gerência recebe como ocorrência.</label>
-        <textarea class="inp" id="nao-note" rows="2" placeholder="${ronda ? 'Ex.: Bancada 3 com ferramenta fora da embalagem' : 'Ex.: Acabou o álcool 70%'}"></textarea>
-        ${ronda || !recurso('reposicao') ? '' : `<label class="toggle sm"><input type="checkbox" id="nao-rep"><span>É falta de material: pedir reposição</span></label>`}
+        <label class="small muted" for="nao-note">${ronda ? 'O que está fora do padrão?' : reu ? 'O que houve?' : 'Por que não deu?'} A gerência recebe como ocorrência.</label>
+        <textarea class="inp" id="nao-note" rows="2" placeholder="${ronda ? 'Ex.: Bancada 3 com ferramenta fora da embalagem' : reu ? 'Ex.: Breno de folga, remarcado para quinta' : 'Ex.: Acabou o álcool 70%'}"></textarea>
+        ${ronda || reu || !recurso('reposicao') ? '' : `<label class="toggle sm"><input type="checkbox" id="nao-rep"><span>É falta de material: pedir reposição</span></label>`}
         <span class="row gap6"><button class="btn primary" data-act="naoSave" data-id="${i.id}" data-it="${it.id}">Registrar</button><button class="btn" data-act="naoCancel">Cancelar</button></span></span></div>`;
     if (canAct) return `<div class="it todo"><button class="it-main" data-act="check" data-id="${i.id}" data-it="${it.id}"><span class="it-ck" aria-hidden="true">${it.photo ? icon('camera', 'ni xs') : ''}</span>
-        <span class="it-tx"><b>${esc(it.t)}</b>${tags(it)}<small>${ronda ? 'Toque se está conforme' : it.photo ? 'Toque para tirar a foto (só do ambiente, sem clientes)' : 'Toque quando terminar'}</small></span></button>
+        <span class="it-tx"><b>${esc(it.t)}</b>${tags(it)}<small>${ronda ? 'Toque se está conforme' : reu ? 'Toque quando acontecer' : it.photo ? 'Toque para tirar a foto (só do ambiente, sem clientes)' : 'Toque quando terminar'}</small>${extra(it)}</span></button>
         ${refThumb(it) ? `<span class="it-ref">${refThumb(it)}</span>` : ''}
-        <button class="it-no" data-act="nao" data-id="${i.id}" data-it="${it.id}">${ronda ? 'Não conforme' : 'Não deu'}</button></div>`;
-    return `<div class="it idle"><span class="it-ck" aria-hidden="true"></span><span class="it-tx"><b>${esc(it.t)}</b>${tags(it)}</span></div>`;
+        <button class="it-no" data-act="nao" data-id="${i.id}" data-it="${it.id}">${ronda ? 'Não conforme' : reu ? 'Não aconteceu' : 'Não deu'}</button></div>`;
+    return `<div class="it idle"><span class="it-ck" aria-hidden="true"></span><span class="it-tx"><b>${esc(it.t)}</b>${tags(it)}${extra(it)}</span></div>`;
   }).join('');
   const early = mode === 'exec' && !done && NOW() < i.start - 30 ? `<div class="alert"><b>Libera às ${hm(i.start - 30)}</b><span>Meia hora antes da janela.</span></div>` : '';
   const v = verVis(i), nd = nudgesOf(i.id);
@@ -124,8 +125,8 @@ function instBody(i, mode){
   const redo = i.redo && vis(i.redo.at) && !done ? `<div class="alert bad"><b>Refazer pedido às ${hm(i.redo.at)}</b><span>${esc(i.redo.note)}</span></div>` : '';
   const nudge = nd.length && (!done || i.doneAt > nd[0].at) ? `<p class="small muted">Cobrado por ${nd.map(x => `${esc(first(person(x.by)))} às ${hm(x.at)}`).join(', ')}.</p>` : '';
   const quem = mode !== 'exec' ? `<div class="row between nowrap who-row"><span class="row nowrap gap8">${av(p)}<b>${esc(whoTxt(i))}</b></span>${mode === 'verify' && s === 'atrasado' ? `<button class="btn no" data-act="nudge" data-id="${i.id}">Cobrar ${esc(first(p))}</button>` : stChip(i)}</div>` : '';
-  const foot = canAct ? `<div class="ck-foot"><span class="num"><b>${g.d}</b>/${g.n}</span>${left ? `<button class="btn primary big" disabled>Faltam ${left}</button>` : `<button class="btn primary big" data-act="finish" data-id="${i.id}">Concluir checklist</button>`}</div>` : '';
-  return `<div class="stack gap12">${quem}${redo}${nudge}${early}<div class="its">${rows}</div>${verBox}
+  const foot = canAct ? `<div class="ck-foot"><span class="num"><b>${g.d}</b>/${g.n}</span>${left ? `<button class="btn primary big" disabled>Faltam ${left}</button>` : `<button class="btn primary big" data-act="finish" data-id="${i.id}">${reu ? 'Concluir reunião' : 'Concluir checklist'}</button>`}</div>` : '';
+  return `<div class="stack gap12">${quem}${redo}${nudge}${early}<div class="its">${rows}</div>${blocoReuniao(i, mode)}${verBox}
     ${t.pop ? `<button class="linkbtn small center" data-act="pop" data-id="${t.pop}">Ver o procedimento ${t.pop}</button>` : '<p class="small muted center">Este é só um treino: nada aqui é registrado.</p>'}</div>${foot}`;
 }
 

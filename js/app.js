@@ -12,7 +12,7 @@ const backBtn = () => `<button class="back" data-act="close">${icon('voltar', 'n
 
 function scInst(p){
   const i = inst(S.ui.open), t = tpl(i.tpl), mode = mine(i, p.id) ? 'exec' : p.role === 'gerente' ? 'verify' : 'view';
-  return `${backBtn()}<div><p class="eyebrow">${t.kind === 'ronda' ? 'Ronda' : 'Checklist'} · ${t.pop}</p><h1 class="p-title">${esc(t.title)}</h1></div>${instBody(i, mode)}`;
+  return `${backBtn()}<div><p class="eyebrow">${tipoNome(t)} · ${t.pop}</p><h1 class="p-title">${esc(t.title)}</h1></div>${instBody(i, mode)}`;
 }
 function scPop(p){
   const x = pop(S.ui.pop);
@@ -71,6 +71,7 @@ function mPerfil(p){
       ${aus.length ? `<p class="small">Ausência registrada: ${aus.map(a => `${dLabelISO(a.inicio)}${a.fim !== a.inicio ? ` a ${dLabelISO(a.fim)}` : ''}${a.motivo ? ` (${esc(a.motivo)})` : ''}`).join(', ')}</p>` : ''}
       <p class="small muted">Para corrigir algum dado, fale com a Jessica.</p></section>
     ${p.parceiro ? perfilNotas(p) : ''}
+    ${perfilCultura(p)}
     <section class="card soft stack gap8"><h2 class="sec-h">Aparência</h2>${seletorTema()}<p class="small muted">Automático segue o modo claro ou escuro do celular.</p></section>
     ${blocoPrivacidadePerfil(p)}
     <button class="btn" data-act="sair">Sair do app</button>`;
