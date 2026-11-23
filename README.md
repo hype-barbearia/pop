@@ -60,6 +60,7 @@ O banco de teste tem o mesmo esquema da produção, conferido objeto por objeto 
 1. **Teste:** a mudança vai para a branch `teste`. O GitHub testa e publica em teste.pop.hypebarbearia.com em cerca de um minuto. Mudança no banco: a migração nova é aplicada **primeiro no banco de teste**.
 2. **Conferência:** você testa no site de teste, no celular e no computador.
 3. **Produção:** aprovado, `teste` é mesclada na `main` (`git checkout main && git merge teste && git push`). O GitHub testa, publica em pop.hypebarbearia.com e cria uma tag `producao-AAAA.MM.DD-HHMM`. A migração é aplicada no banco de produção nesse momento.
+   Antes de promover, confira no site de teste: entrar com o seu e-mail; "ver como" Victor, Jessica, um barbeiro e uma atendente; abrir e marcar um checklist; a tela que mudou, no celular e no computador; nenhum aviso de erro no painel DEV.
 4. **Voltar atrás:** cada publicação tem a sua tag. Para voltar o app: `git revert` do commit na `main` e push (ou publicar uma tag antiga). As tags ficam em https://github.com/hype-barbearia/pop/tags.
 
 O site de teste é publicado no repositório `hype-barbearia/pop-teste` (só o site pronto; o código fica todo aqui), com a chave `TESTE_DEPLOY_KEY` dos segredos do repositório.
