@@ -60,6 +60,7 @@ function renderDev(){
     <p class="day-h">Erros registrados pelo app</p>
     ${tabela(['Quando', 'Quem', 'Mensagem', 'Onde'], (d.erros || []).map(e => [quando(e.em), esc(person(e.pessoa_id)?.name || '—'), esc(e.msg), esc(e.ctx || '')]))}`;
   return `${ph('Acesso DEV · sistemas@hypebarbearia.com', 'Painel de desenvolvimento', 'Veja e teste o app exatamente como cada pessoa vê, com os dados reais de hoje. Tudo aqui é só leitura: nenhuma marcação, conferência ou edição é gravada. Para testar os gestos de um checklist sem gravar nada, use o checklist de treino dentro da visão de qualquer pessoa da equipe.')}
+    <a class="card soft def-banner" href="versoes.html"><span><b>Versões: produção e teste</b><span class="small muted block">Qual versão está no app da equipe, qual está no teste e o que mudou em cada uma.</span></span><span class="btn sm">Abrir →</span></a>
     <section class="panel"><div class="panel-h"><h2>Ver o app como</h2><p>${devPessoas().length} pessoas</p></div>
       ${devGrupos().filter(([, , ps]) => ps.length).map(([g, dsc, ps]) => `<div class="dv-g"><p class="day-h">${g}</p><p class="small muted">${dsc}</p><div class="stack gap8">${ps.map(cartao).join('')}</div></div>`).join('')}</section>
     <div class="grid cols-2">

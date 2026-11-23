@@ -1,6 +1,7 @@
 # Hype POP · testa e publica, em dois ambientes
 #   branch teste → teste.pop.hypebarbearia.com (banco "Hype POP Teste", nada chega à equipe)
-#   branch main  → pop.hypebarbearia.com (produção), e marca a versão com uma tag producao-AAAA.MM.DD-HHMM
+#   branch main  → pop.hypebarbearia.com (produção), com as etiquetas vX.Y (do CHANGELOG.md) e producao-AAAA.MM.DD-HHMM
+# Cada site recebe versao.json (ferramentas/versao.js), lido pela página versoes.html.
 # Nos dois casos: confere a sintaxe, abre todas as telas de todos os acessos com dados de exemplo
 # (tests/smoke.js) e só então publica. Se algum teste falhar, o que está no ar continua igual.
 name: Testar e publicar
@@ -29,7 +30,7 @@ jobs:
         with:
           node-version: 20
       - name: Sintaxe dos arquivos
-        run: for f in js/*.js sw.js tests/*.js ambientes/*/config.js; do node --check "$f"; done
+        run: for f in js/*.js sw.js tests/*.js ferramentas/*.js ambientes/*/config.js; do node --check "$f"; done
       - name: Listas de arquivos iguais (index, service worker, testes) e configuração do teste
         run: node tests/coerencia.js
       - name: Todas as telas, todos os acessos
@@ -48,7 +49,8 @@ jobs:
       - name: Montar o site (só o que o app usa)
         run: |
           mkdir _site
-          cp -r index.html sw.js manifest.webmanifest icon.svg icon-180.png icon-512.png CNAME .nojekyll css js _site/
+          cp -r index.html versoes.html sw.js manifest.webmanifest icon.svg icon-180.png icon-512.png CNAME .nojekyll css js _site/
+          node ferramentas/versao.js _site producao
           # Versão da cópia offline = commit publicado: cada publicação renova a cópia guardada nos aparelhos
           sed -i "s/const CACHE = 'hype-pop-app-[^']*'/const CACHE = 'hype-pop-app-${GITHUB_SHA::7}'/" _site/sw.js
           grep -q "hype-pop-app-${GITHUB_SHA::7}" _site/sw.js
@@ -67,12 +69,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Tag da versão publicada
+      - name: Etiquetas da versão publicada
         run: |
-          TAG="producao-$(TZ=America/Recife date +%Y.%m.%d-%H%M)"
-          git tag "$TAG" "$GITHUB_SHA"
-          git push origin "$TAG"
-          echo "Versão publicada: $TAG" >> "$GITHUB_STEP_SUMMARY"
+          # vX.Y = número da versão no CHANGELOG.md (só na primeira publicação dela); producao-… = cada publicação
+          V=$(node -e "console.log(require('./ferramentas/versao.js').lerHistorico()[0].versao)")
+          DATA="producao-$(TZ=America/Recife date +%Y.%m.%d-%H%M)"
+          git tag "$DATA" "$GITHUB_SHA" && git push origin "$DATA"
+          if git ls-remote --exit-code --tags origin "refs/tags/$V" >/dev/null; then
+            echo "Versão $V já tinha etiqueta; esta publicação é um ajuste dela ($DATA)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            git tag "$V" "$GITHUB_SHA" && git push origin "$V"
+            echo "Versão publicada na produção: $V ($DATA)" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   # ---------- Teste ----------
   publicar-teste:
@@ -84,7 +92,8 @@ jobs:
       - name: Montar o site de teste
         run: |
           mkdir _site
-          cp -r index.html sw.js manifest.webmanifest icon.svg icon-180.png icon-512.png .nojekyll css js _site/
+          cp -r index.html versoes.html sw.js manifest.webmanifest icon.svg icon-180.png icon-512.png .nojekyll css js _site/
+          node ferramentas/versao.js _site teste
           cp ambientes/teste/config.js _site/js/config.js
           echo "teste.pop.hypebarbearia.com" > _site/CNAME
           sed -i "s/const CACHE = 'hype-pop-app-[^']*'/const CACHE = 'hype-pop-teste-${GITHUB_SHA::7}'/" _site/sw.js

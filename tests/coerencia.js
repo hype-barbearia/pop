@@ -16,5 +16,11 @@ const chaves = f => [...ler(f).match(/const HYPE_CONFIG = \{([\s\S]*?)\};/)[1].m
 if (chaves('js/config.js') !== chaves('ambientes/teste/config.js')) erros.push(`ambientes/teste/config.js tem chaves diferentes de js/config.js: ${chaves('ambientes/teste/config.js')} / ${chaves('js/config.js')}`);
 if (!/ambiente: 'teste'/.test(ler('ambientes/teste/config.js'))) erros.push('ambientes/teste/config.js precisa ter ambiente: \'teste\'');
 if (/fwecscsvfxocgjspdsis/.test(ler('ambientes/teste/config.js'))) erros.push('ambientes/teste/config.js aponta para o banco de PRODUÇÃO');
+// Histórico de versões: a página versoes.html e as etiquetas dependem deste formato
+const {lerHistorico, maior} = require('../ferramentas/versao.js');
+const hist = lerHistorico();
+if (!hist.length) erros.push('CHANGELOG.md sem versões no formato "## vX.Y · DD/MM/AAAA · título"');
+hist.forEach((h, k) => { if (!h.itens.length) erros.push(`CHANGELOG.md: ${h.versao} sem melhorias listadas`);
+  if (k && !maior(hist[k - 1].versao, h.versao)) erros.push(`CHANGELOG.md: ${hist[k - 1].versao} deveria ser maior que ${h.versao} (a mais nova vem primeiro)`); });
 if (erros.length) { console.log(erros.join('\n')); process.exit(1); }
-console.log(`Listas de arquivos iguais (${index.length} scripts).`);
+console.log(`Listas de arquivos iguais (${index.length} scripts). Histórico com ${hist.length} versões, atual ${hist[0].versao}.`);

@@ -905,3 +905,4 @@ body.devon .tvp{top:0}
 .amb-teste body::after{content:"Ambiente de teste · nada aqui chega à equipe";position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:9999;pointer-events:none;
   background:#C2410C;color:#fff;font:700 11.5px/1 Archivo,system-ui,sans-serif;letter-spacing:.04em;padding:7px 12px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap}
 @media (min-width:900px){ .amb-teste body::after{bottom:14px} }
+.side-foot .side-ver{display:block;margin-top:8px;font-weight:700;color:var(--accent);text-decoration:none}

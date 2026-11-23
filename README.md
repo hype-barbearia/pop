@@ -55,11 +55,15 @@ Peças no Supabase: função `notificar` (Edge Function), seis tarefas automáti
 
 O banco de teste tem o mesmo esquema da produção, conferido objeto por objeto (funções, colunas, regras de acesso, índices, tarefas automáticas). Entram nele: Victor (`victor@`) e o DEV (`sistemas@`). Para ver como cada pessoa, use o "ver como" do DEV.
 
+### Versões
+
+Cada versão tem um número no [CHANGELOG.md](CHANGELOG.md) (`## vX.Y · data · título`, com as melhorias abaixo). A página **/versoes.html** (pop.hypebarbearia.com/versoes.html e teste.pop.hypebarbearia.com/versoes.html; também no painel DEV e no rodapé do menu dos sócios) mostra qual versão está na produção, qual está no teste e o que mudou em cada uma. Ela lê o `versao.json` que cada publicação grava (`ferramentas/versao.js`).
+
 ### Como uma mudança vai para a produção
 
 1. **Teste:** a mudança vai para a branch `teste`. O GitHub testa e publica em teste.pop.hypebarbearia.com em cerca de um minuto. Mudança no banco: a migração nova é aplicada **primeiro no banco de teste**.
 2. **Conferência:** você testa no site de teste, no celular e no computador.
-3. **Produção:** aprovado, `teste` é mesclada na `main` (`git checkout main && git merge teste && git push`). O GitHub testa, publica em pop.hypebarbearia.com e cria uma tag `producao-AAAA.MM.DD-HHMM`. A migração é aplicada no banco de produção nesse momento.
+3. **Produção:** aprovado, `teste` é mesclada na `main` (`git checkout main && git merge teste && git push`). O GitHub testa, publica em pop.hypebarbearia.com e cria as etiquetas `vX.Y` (número da versão no CHANGELOG.md) e `producao-AAAA.MM.DD-HHMM`. A migração é aplicada no banco de produção nesse momento.
    Antes de promover, confira no site de teste: entrar com o seu e-mail; "ver como" Victor, Jessica, um barbeiro e uma atendente; abrir e marcar um checklist; a tela que mudou, no celular e no computador; nenhum aviso de erro no painel DEV.
 4. **Voltar atrás:** cada publicação tem a sua tag. Para voltar o app: `git revert` do commit na `main` e push (ou publicar uma tag antiga). As tags ficam em https://github.com/hype-barbearia/pop/tags.
 
